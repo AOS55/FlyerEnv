@@ -1,6 +1,17 @@
 [build-system]
 requires = [
     "setuptools>=42",
+    "setuptools-rust",
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "flyer-env"
+version = "0.1"
+
+[[tool.setuptools-rust.ext-modules]]
+# Build rust extension for FlyerEnv
+target = "pyflyer._lib"
+path = "pyflyer-rs/Cargo.toml"
+binding = "PyO3"

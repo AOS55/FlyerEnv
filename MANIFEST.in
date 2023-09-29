@@ -1,3 +1,5 @@
+include pyflyer/Cargo.toml
+recursive-include rust *.rs
 include flyer_env/aircraft/configs/*.yaml
 include flyer_env/aircraft/assets/*.png
 include flyer_env/terrain/assets/tiles/*.png
