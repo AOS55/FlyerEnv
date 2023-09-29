@@ -1,0 +1,67 @@
+# Based on Twin-Otter Model
+name: TO
+mass: 4874.8
+ixx: 28366.4
+iyy: 32852.8
+izz: 52097.3
+ixz: 1384.3
+wing_area: 39.0
+wing_span: 19.8
+mac: 1.98
+
+# Drag coefficients
+c_D_0: 0.108
+c_D_alpha: 0.138
+c_D_alpha_q: -54.05
+c_D_alpha_deltae: 0.111
+c_D_alpha2: 2.988
+c_D_alpha2_q: 302.1
+c_D_alpha2_deltae: 0.156
+c_D_alpha3: -7.743
+c_D_alpha3_q: -218.8
+c_D_alpha4: 11.77
+
+# Side-force coefficients
+c_Y_beta: -0.885
+c_Y_p: -0.090
+c_Y_r: 1.697
+c_Y_deltaa: -0.051
+c_Y_deltar: -0.193
+
+# Lift coefficients
+c_L_0: 0.215
+c_L_alpha: 4.370
+c_L_q: 25.05
+c_L_deltae: 0.291
+c_L_alpha_q: 52.78
+c_L_alpha2: 16.62
+c_L_alpha3: -87.67
+c_L_alpha4: 90.41
+
+# Roll coefficients
+c_l_beta: -0.112
+c_l_p: -0.413
+c_l_r: 0.191
+c_l_deltaa: -0.206
+c_l_deltar: 0.116
+
+# Pitch coefficients
+c_m_0: 0.057
+c_m_alpha: -1.419
+c_m_q: -27.95
+c_m_deltae: -1.626
+c_m_alpha_q: 100.7
+c_m_alpha2_q: -759.2
+c_m_alpha2_deltae: 7.664
+c_m_alpha3_q: 1103.0
+c_m_alpha3_deltae: -8.121
+c_m_alpha4: 2.468
+
+# Yaw coefficients
+c_n_beta: 0.088
+c_n_p: -0.043
+c_n_r: -0.426
+c_n_deltaa: 0.023
+c_n_deltar: -0.087
+c_n_beta2: 0.337
+c_n_beta3: -0.766

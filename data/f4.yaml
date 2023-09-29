@@ -1,0 +1,68 @@
+# Based on F4 aircraft from Heffley and Jewell 1972
+name: F4Phantom
+mass: 17642.0
+ixx: 33898.0
+iyy: 165669.0
+izz: 189496.0
+ixz: 2952.0  # some deviation between Heffely & Jewell, Cook and GTM report on this
+wing_area: 49.239
+wing_span: 11.787
+mac: 4.889
+
+
+# Drag coefficients
+c_D_0: 0.031
+c_D_alpha: 0.280
+c_D_alpha_q: -11.98
+c_D_alpha_deltae: 0.0
+c_D_alpha2: -1.818
+c_D_alpha2_q: 209.4
+c_D_alpha2_deltae: 0.515
+c_D_alpha3: 22.27
+c_D_alpha3_q: -284.7
+c_D_alpha4: -29.81
+
+# Side-force coefficients
+c_Y_beta: -0.688
+c_Y_p: 0.129
+c_Y_r: 0.670
+c_Y_deltaa: 0.0
+c_Y_deltar: 0.089
+
+# Lift coefficients
+c_L_0: 0.105
+c_L_alpha: 1.519
+c_L_q: 6.727
+c_L_deltae: 0.265
+c_L_alpha_q: 33.25
+c_L_alpha2: 9.90
+c_L_alpha3: -12.71
+c_L_alpha4: -12.91
+
+# Roll coefficients
+c_l_beta: -0.034
+c_l_p: -0.236
+c_l_r: 0.025
+c_l_deltaa: -0.035
+c_l_deltar: 0.013
+
+# Pitch coefficients
+c_m_0: -0.013
+c_m_alpha: -0.254
+c_m_q: -2.916
+c_m_deltae: -0.403
+c_m_alpha_q: -3.955
+c_m_alpha2_q: -24.0
+c_m_alpha2_deltae: -0.270
+c_m_alpha3_q: 55.32
+c_m_alpha3_deltae: 1.479
+c_m_alpha4: -0.448
+
+# Yaw coefficients
+c_n_beta: 0.142
+c_n_p: -0.006
+c_n_r: -0.358
+c_n_deltaa: 0.001
+c_n_deltar: -0.053
+c_n_beta2: 0.0
+c_n_beta3: 0.377

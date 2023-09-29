@@ -1,0 +1,67 @@
+# Based on Generic Transport Model
+name: GTM
+mass: 22.5
+ixx: 67.2
+iyy: 5.77
+izz: 7.39
+ixz: 0.163
+wing_area: 0.548
+wing_span: 2.09
+mac: 0.279
+
+# Drag coefficients
+c_D_0: 0.019
+c_D_alpha: -0.078
+c_D_alpha_q: -27.42
+c_D_alpha_deltae: 0.293
+c_D_alpha2: 3.420
+c_D_alpha2_q: 288.2
+c_D_alpha2_deltae: -0.040
+c_D_alpha3: 1.819
+c_D_alpha3_q: 355.3
+c_D_alpha4: -6.563
+
+# Side-force coefficients
+c_Y_beta: -1.003
+c_Y_p: 0.033
+c_Y_r: 0.952
+c_Y_deltaa: -0.009
+c_Y_deltar: 0.253
+
+# Lift coefficients
+c_L_0: 0.016
+c_L_alpha: 5.343
+c_L_q: 30.78
+c_L_deltae: 0.396
+c_L_alpha_q: 12.03
+c_L_alpha2: 0.506
+c_L_alpha3: -36.30
+c_L_alpha4: 46.13
+
+# Roll coefficients
+c_l_beta: -0.109
+c_l_p: -0.366
+c_l_r: 0.061
+c_l_deltaa: -0.079
+c_l_deltar: 0.021
+
+# Pitch coefficients
+c_m_0: 0.182
+c_m_alpha: -1.782
+c_m_q: -44.34
+c_m_deltae: -1.785
+c_m_alpha_q: 374.0
+c_m_alpha2_q: -1748.0
+c_m_alpha2_deltae: 2.439
+c_m_alpha3_q: 1949.0
+c_m_alpha3_deltae: -0.038
+c_m_alpha4: 0.803
+
+# Yaw coefficients
+c_n_beta: 0.183
+c_n_p: -0.022
+c_n_r: -0.405
+c_n_deltaa: -0.009
+c_n_deltar: -0.129
+c_n_beta2: 0.184
+c_n_beta3: -0.377
