@@ -9,3 +9,4 @@ ipykernel
 jupyter-sphinx
 python-docs-theme
 furo
+matplotlib
