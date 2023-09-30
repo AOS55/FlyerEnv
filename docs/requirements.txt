@@ -8,3 +8,4 @@ sphinxcontrib-mermaid
 ipykernel
 jupyter-sphinx
 python-docs-theme
+furo
