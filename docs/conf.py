@@ -45,6 +45,7 @@ extensions = [
     'sphinxcontrib.mermaid',
     'jupyter_sphinx',
     'myst_parser',
+    'python_docs_theme',
 ]
 
 autodoc_default_flags = ['members', 'private-members', 'undoc-members', 'special-members']
