@@ -21,9 +21,9 @@ from typing import Any, Dict
 # import flyer_env
 
 
-project = "flyer-env"
+project = "FlyerEnv"
 copyright = "2023 Farama Foundation"
-author = "Farama Foundation"
+author = "Alexander Quessy"
 
 # The full version, including alpha/beta/rc tags
 release = ''
@@ -85,7 +85,7 @@ myst_enable_extensions = [
 #
 html_theme = "furo"
 html_title = "flyer-env Documentation"
-html_baseurl = "https://flyer-env.farama.org"
+html_baseurl = " https://aos55.github.io/FlyerEnv/"
 html_copy_source = False
 html_favicon = "_static/img/flyericon.png"
 html_theme_options = {
@@ -96,9 +96,9 @@ html_theme_options = {
 html_context: Dict[str, Any] = {}
 html_context["conf_py_path"] = "/docs/"
 html_context["display_github"] = False
-html_context["github_user"] = "Farama-Foundation"
-html_context["github_repo"] = "flyer-env"
-html_context["github_version"] = "main"
+html_context["github_user"] = "AOS55"
+html_context["github_repo"] = "FlyerEnv"
+html_context["github_version"] = "master"
 html_context["slug"] = "flyer-env"
 
 html_static_path = ["_static"]
