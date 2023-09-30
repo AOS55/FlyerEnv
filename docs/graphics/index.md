@@ -9,7 +9,7 @@ Environment rendering is achieved with [pygame](https://www.pygame.org/news), wh
 When `env.render()` is first called a window is created, dimensions are configured with:
 
 ```python
-env = gym.make('flyer-v0')
+env = gym.make('flyer-v1')
 env.configure({
     "screen_width": 640,
     "screen_height": 480
