@@ -1,0 +1,11 @@
+stateDiagram-v2
+    direction LR
+  [*] --> ErrorSum: r(t)
+  ErrorSum --> Proportional: e(t)
+  ErrorSum --> Integral: e(t)
+  ErrorSum --> Derivative: e(t)
+  Proportional --> ControlSum
+  Integral --> ControlSum
+  Derivative --> ControlSum
+  ControlSum --> Aircraft: u(t)
+  Aircraft --> [*]: y(t)
