@@ -47,7 +47,7 @@ env = gymnasium.make("forced_landing-v1")
 ```python
 import gymnasium as gym
 
-env = gym.make("flyer-v0", render_mode="human")
+env = gym.make("flyer-v1", render_mode="human")
 
 done = truncated = False
 while not (done or truncated):

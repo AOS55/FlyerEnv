@@ -5,14 +5,14 @@
 
 Here is a quick example of how to create an environment:
 
-```{eval-rst}
+<!-- ```{eval-rst}
 .. jupyter-execute::
 
     import gymnasium as gym
     from matplotlib import pyplot as plt
     %matplotlib inline
     
-    env = gym.make('flyer-v0', render_mode='rgb_array')
+    env = gym.make('flyer-v1', render_mode='rgb_array')
     env.reset()
     for _ in range(3):
         action = env.action_space.sample()
@@ -21,7 +21,7 @@ Here is a quick example of how to create an environment:
         
     plt.imshow(env.render())
     plt.show()
-```
+``` -->
 
 ### All the environments
 
@@ -45,14 +45,14 @@ The {ref}`observations <observations>`, {ref}`actions <actions>`, {ref}`dynamics
 AbstractEnv.config` dictionary. After environment creation, the configuration can be accessed using the {py:attr}
 `~flyer_env.envs.common.abstract.AbstractEnv.config` attribute.
 
-```{eval-rst}
+<!-- ```{eval-rst}
 .. jupyter-execute::
 
     import pprint
     
-    env = gym.make('flyer-v0', render_mode='rgb_array')
+    env = gym.make('flyer-v1', render_mode='rgb_array')
     pprint.pprint(env.config)
-```
+``` -->
 
 ```{note}
 The environment must be {py:meth}`~flyer_env.envs.common.abstract.AbstractEnv.reset` for the change in configuration 

@@ -16,7 +16,7 @@ Each environment comes with a *default* action type, that can be customized usin
 ```python
 import gymnasium as gym
 
-env = gym.make('flyer-v0')
+env = gym.make('flyer-v1')
 env.configure({
     "action": {
         "type": "ContinousAction"

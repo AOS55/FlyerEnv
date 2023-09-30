@@ -12,7 +12,7 @@ using {ref}`environment configurations <configuration>`. For example:
 import gymnasium as gym
 import flyer_env
 
-env = gym.make('flyer-v0')
+env = gym.make('flyer-v1')
 env.configure({
     'observation': {
         
