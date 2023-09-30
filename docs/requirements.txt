@@ -1,7 +1,7 @@
 sphinx
 sphinx-autobuild
 myst-parser
-git+https://github.com/Farama-Foundation/Celshast#egg=furo
+gymnasium
 sphinx_github_changelog
 sphinxcontrib-bibtex
 sphinxcontrib-mermaid
