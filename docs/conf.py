@@ -99,7 +99,7 @@ html_context["display_github"] = False
 html_context["github_user"] = "AOS55"
 html_context["github_repo"] = "FlyerEnv"
 html_context["github_version"] = "master"
-html_context["slug"] = "flyer-env"
+html_context["slug"] = "FlyerEnv"
 
 html_static_path = ["_static"]
 html_css_files = []

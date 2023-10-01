@@ -1,5 +1,5 @@
 import pytest
-from world import Aircraft
+from pyflyer import Aircraft
 
 def test_control():
     aircraft = Aircraft()
