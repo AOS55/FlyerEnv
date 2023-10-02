@@ -226,7 +226,9 @@ class AbstractEnv(gym.Env):
         """
         dt = 1/self.config["simulation_frequency"]
         self.time += dt
-        self.vehicle.step(dt, action)  # Set the action on the aircraft
+        print(f'action: {action}')
+        self.action_type.act(action)
+        self.vehicle.step(dt)  # Set the action on the aircraft
         # self.world.step()  # Step the world
 
     def render(self) -> Optional[np.ndarray]:

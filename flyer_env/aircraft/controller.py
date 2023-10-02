@@ -1,5 +1,5 @@
 import numpy as np
-
+import os
 from typing import List, Tuple, Union, Optional
 from flyer_env.utils import Vector
 from simple_pid import PID
@@ -15,7 +15,8 @@ class ControlledAircraft:
                  trim: Vector = [0.0, 0.04055471935347572, 0.6730648623679762, 0.0]
                 ):
         
-        self.aircraft = Aircraft()
+        path = os.path.join(*[os.path.dirname(os.path.realpath(__file__)), "..", "envs", "data/"])
+        self.aircraft = Aircraft(data_path=path)
         self.aircraft.reset(position, heading, speed)
 
         self.pid_pitch = PID(10.0, 2.0, 0.1)
@@ -68,7 +69,14 @@ class ControlledAircraft:
                 tgt_pos = action["pursuit_target"]
                 next_aileron = self.pursuit_controller(tgt_pos)
         
-        return [next_aileron, next_elevator, next_tla, next_rudder]
+        action = {"aileron": next_aileron,
+                  "elevator": next_elevator,
+                  "tla": next_tla, 
+                  "rudder": next_rudder}
+
+        self.aircraft.act(action)
+
+        # return 
         # return self.rate_limit(next_controls)
     
     def pitch_controller(self, pitch_err: float) -> float:

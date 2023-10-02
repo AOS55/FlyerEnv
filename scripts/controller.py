@@ -15,7 +15,6 @@ COLOURS = [[0, 18, 25], [0, 95, 115], [10, 147, 150], [148, 210, 189], [233, 216
                [238, 155, 0], [202, 103, 2], [187, 62, 3], [174, 32, 18], [155, 34, 38]]
 COLOURS = [[value/255 for value in rgb] for rgb in COLOURS]
 
-
 class ControlledAircraft:
 
     def __init__(self,
