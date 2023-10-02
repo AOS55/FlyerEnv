@@ -34,9 +34,9 @@ class ActionType:
         raise NotImplementedError
     
     @property
-    def controlled_vehicle(self, vehicle):
+    def controlled_vehicle(self):
         """The vehicle acted upon"""
-        return self.__controlled_vehicle or vehicle
+        return self.__controlled_vehicle or self.env.vehicle
 
     @controlled_vehicle.setter
     def controlled_vehicle(self, vehicle):
@@ -167,7 +167,7 @@ class ControlledAction(ActionType):
 
 class PursuitAction(ActionType):
 
-    ALT_RANGE = (0.0, 10000)
+    ALT_RANGE = (0.0, -10000)
     SPEED_RANGE = (0.0, 300.0)
 
     """
