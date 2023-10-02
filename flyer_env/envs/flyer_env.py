@@ -1,8 +1,10 @@
 from typing import Dict, Text
 import sys
+import os
 import numpy as np
 
 from flyer_env import utils
+from flyer_env.aircraft import ControlledAircraft
 from flyer_env.envs.common.abstract import AbstractEnv
 from flyer_env.envs.common.action import Action
 from pyflyer import World, Aircraft
@@ -42,9 +44,7 @@ class FlyerEnv(AbstractEnv):
         return config
 
     def _reset(self, seed) -> None:
-        # TODO: Setup all the reset attributes
-        if not seed: seed = 1  # set seed to 1 if None
-        print(f'self.seed: {seed}')
+        if not seed: seed = 1  # set seed to 1 if None TODO: set to be random on None, look @ HighwayEnv
         self._create_world(seed)
         self._create_aircraft()
         self._create_goal(seed)
@@ -52,19 +52,34 @@ class FlyerEnv(AbstractEnv):
     def _create_world(self, seed) -> None:
         """Create the world map"""
         self.world = World()
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets")
+        self.world.assets_dir = path
         self.world.create_map(seed)
         return
     
     def _create_aircraft(self) -> None:
         """Create an aircraft to fly around the world"""
-        aircraft = Aircraft()
-        aircraft.reset(
-            pos=[0.0, 0.0, -1000.0],
-            heading=0.0,
-            airspeed=100.0 
-        )
-        self.world.add_aircraft(aircraft)
-        self.controlled_vehicles = self.world.vehicles
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/")
+        start_pos = [0.0, 0.0, -1000.0]
+        heading = 0.0
+        airspeed = 100.0 
+
+        if self.config["action"]["type"] == "ContinuousAction":
+            vehicle = Aircraft(data_path=path)
+            vehicle.reset(
+                pos=start_pos,
+                heading=heading,
+                airspeed=airspeed 
+            )
+            self.world.add_aircraft(vehicle)
+        else:
+            vehicle = ControlledAircraft(
+                position=start_pos,
+                heading=heading,
+                speed=airspeed
+            )
+            self.world.add_aircraft(vehicle.aircraft)
+        self.controlled_vehicles = vehicle
     
     def _create_goal(self, seed) -> None:
         """Create a random goal in 3D space to navigate to, based on the aircraft's initial starting position"""
@@ -83,8 +98,6 @@ class FlyerEnv(AbstractEnv):
 
         g_pos = get_goal()
         self.goal = g_pos
-
-        print(f'self.goal: {self.goal}')
         return
     
     def _reward(self, action: Action) -> float:
