@@ -48,11 +48,14 @@ def simulate():
         else:
             control_input = [0.0, elevator, tla, 0.0]
 
-        aircraft.step(dt, control_input)
-        controls.append({"aileron": control_input[0],
-                         "elevator": control_input[1],
-                         "tla": control_input[2],
-                         "rudder": control_input[3]})
+        control = {"aileron": control_input[0],
+                   "elevator": control_input[1],
+                   "tla": control_input[2],
+                   "rudder": control_input[3]}
+
+        aircraft.act(control)
+        aircraft.step(dt)
+        controls.append(control)
         states.append(aircraft.dict)
         times.append(time)
     output = pd.DataFrame.from_dict(states)
