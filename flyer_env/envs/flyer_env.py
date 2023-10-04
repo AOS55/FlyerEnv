@@ -46,7 +46,7 @@ class FlyerEnv(AbstractEnv):
     def _reset(self, seed) -> None:
         if not seed: seed = 1  # set seed to 1 if None TODO: set to be random on None, look @ HighwayEnv
         self._create_world(seed)
-        self._create_aircraft()
+        self._create_vehicles()
         self._create_goal(seed)
 
     def _create_world(self, seed) -> None:
@@ -57,29 +57,30 @@ class FlyerEnv(AbstractEnv):
         self.world.create_map(seed)
         return
     
-    def _create_aircraft(self) -> None:
+    def _create_vehicles(self) -> None:
         """Create an aircraft to fly around the world"""
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/")
         start_pos = [0.0, 0.0, -1000.0]
         heading = 0.0
         airspeed = 100.0 
+        aircraft = Aircraft(data_path=path)
+        aircraft.reset(
+            pos=start_pos,
+            heading=heading,
+            airspeed=airspeed 
+        )
+        self.world.add_aircraft(aircraft)
 
+        # Due to borrow checker of World.rs need to build from this reference
         if self.config["action"]["type"] == "ContinuousAction":
-            vehicle = Aircraft(data_path=path)
-            vehicle.reset(
-                pos=start_pos,
-                heading=heading,
-                airspeed=airspeed 
-            )
-            self.world.add_aircraft(vehicle)
+            vehicle = self.world.vehicles[0]
         else:
             vehicle = ControlledAircraft(
-                position=start_pos,
-                heading=heading,
-                speed=airspeed
+                self.world.vehicles[0],
+                dt = 1/self.config["simulation_frequency"],
             )
-            self.world.add_aircraft(vehicle.aircraft)
-        self.controlled_vehicles = vehicle
+        self.controlled_vehicles.append(vehicle)
+
     
     def _create_goal(self, seed) -> None:
         """Create a random goal in 3D space to navigate to, based on the aircraft's initial starting position"""
@@ -132,11 +133,10 @@ class FlyerEnv(AbstractEnv):
         """
         Reward for reaching the goal state
         """
-        v_pos = self.world.vehicles[0].position
+        distance = self.controlled_vehicles[0].aircraft.goal_dist(self.goal)
         point_reward = self.config["point_reward"]
         dist_terminal = self.config["goal_generation"]["dist_terminal"]
-        difference = np.subtract(v_pos, self.goal)
-        reward = point_reward * dist_terminal / (np.linalg.norm(difference))
+        reward = point_reward * dist_terminal / distance
         return reward
 
     def _crash_reward(self) -> float:
