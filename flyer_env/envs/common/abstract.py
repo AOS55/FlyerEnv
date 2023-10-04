@@ -83,8 +83,8 @@ class AbstractEnv(gym.Env):
                 "type": "ContinuousAction"
             },
             "simulation_frequency": 120.0,  # [Hz]
-            "policy_frequency": 1.0,  # [Hz]
-            "render_frequency": 0.01,  # [Hz]
+            "policy_frequency": 10.0,  # [Hz]
+            "render_frequency": 1.0,  # [Hz]
             "screen_size": 600,  # [px], forced to be square viewport for now
             "scaling": 25,  # [m/px], ratio of how large the default tile is in [m] 
         }
@@ -226,9 +226,10 @@ class AbstractEnv(gym.Env):
         """
         dt = 1/self.config["simulation_frequency"]
         self.time += dt
-        print(f'action: {action}')
         self.action_type.act(action)
-        self.vehicle.step(dt)  # Set the action on the aircraft
+        self.vehicle.step(dt)  # set the action on the aircraft
+        self.world.camera_pos = self.vehicle.aircraft.position  # move the camera in the world
+        # print(f"self.world.camera_pos: {self.world.camera_pos}")
         # self.world.step()  # Step the world
 
     def render(self) -> Optional[np.ndarray]:
