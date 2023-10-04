@@ -2,6 +2,7 @@ import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 from gymnasium.envs.registration import register
+from flyer_env.wrappers import RecordVideo
 
 
 def register_flyer_envs():
