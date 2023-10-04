@@ -167,7 +167,7 @@ class ControlledAction(ActionType):
 
 class PursuitAction(ActionType):
 
-    ALT_RANGE = (0.0, -10000)
+    ALT_RANGE = (0.0, 10000.0)
     SPEED_RANGE = (0.0, 300.0)
 
     """
