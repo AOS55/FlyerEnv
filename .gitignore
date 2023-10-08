@@ -25,3 +25,4 @@ _build
 # Docs
 docs/_build
 **jupyter_execute
+flyer_env/envs/terrain_data
