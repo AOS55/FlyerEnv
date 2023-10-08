@@ -1,9 +1,11 @@
+import os
 import numpy as np
 from typing import Dict, Text
 
 from flyer_env import utils
 from flyer_env.envs.common.action import Action
 from flyer_env.envs.common.abstract import AbstractEnv
+from flyer_env.aircraft import ControlledAircraft
 from flyer_env.aircraft.trajectory import TrajectoryTarget
 
 from pyflyer import World, Aircraft
@@ -39,34 +41,65 @@ class TrajectoryEnv(AbstractEnv):
         })
         return config
     
-    def _reset(self) -> None:
-        self._create_world()
+    def _reset(self, seed) -> None:
+        if not seed: seed = 1
+        self._create_world(seed)
         self._create_aircraft()
         self._create_trajectory_func()
 
     def _create_world(self, seed) -> None:
         """Create the world map"""
         self.world = World()
-        self.world.create_map(seed)
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets")
+        self.world.assets_dir = path
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "terrain_data")
+        self.world.terrain_data_dir = path
+        self.world.create_map(seed, area=self.config["area"])
         return
     
     def _create_aircraft(self) -> None:
         """Create an aircraft to fly around the world"""
-        aircraft = Aircraft()
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/")
+        start_pos = [0.0, 0.0, -1000.0]
+        heading = 0.0
+        airspeed = 100.0 
+        aircraft = Aircraft(data_path=path)
         aircraft.reset(
-            pos=[0.0, 0.0, -1000.0],
-            heading = 0.0,
-            airspeed=100.0
+            pos=start_pos,
+            heading=heading,
+            airspeed=airspeed
         )
         self.world.add_aircraft(aircraft)
-        self.controlled_vehicles = self.world.vehicles
+
+        # Due to borrow checker of World.rs need to build from this reference
+        if self.config["action"]["type"] == "ContinuousAction":
+            vehicle = self.world.vehicles[0]
+        else:
+            vehicle = ControlledAircraft(
+                self.world.vehicles[0],
+                dt = 1/self.config["simulation_frequency"],
+            )
+        self.controlled_vehicles.append(vehicle)
 
     def _create_trajectory_func(self):
+        """Create a trajectory function for the aicraft to follow"""
+        def traj_start_pos(ac_pos, ac_hdg, dist):
+            ac_pos[0] = ac_pos[0] + dist * np.cos(ac_hdg)
+            ac_pos[1] = ac_pos[1] + dist * np.sin(ac_hdg + np.pi/180.0)
+            return ac_pos
+
         trajectory_config = self.config["trajectory_config"]
-        v = self.world.vehciles[0]
-        self.traj_target = TrajectoryTarget(speed=v.speed,
-                                            start_position=v.position,
-                                            start_heading=v.dict['yaw'])
+        v = self.world.vehicles[0].dict
+        ac_pos = [v['x'], v['y'], v['z']]
+        ac_hdg = v['yaw']
+        start_displacement = 100.0  # distance to displac the target from the aircraft start position
+        
+        start_pos = traj_start_pos(ac_pos, ac_hdg, start_displacement)
+
+        self.t_pos = start_pos
+        self.traj_target = TrajectoryTarget(speed=v['u'],
+                                            start_position=start_pos,
+                                            start_heading=v['yaw'])
         traj_funcs = {"sl": self.traj_target.straight_and_level,
                       "climb": self.traj_target.climb,
                       "descend": self.traj_target.descend,
@@ -107,12 +140,11 @@ class TrajectoryEnv(AbstractEnv):
         }
     
     def _traj_reward(self) -> float:
-        dt = 1/self.config["policy_frequency"]
+        dt = 1/self.config["simulation_frequency"]
         traj_reward = self.config["traj_reward"]
         t_pos, done = self.traj_target.update(self.traj_func, dt=dt)
-        v_pos = self.vehicle.position
-        difference = np.subtract(v_pos, t_pos)
-        dist = np.linalg.norm(difference)
+        dist = self.controlled_vehicles[0].goal_dist(t_pos)
+        self.t_pos = t_pos
         if dist < 1.0:
             reward = traj_reward
         else:
@@ -128,6 +160,12 @@ class TrajectoryEnv(AbstractEnv):
         else: 
             return 0.0
 
+    def _info(self, obs, action) -> Dict[str, float]:
+        """
+        Dictionary for the trajectory target
+        """
+        return {"t_pos": self.t_pos}
+
     def _is_terminated(self) -> bool:
         """
         The episode is over if the ego vehicle crashed, or it hits the ground
@@ -136,7 +174,7 @@ class TrajectoryEnv(AbstractEnv):
         if self.vehicle.crashed:
             return True
         # If in ground terminate (not a landing scenario)
-        if self.vehicle.position[-1] <= 0.0:
+        if self.vehicle.position[-1] >= 0.0:
             return True
         return False
     
