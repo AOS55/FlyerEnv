@@ -37,7 +37,7 @@ class ControlledAircraft:
 
         self.pid_speed = PID(0.2, 1.0, 0.0, setpoint=trim[2])
 
-        self.pid_alt = PID(0.000873, 0.000, 0.0)
+        self.pid_alt = PID(0.000873, 0.0007, 0.0)
         self.pid_alt.output_limits = (-20.0, 20.0)
 
         self.pid_heading = PID(-3.0, 0.0, 0.0)
@@ -183,9 +183,12 @@ class ControlledAircraft:
         """
         if self.high_time_since_update >= self.update_rate["high_level"]:
             pos_error = tgt_pos[0:2] - ac_pos
+            # print(f'tgt_pos: {tgt_pos}, ac_pos: {ac_pos}')
             self.hdg = self.clip_heading(np.arctan2(pos_error[1], pos_error[0]))
+            # print(f'self.hdg: {self.hdg * 180.0/np.pi}, ac_hdg: {ac_hdg * 180.0/np.pi}')
             self.high_time_since_update = 0.0
-        hdg_err = self.hdg - ac_hdg
+        hdg_err = self.clip_heading(self.hdg - ac_hdg)
+        # print(f'hdg_err: {hdg_err * 180.0/np.pi}, self.hdg: {self.hdg * 180.0/np.pi}, ac_hdg: {ac_hdg * 180.0/np.pi}')
         aileron = self.heading_controller(hdg_err, ac_bank)
         return aileron
 
@@ -232,6 +235,12 @@ class ControlledAircraft:
         Helper method to access heading from the underlying rust PyAircraft
         """
         return self.aircraft.heading
+
+    def goal_dist(self, goal: Vector):
+        """
+        Helper method to access goal_dist from the underlying rust PyAircraft
+        """
+        return self.aircraft.goal_dist(goal)
 
     @staticmethod
     def clip_heading(heading: float) -> float:
