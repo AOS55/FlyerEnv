@@ -28,8 +28,8 @@ class FlyerEnv(AbstractEnv):
             "action": {
                 "type": "ContinuousAction"
             },
-            "area": (256, 256),  # terrain map area [tiles]
-            "vehicle_type": "Dynamic",  # vehicle type only dynamic
+            "area": (1024, 1024),  # terrain map area [tiles]
+            "vehicle_type": "Dynamic",  # vehicle type, only dynamic available
             "duration": 10.0,  # [s]
             "collision_reward": -200.0,  # max -ve reward for crashing
             "point_reward": 100.0,  # max +ve reward for hitting the goal
@@ -54,7 +54,9 @@ class FlyerEnv(AbstractEnv):
         self.world = World()
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets")
         self.world.assets_dir = path
-        self.world.create_map(seed)
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "terrain_data")
+        self.world.terrain_data_dir = path
+        self.world.create_map(seed, area=self.config["area"])
         return
     
     def _create_vehicles(self) -> None:
