@@ -228,7 +228,7 @@ class AbstractEnv(gym.Env):
         self.time += dt
         self.action_type.act(action)
         self.vehicle.step(dt)  # set the action on the aircraft
-        self.world.camera_pos = self.vehicle.aircraft.position  # move the camera in the world
+        self.world.camera_pos = self.vehicle.position  # move the camera in the world
         # print(f"self.world.camera_pos: {self.world.camera_pos}")
         # self.world.step()  # Step the world
 
