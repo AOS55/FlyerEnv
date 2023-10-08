@@ -123,7 +123,7 @@ class TrajectoryTarget:
         return traj_func
 
     def left_turn(self, end_heading: float = -90.0*(np.pi/180.0),
-                  turn_rate: float = 5.0*(np.pi/180.0), length: float = 45.0, **kwargs):
+                  turn_rate: float = 3.0*(np.pi/180.0), length: float = 45.0, **kwargs):
         """
         Create an update function to turn, left, to a new heading
 
