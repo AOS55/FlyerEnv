@@ -96,7 +96,7 @@ class ControlledAircraft:
 
             if "heading" in action:
                 com_hdg = self.clip_heading(action["heading"])
-                next_aileron = self.heading_controller(com_hdg - aircraft_dict['yaw'], aircraft_dict['roll'])
+                next_aileron = self.heading_controller(self.clip_heading(com_hdg - aircraft_dict['yaw']), aircraft_dict['roll'])
 
             if "pursuit_target" in action:
                 tgt_pos = action["pursuit_target"]
@@ -104,6 +104,10 @@ class ControlledAircraft:
                                                        np.array([aircraft_dict['x'], aircraft_dict['y']]),
                                                        aircraft_dict['yaw'],
                                                        aircraft_dict['roll'])
+                
+            if "track_points" in action:
+                tgt_points = action["track_points"]
+                next_aileron, next_elevator = self.track_controller(tgt_points, aircraft_dict['yaw'], aircraft_dict['pitch'], aircraft_dict['roll'])
         
         action = {"aileron": next_aileron,
                   "elevator": next_elevator,
@@ -191,6 +195,24 @@ class ControlledAircraft:
         # print(f'hdg_err: {hdg_err * 180.0/np.pi}, self.hdg: {self.hdg * 180.0/np.pi}, ac_hdg: {ac_hdg * 180.0/np.pi}')
         aileron = self.heading_controller(hdg_err, ac_bank)
         return aileron
+
+    # TODO: Find if there is a way to integrate this into the action space
+    # def track_controller(self, track_points: Vector, ac_heading: float, ac_pitch: float, ac_bank: float) -> Vector:
+    #     """
+    #     Controller to track along a series of points 
+
+    #     :param track_points:
+    #     :return:
+    #     """
+
+    #     [heading, altitude], flag = self.nav_track.arc_path()
+
+    #     hdg_err = heading - ac_heading
+    #     aileron = self.heading_controller(hdg_err, ac_bank)
+
+    #     alt_err = altitude - self.position[-1]
+    #     elevator = self.alt_controller(alt_err, ac_pitch)
+    #     return aileron, elevator
 
     # # TODO: Is there a more elegant way of solving this, it's a little slow
     # def rate_limit(self, next_controls):
