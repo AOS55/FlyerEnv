@@ -114,13 +114,13 @@ class ControlledAction(ActionType):
     Controls are set in the order: [HeadingSin, HeadingCos, Alt, Speed]
     """
     HEADING_RANGE = (-np.pi, np.pi)
-    ALT_RANGE = (0.0, 10000)
+    ALT_RANGE = (0.0, -10000)
     SPEED_RANGE = (60.0, 110.0)
 
     def __init__(self,
                  env: 'AbstractEnv',
                  heading_range: Optional[Tuple[float, float]] = None,
-                alt_range: Optional[Tuple[float, float]] = None,
+                 alt_range: Optional[Tuple[float, float]] = None,
                  speed_range: Optional[Tuple[float, float]] = None,
                  clip: bool = True,
                  **kwargs) -> None:
@@ -141,28 +141,28 @@ class ControlledAction(ActionType):
         self.clip = clip
         self.last_action = np.zeros(self.size)
 
-        def space(self) -> spaces.Box:
-            return spaces.Box(-1.0, 1.0, shape=(self.size,), dtype=np.float32)
+    def space(self) -> spaces.Box:
+        return spaces.Box(-1.0, 1.0, shape=(self.size,), dtype=np.float32)
 
-        @property
-        def vehicle_class(self) -> Callable:
-            return functools.partial(ControlledAircraft)
-        
-        def act(self, action: np.array) -> None:
-            """
-            Apply the action to the controlled vehicle
+    @property
+    def vehicle_class(self) -> Callable:
+        return functools.partial(ControlledAircraft)
+    
+    def act(self, action: np.array) -> None:
+        """
+        Apply the action to the controlled vehicle
 
-            :param action: action array with [sine, cosine, altitude and speed] mapped between ranges
-            """
-            if self.clip:
-                action = np.clip(action, -1, 1)
-            
-            self.controlled_vehicle.act({
-                'heading': np.arctan2(action[0], action[1]),
-                'alt': utils.lmap(action[2], self.alt_range, [-1, 1]),
-                'speed': utils.lmap(action[3], self.speed_range, [-1, 1])
-            })
-            self.last_action = action
+        :param action: action array with [sine, cosine, altitude and speed] mapped between ranges
+        """
+        if self.clip:
+            action = np.clip(action, -1, 1)
+
+        self.controlled_vehicle.act({
+            'heading': np.arctan2(action[0], action[1]),
+            'alt': utils.lmap(action[2], [-1, 1], self.alt_range),
+            'speed': utils.lmap(action[3], [-1, 1], self.speed_range)
+        })
+        self.last_action = action
 
 
 class PursuitAction(ActionType):
@@ -218,6 +218,51 @@ class PursuitAction(ActionType):
         self.last_action = action
 
 
+class TrackAction(ActionType):
+    
+    SPEED_RANGE = (0.0, 300.0)
+    
+    def __init__(self,
+                 env: 'AbstractEnv',
+                 speed_range: Optional[Tuple[float, float]] = None,
+                 clip: bool = None,
+                 **kwargs) -> None:
+        
+        super().__init__(env)
+        self.speed_range = speed_range if speed_range else self.SPEED_RANGE
+        self.size = 4
+        self.clip = clip
+        self.last_action = {"track_points": np.zeros(3), "other_controls": np.zeros(1)} 
+
+    def space(self) -> spaces.Dict:
+        return spaces.Dict({
+            "targets": spaces.Box(low=-np.infty, high=np.infty, shape=(3,), dtype=np.float32),
+            "other_controls": spaces.Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
+        })
+
+    @property
+    def vehicle_class(self) -> Callable:
+        return functools.partial(ControlledAircraft)
+    
+    def act(self, action: Dict[str, Vector]) -> None:
+
+        """
+        Apply the action to the controlled vehicle
+
+        :param action: dictionary corresponding to commanded positions, altitude and speed
+        """
+
+        if self.clip:
+            action['other_controls'] = np.clip(action['other_controls'], -1, 1)
+
+        self.controlled_vehicle.act({
+            'track_points': action['targets'],
+            'speed': utils.lmap(action['other_controls'], [0, 1], self.speed_range)
+        })
+
+        self.last_action = action
+
+
 def action_factory(env: 'AbstractEnv', config: dict) -> ActionType:
     if config["type"] == "ContinuousAction":
         return ContinuousAction(env, **config)
@@ -225,5 +270,7 @@ def action_factory(env: 'AbstractEnv', config: dict) -> ActionType:
         return ControlledAction(env, **config)
     elif config["type"] == "PursuitAction":
         return PursuitAction(env, **config)
+    elif config["type"] == "TrackAction":
+        return TrackAction(env, **config)
     else:
         raise ValueError("Unknown action type")
