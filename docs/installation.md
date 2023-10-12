@@ -6,8 +6,7 @@
 
 This project requires python3 (>=3.8)
 
-Graphics require the installation of [pygame](https://www.pygame.org/news), which itself has dependencies to be 
-installed.
+
 
 ### Ubuntu
 

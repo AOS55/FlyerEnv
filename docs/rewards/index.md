@@ -2,7 +2,7 @@
 
 # Rewards
 
-The reward function is defined in the {py:meth}`~flyer_env.envs.common.abstract.AbstractEnv._reward` method, 
+<!-- The reward function is defined in the {py:meth}`~flyer_env.envs.common.abstract.AbstractEnv._reward` method,  -->
 overloaded in every environment.
 
 ```{note}

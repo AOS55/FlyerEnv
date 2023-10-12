@@ -1,11 +1,11 @@
-# Welcome to [flyer-env](https://github.com/Farama-Foundation/FlyerEnv)'s documentation!
+# Welcome to [FlyerEnv](https://github.com/AOS55/FlyerEnv)'s documentation!
 
-This project contains a collection of environments for *guidance, navigation and control* in fixed-wing aircraft
+This project contains a collection of environments for *guidance, navigation and control* in aerial vehicles.
 
 The purpose of this documentation is to provide:
 
 1. a {ref}`quick start guide <quickstart>` describing the environments and customization options.
-2. a {ref}`detailed description <user_guide>` describing core project components and guide to contributing.
+2. a {ref}`detailed description <user_guide>` describing core project components and a guide to contributing.
 
 (index-how-to-cite-this-work)=
 
@@ -16,7 +16,7 @@ If you use this package, please consider citing it:
 ```bibtex
 @misc{flyer-env,
     author={Quessy, Alexander},
-    title={An Environment for Autonomous Fixed-Wing Guidance, Navigation and Control Tasks},
+    title={FlyerEnv: an Environment for Autonomous Fixed-Wing Guidance, Navigation and Control Tasks},
     year={2023},
     publisher={GitHub},
     journal={GitHub repository},
