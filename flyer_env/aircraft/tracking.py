@@ -4,7 +4,7 @@ from typing import Dict
 from flyer_env.utils import Vector
 
 
-class TrackPointsAlt:
+class TrackPoints:
 
     def __init__(self,
                  goal_set: Dict[float, Vector],
@@ -61,7 +61,7 @@ class TrackPointsAlt:
 
     def arc_path(self, pos):
 
-        if self.goal_state < len(self.goal_set):
+        if self.goal_state < len(self.goal_set) - 2:
             final_state = False
             
             # Get points defining trajecotries
@@ -72,13 +72,13 @@ class TrackPointsAlt:
             track_bearing_in = self._check_angle_negative_range(self._bearing(point_a, point_b))
             track_bearing_out = self._check_angle_negative_range(self._bearing(point_b, point_c))
 
-            filet_angle = self._check_angle_negative_range(track_bearing_out - track_bearing_in)
+            filet_angle = self._check_angle_negative_range(np.pi - (track_bearing_out - track_bearing_in))
             if self.control_state == 0:
                 q = self._unit_dir_vector(point_a, point_b)
                 w = point_b
                 try:
-                    z_point = (w[0] - ((self.radius / np.tan(filet_angle / 2)) * q[0]),
-                               w[1] - ((self.radius / np.tan(filet_angle / 2)) * q[1]))
+                    z_point = (w[0] - (np.abs((self.radius / np.tan(filet_angle / 2))) * q[0]),
+                               w[1] - (np.abs((self.radius / np.tan(filet_angle / 2))) * q[1]))
                     h_point = np.subtract(z_point, pos[:2])
                     h_val = (h_point[0] * q[0]) + (h_point[1] * q[1])
                     if h_val < 0:
@@ -98,10 +98,10 @@ class TrackPointsAlt:
                 q1 = self._unit_dir_vector(point_b, point_c)
                 q_grad = self._unit_dir_vector(q0, q1)
                 w = point_b
-                center_point = (w[0] + ((self.radius / np.sin(filet_angle / 2)) * q_grad[0]),
-                                w[1] + ((self.radius / np.sin(filet_angle / 2)) * q_grad[1]))
-                z_point = (w[0] + ((self.radius / np.tan(filet_angle / 2)) * q1[0]),
-                           w[1] + ((self.radius / np.tan(filet_angle / 2)) * q1[1]))
+                center_point = (w[0] + (np.abs((self.radius / np.sin(filet_angle / 2))) * q_grad[0]),
+                                w[1] + (np.abs((self.radius / np.sin(filet_angle / 2))) * q_grad[1]))
+                z_point = (w[0] + (np.abs((self.radius / np.tan(filet_angle / 2))) * q1[0]),
+                           w[1] + (np.abs((self.radius / np.tan(filet_angle / 2))) * q1[1]))
                 turning_direction = np.copysign(1, (q0[0] * q1[1]) - (q0[1] * q1[0]))
                 h_point = np.subtract(z_point, pos[:2])
                 h_val = (h_point[0] * q1[0]) + (h_point[1] * q1[1])
@@ -123,12 +123,23 @@ class TrackPointsAlt:
                     tangent_track = tangent_track - (2 * np.pi)
                 error = (distance_from_center - self.radius) / self.radius
                 k_orbit = 4.0
-                # heading = tangent_track - (np.arctan(k_orbit * error))
-                heading = tangent_track
-                print(f'heading: {heading * 180.0/np.pi}')
+                heading = tangent_track + (np.arctan(k_orbit * error))
+                # heading = tangent_track
         else:
             final_state = True
-            heading = self._bearing(pos[:2], self.goal_set[3])
-            dist = self._distance(pos[:2], self.goal_set[3])
+            points = list(self.goal_set.values())
 
+            point_a = points[-2]
+            point_b = points[-1]
+            
+            track_bearing = self._check_angle_negative_range(self._bearing(point_a, point_b))
+            track_distance = self._distance(point_a, point_b)
+
+            objective_bearing = self._bearing(pos[:2], point_b)
+            objective_distance = self._distance(pos[:2], point_b)
+
+            off_track_angle = self._check_angle_negative_range(objective_bearing - track_bearing)
+            heading = (0.5 * (track_distance/objective_distance) * off_track_angle) + track_bearing
+            heading = self._check_angle_negative_range(heading)
+            # print(f'heading: {heading * 180.0/np.pi}')
         return heading
