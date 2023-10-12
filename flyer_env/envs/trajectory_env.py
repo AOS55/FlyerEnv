@@ -26,25 +26,25 @@ class TrajectoryEnv(AbstractEnv):
             "action": {
                 "type": "ContinuousAction"
             },
-            "area": (256, 256),
-            "vehicle_type": "Dynamic",
-            "duration": 10.0,
-            "collision_reward": -200.0,
-            "traj_reward": 10.0,
-            "normalize_reward": True,
+            "area": (1024, 1024),  # terrain map area [tiles]
+            "vehicle_type": "Dynamic",  # vehicle type, only dynamic available
+            "duration": 10.0,  # simulation duration [s]
+            "collision_reward": -200.0,  # max -ve reward for crashing
+            "traj_reward": 10.0,  # max +ve reward for reaching for following trajectory
+            "normalize_reward": True,  # whether to normalize the reward [-1, +1]
             "trajectory_config": {
-                "name": "climb",
+                "name": "climb",  
                 "final_height": 200.0,
                 "climb_angle": 10.0 * np.pi / 180.0,
                 "length": 15.0,
-            }
+            }  # trajectory configuration details
         })
         return config
     
     def _reset(self, seed) -> None:
         if not seed: seed = 1
         self._create_world(seed)
-        self._create_aircraft()
+        self._create_vehicles()
         self._create_trajectory_func()
 
     def _create_world(self, seed) -> None:
@@ -57,7 +57,7 @@ class TrajectoryEnv(AbstractEnv):
         self.world.create_map(seed, area=self.config["area"])
         return
     
-    def _create_aircraft(self) -> None:
+    def _create_vehicles(self) -> None:
         """Create an aircraft to fly around the world"""
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/")
         start_pos = [0.0, 0.0, -1000.0]
@@ -156,7 +156,7 @@ class TrajectoryEnv(AbstractEnv):
         Penalize if the aircraft crashes
         """
         if self.vehicle.crashed: 
-            return -200.0
+            return self.config["collision_reward"]
         else: 
             return 0.0
 
