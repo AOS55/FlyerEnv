@@ -30,16 +30,16 @@ class FlyerEnv(AbstractEnv):
             },
             "area": (1024, 1024),  # terrain map area [tiles]
             "vehicle_type": "Dynamic",  # vehicle type, only dynamic available
-            "duration": 10.0,  # [s]
+            "duration": 10.0,  # simulation durati [s]
             "collision_reward": -200.0,  # max -ve reward for crashing
             "point_reward": 100.0,  # max +ve reward for hitting the goal
-            "normalize_reward": True,
+            "normalize_reward": True, # whether to normalize the reward [-1, +1]
             "goal_generation": {
                 "heading_limits": [-np.pi, np.pi],
                 "pitch_limits": [-10.0 * np.pi/180.0, 10.0 * np.pi/180.0],
                 "dist_limits": [1000.0, 10000.0],
                 "dist_terminal": 20.0
-            }
+            }  # goal generation details
         })
         return config
 

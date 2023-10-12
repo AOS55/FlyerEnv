@@ -9,7 +9,7 @@ from flyer_env.envs.common.action import Action
 from pyflyer import World, Aircraft
 
 
-class FlyerEnv(AbstractEnv):
+class RunwayEnv(AbstractEnv):
     """
     A runway landing environment
     
@@ -28,22 +28,23 @@ class FlyerEnv(AbstractEnv):
             },
             "area": (1024, 1024),  # terrain map area [tiles]
             "vehicle_type": "Dynamic",  # vehicle type, only dynamic available
-            "duration": 10.0,  # [s]
+            "duration": 10.0,  # simulation duration [s]
             "collision_reward": -200.0,  # max -ve reward for crashing
             "landing_reward": 100.0,  # max +ve reward for landing successfully
-            "normalize_reward": True,
+            "normalize_reward": True,  # whether to normalize the reward
             "runway_configuration": {
                 "runway_position": [0.0, 0.0],
                 "runway_width": 20.0,
                 "runway_length": 1500.0,
                 "runway_heading": 0.0
-            }
+            }  # trajectory configuration details
         })
         return config
     
     def _reset(self, seed) -> None:
         if not seed: seed = 1
         self._create_world(seed)
+        self._create_runway()
         self._create_vehicles()
 
     def _create_world(self, seed) -> None:
@@ -54,26 +55,58 @@ class FlyerEnv(AbstractEnv):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "terrain_data")
         self.world.terrain_data_dir = path
         self.world.create_map(seed, area=self.config["area"])
+        return
+    
+    def _create_runway(self) -> None:
+        """Create a runway for the aircraft to land on"""
         runway_config = self.config["runway_configuration"]
-        self.world.create_runway(
+        self.world.add_runway(
             runway_position = runway_config["runway_position"],
             runway_width = runway_config["runway_width"],
             runway_heading = runway_config["runway_heading"]
-        )
-        return
-    
+        ) 
+
     def _create_vehicles(self) -> None:
         """Create an aircaft to fly around the world"""
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/")
+        start_pos = [0.0, 0.0, -1000.0]
+        heading = 0.0
+        airspeed = 100.0
+        aircraft = Aircraft(data_path=path)
+        aircraft.reset(
+            pos=start_pos,
+            heading=heading,
+            airspeed=airspeed
+        )
+        self.world.add_aircraft(aircraft)
+
+        # Due to borrow checker of World.rs need to build from this reference
+        if self.config["action"]["type"] == "ContinuousAction":
+            vehicle = self.world.vehicles[0]
+        else:
+            vehicle = ControlledAircraft(
+                self.world.vehicles[0],
+                dt = 1/self.config["simulation_frequency"],
+            )
+        self.controlled_vehicles.append(vehicle)
 
     def _reward(self, action: Action) -> float:
         """Reward vehicle if it lands successfully"""
+        rewards = self._rewards(action)
+        reward = sum(self.config.get(name, 0) * reward for name, reward in rewards.items())
+        if self.config["normalize_reward"]:
+            reward = utils.lmap(reward,
+                                [self.config["collision_reward"],
+                                 self.config["landing_reward"]],
+                                 [0, 1])
+        return reward
 
     def _rewards(self, action: Action) -> Dict[Text, float]:
         """
         Calculate landing based rewards
         """
         crash_reward = self._crash_reward()
-        landing_reward = self._point_reward()
+        landing_reward = self._landing_reward()
         return {'collision_reward': crash_reward,
                 'landing_reward': landing_reward}
 
@@ -81,13 +114,17 @@ class FlyerEnv(AbstractEnv):
         """
         Reward for landing successfully 
         """
+        v_pos = self.vehicle.position
+        if v_pos[-1] > -4 and self.world.point_on_runway(v_pos[0:2]):
+            return self.config["landing_reward"]
+        return 0.0
 
     def _crash_reward(self) -> float:
         """
         Penalize if the aircraft crashes
         """
         if self.vehicle.crashed:
-            return -200.0
+            return self.config["collision_reward"]
         else:
             return 0.0
     
@@ -97,18 +134,14 @@ class FlyerEnv(AbstractEnv):
         """
 
         v_pos = self.vehicle.position
-        difference = np.subtract(v_pos, self.goal)
-        distance = np.linalg.norm(difference)
-        dist_terminal = self.config["goal_generation"]["dist_terminal"]
 
         # If crashed terminate
         if self.vehicle.crashed:
+            print("Crashed!")
             return True
-        # If in ground terminate (not a landing scenario)
-        if self.vehicle.position[-1] >= 0.0:
-            return True
-        # If reached goal region
-        if distance < dist_terminal:
+        # If landed
+        if v_pos[-1] > -4 and self.world.point_on_runway(v_pos[0:2]):
+            print("Landed!")
             return True
         return False
 
