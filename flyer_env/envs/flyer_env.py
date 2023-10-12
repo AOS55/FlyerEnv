@@ -135,7 +135,7 @@ class FlyerEnv(AbstractEnv):
         """
         Reward for reaching the goal state
         """
-        distance = self.controlled_vehicles[0].aircraft.goal_dist(self.goal)
+        distance = self.vehicle.goal_dist(self.goal)
         point_reward = self.config["point_reward"]
         dist_terminal = self.config["goal_generation"]["dist_terminal"]
         reward = point_reward * dist_terminal / distance
