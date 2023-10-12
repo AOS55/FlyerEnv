@@ -7,7 +7,7 @@
         <link rel="canonical" href=" https://aos55.github.io/FlyerEnv/environments/runway.html" />
 
     <link rel="shortcut icon" href="../../_static/flyericon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
-        <title>Runway - flyer-env Documentation</title>
+        <title>Runway - FlyerEnv Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css" />
@@ -126,7 +126,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../"><div class="brand">flyer-env Documentation</div></a>
+      <a href="../../"><div class="brand">FlyerEnv Documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -137,7 +137,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -149,7 +149,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../">
   
   
-  <span class="sidebar-brand-text">flyer-env Documentation</span>
+  <span class="sidebar-brand-text">FlyerEnv Documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../search/" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -168,10 +168,6 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/">User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of User Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../observations/">Observations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../observations/#kinematics">Kinematics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../observations/#dynamics">Dynamics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../observations/#image">Image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../observations/#terrain">Terrain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../actions/">Actions</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../dynamics/">Dynamics</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Dynamics</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../dynamics/world/terrain/">Terrain</a></li>
@@ -222,7 +218,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -230,6 +226,42 @@
         <article role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="runway">
 <span id="environments-runway"></span><h1>Runway<a class="headerlink" href="#runway" title="Link to this heading">#</a></h1>
+<p>In this task the aircraft needs to land on a runway, specified within a configuration. Reward is sparse and provided based on whether the aircraft successfully lands on the airfield.</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">&quot;runway-v1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="default-configuration">
+<h2>Default Configuration<a class="headerlink" href="#default-configuration" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Dynamics&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ContinuousAction&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;area&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span>  <span class="c1"># terrain map area [tiles]</span>
+    <span class="s2">&quot;vehicle_type&quot;</span><span class="p">:</span> <span class="s2">&quot;Dynamic&quot;</span><span class="p">,</span>  <span class="c1"># vehicle type, only dynamic available</span>
+    <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">,</span>  <span class="c1"># simulation duration [s]</span>
+    <span class="s2">&quot;collision_reward&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">200.0</span><span class="p">,</span>  <span class="c1"># max -ve reward for crashing</span>
+    <span class="s2">&quot;landing_reward&quot;</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span>  <span class="c1"># max +ve reward for landing successfully</span>
+    <span class="s2">&quot;normalize_reward&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># whether to normalize the reward</span>
+    <span class="s2">&quot;runway_configuration&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;runway_position&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="s2">&quot;runway_width&quot;</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">,</span>
+        <span class="s2">&quot;runway_length&quot;</span><span class="p">:</span> <span class="mf">1500.0</span><span class="p">,</span>
+        <span class="s2">&quot;runway_heading&quot;</span><span class="p">:</span> <span class="mf">0.0</span>
+    <span class="p">}</span>  <span class="c1"># trajectory configuration details</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Specifically this is defined in:</p>
+</section>
+<section id="api">
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">#</a></h2>
+</section>
 </section>
 
         </article>
@@ -275,8 +307,29 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Runway</a><ul>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#default-configuration">Default Configuration</a></li>
+<li><a class="reference internal" href="#api">API</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

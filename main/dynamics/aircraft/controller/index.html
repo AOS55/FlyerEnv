@@ -7,7 +7,7 @@
         <link rel="canonical" href=" https://aos55.github.io/FlyerEnv/dynamics/aircraft/controller.html" />
 
     <link rel="shortcut icon" href="../../../_static/flyericon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
-        <title>Control - flyer-env Documentation</title>
+        <title>Control - FlyerEnv Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css" />
@@ -126,7 +126,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../../"><div class="brand">flyer-env Documentation</div></a>
+      <a href="../../../"><div class="brand">FlyerEnv Documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -149,7 +149,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../">
   
   
-  <span class="sidebar-brand-text">flyer-env Documentation</span>
+  <span class="sidebar-brand-text">FlyerEnv Documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../../search/" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -168,10 +168,6 @@
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../../user_guide/">User Guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of User Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../../observations/">Observations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../observations/#kinematics">Kinematics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../observations/#dynamics">Dynamics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../observations/#image">Image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../observations/#terrain">Terrain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../actions/">Actions</a></li>
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../../">Dynamics</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Dynamics</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../../world/terrain/">Terrain</a></li>
@@ -230,9 +226,9 @@
         <article role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="control">
 <span id="aircraft-controller"></span><h1>Control<a class="headerlink" href="#control" title="Link to this heading">#</a></h1>
-<p>All control occurs within the <code class="xref py py-class docutils literal notranslate"><span class="pre">ControlledKinematicVehicle</span></code> and is broken
-down into low-level loop-closure based PID controllers and high-level control. Each allowing for increasing level of
-abstraction in the action space.</p>
+<!-- All control occurs within the {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle` and is broken 
+down into low-level loop-closure based PID controllers and high-level control. Each allowing for increasing level of 
+abstraction in the action space.  -->
 <section id="low-level-control">
 <h2>Low-level control<a class="headerlink" href="#low-level-control" title="Link to this heading">#</a></h2>
 <p>Low-level controllers are used to hold and maintain the Kinematic aircraft in a fixed attitude and speed. Each
@@ -250,24 +246,24 @@ follow a PID type controller.</p>
   ControlSum --&gt; Aircraft: u(t)
   Aircraft --&gt; [*]: y(t)
         </div><p>Controllers include:</p>
-<ul class="simple">
-<li><p>Pitch <code class="xref py py-class docutils literal notranslate"><span class="pre">pitch_controller</span></code></p></li>
-<li><p>Roll <code class="xref py py-class docutils literal notranslate"><span class="pre">roll_controller</span></code></p></li>
-<li><p>Speed <code class="xref py py-class docutils literal notranslate"><span class="pre">speed_controller</span></code></p></li>
-</ul>
+<!-- - Pitch {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.pitch_controller`
+- Roll {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.roll_controller`
+- Speed {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.speed_controller` -->
 </section>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="high-level-control">
 <h1>High-level control<a class="headerlink" href="#high-level-control" title="Link to this heading">#</a></h1>
 <p>High-level controllers are used to control higher order functions allowing offloading the problem of decision-making
 to be a higher-order task. These build on the low level controllers to include:</p>
-<ul class="simple">
-<li><p>Altitude <code class="xref py py-class docutils literal notranslate"><span class="pre">alt_controller</span></code></p></li>
-<li><p>Heading <code class="xref py py-class docutils literal notranslate"><span class="pre">heading_controller</span></code></p></li>
-<li><p>Pursuit <code class="xref py py-class docutils literal notranslate"><span class="pre">pursuit_controller</span></code></p></li>
-</ul>
+<!-- - Altitude {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.alt_controller`
+- Heading {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.heading_controller`
+- Pursuit {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.pursuit_controller` -->
 <section id="api">
 <h2>API<a class="headerlink" href="#api" title="Link to this heading">#</a></h2>
+<!-- ```{eval-rst}
+.. automodule:: flyer_env.aircraft.contoller
+    :members:
+``` -->
 </section>
 </section>
 

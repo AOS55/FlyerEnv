@@ -7,7 +7,7 @@
         <link rel="canonical" href=" https://aos55.github.io/FlyerEnv/quickstart.html" />
 
     <link rel="shortcut icon" href="../_static/flyericon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
-        <title>Getting Started - flyer-env Documentation</title>
+        <title>Getting Started - FlyerEnv Documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
@@ -126,7 +126,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../"><div class="brand">flyer-env Documentation</div></a>
+      <a href="../"><div class="brand">FlyerEnv Documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -149,7 +149,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../">
   
   
-  <span class="sidebar-brand-text">flyer-env Documentation</span>
+  <span class="sidebar-brand-text">FlyerEnv Documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search/" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -168,10 +168,6 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../user_guide/">User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of User Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../observations/">Observations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../observations/#kinematics">Kinematics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../observations/#dynamics">Dynamics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../observations/#image">Image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../observations/#terrain">Terrain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../actions/">Actions</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../dynamics/">Dynamics</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Dynamics</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../dynamics/world/terrain/">Terrain</a></li>
@@ -265,7 +261,7 @@
 </section>
 <section id="configuring-an-environment">
 <span id="configuration"></span><h2>Configuring an environment<a class="headerlink" href="#configuring-an-environment" title="Link to this heading">#</a></h2>
-<p>The <a class="reference internal" href="../observations/#id1"><span class="std std-ref">observations</span></a>, <a class="reference internal" href="../actions/#actions"><span class="std std-ref">actions</span></a>, <a class="reference internal" href="../observations/#dynamics"><span class="std std-ref">dynamics</span></a> and <a class="reference internal" href="../rewards/#rewards"><span class="std std-ref">rewards</span></a> of an environment are parametrized by the configuration <code class="xref py py-attr docutils literal notranslate"><span class="pre">config</span></code> dictionary. After environment creation, the configuration can be accessed using the {py:attr}
+<p>The <a class="reference internal" href="../observations/#id1"><span class="std std-ref">observations</span></a>, <a class="reference internal" href="../actions/#actions"><span class="std std-ref">actions</span></a>, <a class="reference internal" href="../dynamics/#dynamics"><span class="std std-ref">dynamics</span></a> and <a class="reference internal" href="../rewards/#rewards"><span class="std std-ref">rewards</span></a> of an environment are parametrized by the configuration <code class="xref py py-attr docutils literal notranslate"><span class="pre">config</span></code> dictionary. After environment creation, the configuration can be accessed using the {py:attr}
 <code class="docutils literal notranslate"><span class="pre">~flyer_env.envs.common.abstract.AbstractEnv.config</span></code> attribute.</p>
 <!-- ```{eval-rst}
 .. jupyter-execute::
