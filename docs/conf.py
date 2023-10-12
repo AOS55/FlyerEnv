@@ -10,9 +10,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
+print(f'sys.executable: {sys.executable}')
 
 # -- Project information -----------------------------------------------------
 import os
@@ -84,12 +85,11 @@ myst_enable_extensions = [
 # a list of builtin themes.
 #
 html_theme = "furo"
-html_title = "flyer-env Documentation"
+html_title = "FlyerEnv Documentation"
 html_baseurl = " https://aos55.github.io/FlyerEnv/"
 html_copy_source = False
 html_favicon = "_static/img/flyericon.png"
 html_theme_options = {
-    "gtag": "G-6H9C8TWXZ8",
     "description": "A collection of environments for fixed wing aircraft control and decision-making tasks",
     "versioning": True,
 }
