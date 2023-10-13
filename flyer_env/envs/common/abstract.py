@@ -170,7 +170,6 @@ class AbstractEnv(gym.Env):
         :param options: Allows the environment configuration to specified through options["config"]
         :return: the observation of the reset state and information about the environment
         """
-
         super().reset(seed=seed, options=options)
         if options and "config" in options:
             self.configure(options["config"])
@@ -226,8 +225,8 @@ class AbstractEnv(gym.Env):
         """
         dt = 1/self.config["simulation_frequency"]
         self.time += dt
-        self.action_type.act(action)
-        self.vehicle.step(dt)  # set the action on the aircraft
+        self.action_type.act(action)  # set the action on the aircraft
+        self.vehicle.step(dt)  # update the aircraft
         self.world.camera_pos = self.vehicle.position  # move the camera in the world
         # print(f"self.world.camera_pos: {self.world.camera_pos}")
         # self.world.step()  # Step the world
