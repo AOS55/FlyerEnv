@@ -31,7 +31,8 @@ class TrajectoryEnv(AbstractEnv):
             "duration": 10.0,  # simulation duration [s]
             "collision_reward": -200.0,  # max -ve reward for crashing
             "traj_reward": 10.0,  # max +ve reward for reaching for following trajectory
-            "normalize_reward": True,  # whether to normalize the reward [-1, +1]
+            "normalize_reward": False,  # whether to normalize the reward [-1, +1]
+            "start_displacement": 100.0, # offset distance from goal
             "trajectory_config": {
                 "name": "climb",  
                 "final_height": 200.0,
@@ -93,9 +94,9 @@ class TrajectoryEnv(AbstractEnv):
         v = self.world.vehicles[0].dict
         ac_pos = [v['x'], v['y'], v['z']]
         ac_hdg = v['yaw']
-        start_displacement = 100.0  # distance to displac the target from the aircraft start position
+        # start_displacement = 10.0  # distance to displac the target from the aircraft start position
         
-        start_pos = traj_start_pos(ac_pos, ac_hdg, start_displacement)
+        start_pos = traj_start_pos(ac_pos, ac_hdg, self.config["start_displacement"])
 
         self.t_pos = start_pos
         self.traj_target = TrajectoryTarget(speed=v['u'],
@@ -142,14 +143,15 @@ class TrajectoryEnv(AbstractEnv):
     
     def _traj_reward(self) -> float:
         dt = 1/self.config["simulation_frequency"]
-        traj_reward = self.config["traj_reward"]
+        # traj_reward = self.config["traj_reward"]
         t_pos, done = self.traj_target.update(self.traj_func, dt=dt)
         dist = self.controlled_vehicles[0].goal_dist(t_pos)
         self.t_pos = t_pos
-        if dist < 1.0:
-            reward = traj_reward
+        dist = dist-self.config["start_displacement"]
+        if np.abs(dist) < 1.0:
+            reward = 1.0
         else:
-            reward = traj_reward / dist
+            reward = 1.0 / (dist**2)
         return reward
 
     def _crash_reward(self) -> float:
