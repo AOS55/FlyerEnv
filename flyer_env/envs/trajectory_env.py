@@ -59,6 +59,7 @@ class TrajectoryEnv(AbstractEnv):
     
     def _create_vehicles(self) -> None:
         """Create an aircraft to fly around the world"""
+        self.controlled_vehicles = []
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/")
         start_pos = [0.0, 0.0, -1000.0]
         heading = 0.0
@@ -110,7 +111,7 @@ class TrajectoryEnv(AbstractEnv):
 
     def _reward(self, action: Action) -> float:
         """
-        Reward maximial when following the desired trajectory, controlled by a target ball.
+        Reward maximal when following the desired trajectory, controlled by a target ball.
 
         :param action: last action performed
         :return: reward
