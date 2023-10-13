@@ -21,6 +21,9 @@ _build
 
 # Outputs
 **/out/*
+wandb
+*.out
+*.zip
 
 # Docs
 docs/_build
