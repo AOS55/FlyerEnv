@@ -93,17 +93,19 @@ class ContinuousAction(ActionType):
             action = np.clip(action, -1, 1)
         if self.powered:
             self.controlled_vehicle.act({
-                'elevator': utils.lmap(action[0], [-1, 1], self.elevator_range),
-                'aileron': utils.lmap(action[1], [-1, 1], self.aileron_range),
+                'aileron': utils.lmap(action[0], [-1, 1], self.aileron_range),
+                'elevator': utils.lmap(action[1], [-1, 1], self.elevator_range),
                 'tla': utils.lmap(action[2], [-1, 1], self.tla_range),
-                'rudder': utils.lmap(action[3], [-1, 1], self.rudder_range)
+                # 'rudder': utils.lmap(action[3], [-1, 1], self.rudder_range)
+                'rudder': 0.0
             })
         else:
             self.controlled_vehicle.act({
-                'elevator': utils.lmap(action[0], [-1, 1], self.elevator_range),
-                'aileron': utils.lmap(action[1], [-1, 1], self.aileron_range),
+                'aileron': utils.lmap(action[0], [-1, 1], self.aileron_range),
+                'elevator': utils.lmap(action[1], [-1, 1], self.elevator_range),
                 'tla': 0.0,
-                'rudder': utils.lmap(action[2], [-1, 1], self.rudder_range)
+                # 'rudder': utils.lmap(action[2], [-1, 1], self.rudder_range)
+                'rudder': 0.0
             })
         self.last_action = action
 
