@@ -43,7 +43,7 @@ class TrajectoryTarget:
             else:
                 done = False
 
-            return position, done
+            return position, done, heading
         return traj_func
 
     def climb(self, final_height: float = 200.0,
