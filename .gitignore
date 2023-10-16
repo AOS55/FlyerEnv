@@ -24,6 +24,8 @@ _build
 wandb
 *.out
 *.zip
+logs
+.runs
 
 # Docs
 docs/_build
