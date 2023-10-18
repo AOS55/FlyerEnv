@@ -7,12 +7,14 @@ import wandb
 from wandb.integration.sb3 import WandbCallback
 
 
-def main(): 
-
+def main():
 
     env_config = {
         "area": (256, 256),
         "simulation_frequency": 100.0,
+        "observation": {
+            "type": "Trajectory"
+        },
         "duration": 10.0,
         "trajectory_config": {
             "name": "sl"
@@ -21,7 +23,7 @@ def main():
 
     config = {
         "policy_type": "MlpPolicy",
-        "total_timesteps": 10000000,
+        "total_timesteps": 40000000,
         "env_name": "trajectory-v1",
         "env_config": env_config
     }
