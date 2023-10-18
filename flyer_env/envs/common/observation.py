@@ -68,8 +68,8 @@ class DynamicObservation(ObservationType):
 class TrajectoryObservation(ObservationType):
 
     """
-        Observe dynamics of vehicle relative to goal position
-        ONLY FOR USE WITH TRAJECTORY ENV
+    Observe dynamics of vehicle relative to goal position
+    ONLY FOR USE WITH TRAJECTORY ENV
     """
 
     FEATURES: List[str] = ['x', 'y', 'z', 'roll', 'pitch', 'yaw', 'u', 'v', 'w', 'p', 'q', 'r']
@@ -99,6 +99,37 @@ class TrajectoryObservation(ObservationType):
         obs[0, 0] = self.t_pos[0] - obs[0, 0]
         obs[0, 1] = self.t_pos[1] - obs[0, 1]
         obs[0, 2] = self.t_pos[2] - obs[0, 2]
+        return obs.astype(self.space().dtype)
+
+
+class ControlObservation(ObservationType):
+    
+    """
+    Observe the aircaft without the position information
+    """
+
+    FEATURES: List[str] = ['roll', 'pitch', 'yaw', 'u', 'v', 'w', 'p', 'q', 'r']
+
+    def __init__(self,
+                 env: "AbstractEnv",
+                 features: List[str] = None,
+                 vehicles_count: int = 1,
+                 features_range: Dict[str, List[float]] = None,
+                 **kwargs: dict) -> None:
+        
+        super().__init__(env)
+        self.features = features or self.FEATURES
+        self.vehicles_count = vehicles_count
+        self.features_range = features_range
+
+    def space(self) -> spaces.Space:
+        return spaces.Box(shape=(self.vheicles_count, len(self.features)), low=-np.inf, high=np.inf, dtype=np.float32)
+    
+    def observe(self) -> np.ndarray:
+
+        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
+        df = df[self.features]
+        obs = df.values.copy()
         return obs.astype(self.space().dtype)
 
 
