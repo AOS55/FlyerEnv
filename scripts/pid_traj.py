@@ -19,6 +19,9 @@ def main():
 
     env_config = {
         "duration": 10.0,
+        "observation": {
+            "type": "Trajectory"
+        },
         "action": {
             "type": "PursuitAction"
         },
