@@ -10,21 +10,21 @@ from wandb.integration.sb3 import WandbCallback
 def main():
 
     env_config = {
-        "area": (256, 256),
-        "simulation_frequency": 100.0,
         "observation": {
-            "type": "Trajectory"
+            "type": "Longitudinal"
+        },
+        "action": {
+            "type": "LongitudinalAction"
         },
         "duration": 10.0,
-        "trajectory_config": {
-            "name": "sl"
-        },
+        "area": (256, 256),
+        "simulation_frequency": 1000.0
     }
 
     config = {
         "policy_type": "MlpPolicy",
         "total_timesteps": 40000000,
-        "env_name": "trajectory-v1",
+        "env_name": "control-v1",
         "env_config": env_config
     }
 
@@ -43,8 +43,8 @@ def main():
     # env = make_vec_env(config["env_name"], n_envs=32)
     # env = gym.wrappers.RecordEpisodeStatistics(env)
 
-    eval_callback = EvalCallback(eval_env, best_model_save_path="./logs/",
-                             log_path="./logs/", eval_freq=500,
+    eval_callback = EvalCallback(eval_env, best_model_save_path=f"./logs/{config['env_name']}",
+                             log_path=f"./logs/{config['env_name']}", eval_freq=500,
                              deterministic=True, render=False)
     
 
