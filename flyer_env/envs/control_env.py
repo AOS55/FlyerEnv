@@ -20,7 +20,7 @@ class ControlEnv(AbstractEnv):
         config = super().default_config()
         config.update({
             "observation": {
-                "type": "Dynamics"
+                "type": "Control"
             },
             "action": {
                 "type": "ContinuousAction"
@@ -32,10 +32,10 @@ class ControlEnv(AbstractEnv):
             "max_reward": 0.0,
             "normalize_reward": False,
             "state_com": {
-                "pitch": 0.0,
-                "roll": 0.0,
-                "yaw": 0.0,
-                "u": 100.0,
+                "pitch": (0.0, 180.0/np.pi),
+                "roll": (0.0, 180.0/np.pi),
+                "yaw": (0.0, 180.0/np.pi),
+                "u": (100.0, 0.1)
             }
         })
         return config
@@ -69,7 +69,7 @@ class ControlEnv(AbstractEnv):
         )
         self.world.add_aircraft(aircraft)
 
-        if self.config["action"]["type"] == "ContinuousAction":
+        if self.config["action"]["type"] == "ContinuousAction" or self.config["action"]["type"] == "LongitudinalAction":
             vehicle = self.world.vehicles[0]
         else:
             vehicle = ControlledAircraft(
@@ -86,7 +86,7 @@ class ControlEnv(AbstractEnv):
         :return: reward
         """
         rewards = self._rewards(action)
-        reward = sum(self.config.get(name, 0) * reward for name, reward in rewards.items())
+        reward = sum(reward for _, reward in rewards.items())
         if self.config["normalize_reward"]:
             reward = utils.lmap(reward,
                                 [-1000.0,
@@ -105,17 +105,21 @@ class ControlEnv(AbstractEnv):
         state_reward = self._state_reward()
         return {
             "crash_reward": crash_reward,
-            "traj_reward": state_reward
+            "state_reward": state_reward
         }
     
     def _state_reward(self) -> float:
-        v_dict = self.vehicle.dict
+        v_dict = self.controlled_vehicles[0].dict
         reward = 0.0
         for key in self.config["state_com"]:
-            error = np.abs(self.config["state_com"][key] - v_dict[key])
-            reward -= error
+            com, scale = self.config["state_com"][key] 
+            error = np.abs(com - v_dict[key])
+            # print(f'{key}, {v_dict[key] * 180.0/np.pi}, error: {error}')
+            reward -= error * scale
+            # print(f'{key}, reward: {reward}')
         if reward < -1000.0:
             reward = -1000.0
+            print(f'reward: {reward}')
         return reward
     
     def _crash_reward(self) -> float:
