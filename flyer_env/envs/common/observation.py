@@ -123,7 +123,38 @@ class ControlObservation(ObservationType):
         self.features_range = features_range
 
     def space(self) -> spaces.Space:
-        return spaces.Box(shape=(self.vheicles_count, len(self.features)), low=-np.inf, high=np.inf, dtype=np.float32)
+        return spaces.Box(shape=(self.vehicles_count, len(self.features)), low=-np.inf, high=np.inf, dtype=np.float32)
+    
+    def observe(self) -> np.ndarray:
+
+        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
+        df = df[self.features]
+        obs = df.values.copy()
+        return obs.astype(self.space().dtype)
+
+
+class LongitudinalObservation(ObservationType):
+
+    """
+    Observe the aircraft only given longitudinal data
+    """
+
+    FEATURES: List[str] = ['pitch', 'u', 'w', 'q']
+
+    def __init__(self,
+                 env: "AbstractEnv",
+                 features: List[str] = None,
+                 vehicles_count: int = 1,
+                 features_range: Dict[str, List[float]] = None,
+                 **kwargs: dict) -> None:
+        
+        super().__init__(env)
+        self.features = features or self.FEATURES
+        self.vehicles_count = vehicles_count
+        self.features_range = features_range
+
+    def space(self) -> spaces.Space:
+        return spaces.Box(shape=(self.vehicles_count, len(self.features)), low=-np.inf, high=np.inf, dtype=np.float32)
     
     def observe(self) -> np.ndarray:
 
@@ -138,5 +169,9 @@ def observation_factory(env: "AbstractEnv", config: dict) -> ObservationType:
         return DynamicObservation(env, **config)
     elif config["type"] == "Trajectory" or config["type"] == "trajectory":
         return TrajectoryObservation(env, **config)
+    elif config["type"] == "Control" or config["type"] == "control":
+        return ControlObservation(env, **config)
+    elif config["type"] == "Longitudinal" or config["type"] == "longitudinal":
+        return LongitudinalObservation(env, **config)
     else:
         raise ValueError("Unknown observation type")
