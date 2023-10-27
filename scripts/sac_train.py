@@ -5,26 +5,27 @@ from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.monitor import Monitor
 import wandb
 from wandb.integration.sb3 import WandbCallback
+from datetime import datetime
 
 
 def main():
 
     env_config = {
         "observation": {
-            "type": "Longitudinal"
+            "type": "Dynamics"
         },
         "action": {
-            "type": "LongitudinalAction"
+            "type": "ContinuousAction"
         },
         "duration": 10.0,
         "area": (256, 256),
-        "simulation_frequency": 1000.0
+        "simulation_frequency": 100.0
     }
 
     config = {
         "policy_type": "MlpPolicy",
-        "total_timesteps": 40000000,
-        "env_name": "control-v1",
+        "total_timesteps": 10000000,
+        "env_name": "trajectory-v1",
         "env_config": env_config
     }
 
@@ -42,9 +43,11 @@ def main():
     eval_env = Monitor(eval_env)
     # env = make_vec_env(config["env_name"], n_envs=32)
     # env = gym.wrappers.RecordEpisodeStatistics(env)
+    now = datetime.now()
+    date = now.strftime("%m%d%Y")
 
-    eval_callback = EvalCallback(eval_env, best_model_save_path=f"./logs/{config['env_name']}",
-                             log_path=f"./logs/{config['env_name']}", eval_freq=500,
+    eval_callback = EvalCallback(eval_env, best_model_save_path=f"./logs/{date}_{config['env_name']}",
+                             log_path=f"./logs/{date}_{config['env_name']}", eval_freq=500,
                              deterministic=True, render=False)
     
 
