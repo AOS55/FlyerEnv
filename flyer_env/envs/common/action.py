@@ -45,10 +45,10 @@ class ActionType:
 
 class ContinuousAction(ActionType):
 
-    ELEVATOR_RANGE = (-5.0 * (-np.pi/180.0), 30.0 * (np.pi/180.0))
-    AILERON_RANGE = (-5.0 * (-np.pi/180.0), 5.0 * (-np.pi/180.0))
+    ELEVATOR_RANGE = (-5.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))
+    AILERON_RANGE = (-5.0 * (np.pi/180.0), 5.0 * (-np.pi/180.0))
     TLA_RANGE = (0.0, 1.0)
-    RUDDER_RANGE = (-30.0 * (-np.pi/180.0), 30.0 * (np.pi/180.0))
+    RUDDER_RANGE = (-30.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))
 
     """
     A continuous action space for thrust-lever-angle and control surface deflections.
@@ -112,7 +112,7 @@ class ContinuousAction(ActionType):
 
 class LongitudinalAction(ActionType):
 
-    ELEVATOR_RANGE = (-5.0 * (-np.pi/180.0), 30.0 * (np.pi/180.0))
+    ELEVATOR_RANGE = (-5.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))
     TLA_RANGE = (0.0, 1.0)
 
     """
