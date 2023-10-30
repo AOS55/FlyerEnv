@@ -48,7 +48,7 @@ class ContinuousAction(ActionType):
     ELEVATOR_RANGE = (-5.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))
     AILERON_RANGE = (-5.0 * (np.pi/180.0), 5.0 * (-np.pi/180.0))
     TLA_RANGE = (0.0, 1.0)
-    RUDDER_RANGE = (-30.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))
+    RUDDER_RANGE = (-30.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))  # removed rudder from action-space for now
 
     """
     A continuous action space for thrust-lever-angle and control surface deflections.
@@ -60,7 +60,6 @@ class ContinuousAction(ActionType):
                  elevator_range: Optional[Tuple[float, float]] = None,
                  aileron_range: Optional[Tuple[float, float]] = None,
                  tla_range: Optional[Tuple[float, float]] = None,
-                 rudder_range: Optional[Tuple[float, float]] = None,
                  powered: bool = True,
                  clip: bool = True,
                  **kwargs) -> None:
@@ -73,11 +72,10 @@ class ContinuousAction(ActionType):
         self.elevator_range = elevator_range if elevator_range else self.ELEVATOR_RANGE
         self.aileron_range = aileron_range if aileron_range else self.AILERON_RANGE
         self.tla_range = tla_range if tla_range else self.TLA_RANGE 
-        self.rudder_range = rudder_range if rudder_range else self.RUDDER_RANGE
 
         self.powered = powered
         self.clip = clip
-        self.size = 4 if self.powered else 3
+        self.size = 3 if self.powered else 2
 
         self.last_action = np.zeros(self.size)
 
