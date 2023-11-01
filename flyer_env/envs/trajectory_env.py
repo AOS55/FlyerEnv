@@ -98,7 +98,7 @@ class TrajectoryEnv(AbstractEnv):
         
         start_pos = traj_start_pos(ac_pos, ac_hdg, self.config["start_displacement"])
 
-        self.t_pos = start_pos
+        self.goal = start_pos
         self.traj_target = TrajectoryTarget(speed=v['u'],
                                             start_position=start_pos,
                                             start_heading=v['yaw'])
@@ -146,7 +146,7 @@ class TrajectoryEnv(AbstractEnv):
         # traj_reward = self.config["traj_reward"]
         t_pos, done = self.traj_target.update(self.traj_func, dt=dt)
         dist = self.controlled_vehicles[0].goal_dist(t_pos)
-        self.t_pos = t_pos
+        self.goal = t_pos
         dist = dist-self.config["start_displacement"]
         if np.abs(dist) < 1.0:
             reward = 1.0
@@ -167,7 +167,7 @@ class TrajectoryEnv(AbstractEnv):
         """
         Dictionary for the trajectory target
         """
-        return {"t_pos": self.t_pos}
+        return {"t_pos": self.goal}
 
     def _is_terminated(self) -> bool:
         """
