@@ -68,8 +68,8 @@ class DynamicObservation(ObservationType):
 class TrajectoryObservation(ObservationType):
 
     """
-        Observe dynamics of vehicle relative to goal position
-        ONLY FOR USE WITH TRAJECTORY ENV
+    Observe dynamics of vehicle relative to goal position
+    ONLY FOR USE WITH TRAJECTORY ENV
     """
 
     FEATURES: List[str] = ['x', 'y', 'z', 'roll', 'pitch', 'yaw', 'u', 'v', 'w', 'p', 'q', 'r']
@@ -85,8 +85,8 @@ class TrajectoryObservation(ObservationType):
         self.features = features or self.FEATURES
         self.vehicles_count = vehicles_count
         self.features_range = features_range
-        if hasattr(env, "t_pos"):
-            self.t_pos = env.t_pos
+        if hasattr(env, "goal"):
+            self.goal = env.goal
 
     def space(self) -> spaces.Space:
         return spaces.Box(shape=(self.vehicles_count, len(self.features)), low=-np.inf, high=np.inf, dtype=np.float32)
@@ -96,9 +96,71 @@ class TrajectoryObservation(ObservationType):
         df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
         df = df[self.features]
         obs = df.values.copy()
-        obs[0, 0] = self.t_pos[0] - obs[0, 0]
-        obs[0, 1] = self.t_pos[1] - obs[0, 1]
-        obs[0, 2] = self.t_pos[2] - obs[0, 2]
+        obs[0, 0] = self.goal[0] - obs[0, 0]
+        obs[0, 1] = self.goal[1] - obs[0, 1]
+        obs[0, 2] = self.goal[2] - obs[0, 2]
+        return obs.astype(self.space().dtype)
+
+
+class ControlObservation(ObservationType):
+    
+    """
+    Observe the aircaft without the position information
+    """
+
+    FEATURES: List[str] = ['roll', 'pitch', 'yaw', 'u', 'v', 'w', 'p', 'q', 'r']
+
+    def __init__(self,
+                 env: "AbstractEnv",
+                 features: List[str] = None,
+                 vehicles_count: int = 1,
+                 features_range: Dict[str, List[float]] = None,
+                 **kwargs: dict) -> None:
+        
+        super().__init__(env)
+        self.features = features or self.FEATURES
+        self.vehicles_count = vehicles_count
+        self.features_range = features_range
+
+    def space(self) -> spaces.Space:
+        return spaces.Box(shape=(self.vehicles_count, len(self.features)), low=-np.inf, high=np.inf, dtype=np.float32)
+    
+    def observe(self) -> np.ndarray:
+
+        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
+        df = df[self.features]
+        obs = df.values.copy()
+        return obs.astype(self.space().dtype)
+
+
+class LongitudinalObservation(ObservationType):
+
+    """
+    Observe the aircraft only given longitudinal data
+    """
+
+    FEATURES: List[str] = ['pitch', 'u', 'w', 'q']
+
+    def __init__(self,
+                 env: "AbstractEnv",
+                 features: List[str] = None,
+                 vehicles_count: int = 1,
+                 features_range: Dict[str, List[float]] = None,
+                 **kwargs: dict) -> None:
+        
+        super().__init__(env)
+        self.features = features or self.FEATURES
+        self.vehicles_count = vehicles_count
+        self.features_range = features_range
+
+    def space(self) -> spaces.Space:
+        return spaces.Box(shape=(self.vehicles_count, len(self.features)), low=-np.inf, high=np.inf, dtype=np.float32)
+    
+    def observe(self) -> np.ndarray:
+
+        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
+        df = df[self.features]
+        obs = df.values.copy()
         return obs.astype(self.space().dtype)
 
 
@@ -107,5 +169,9 @@ def observation_factory(env: "AbstractEnv", config: dict) -> ObservationType:
         return DynamicObservation(env, **config)
     elif config["type"] == "Trajectory" or config["type"] == "trajectory":
         return TrajectoryObservation(env, **config)
+    elif config["type"] == "Control" or config["type"] == "control":
+        return ControlObservation(env, **config)
+    elif config["type"] == "Longitudinal" or config["type"] == "longitudinal":
+        return LongitudinalObservation(env, **config)
     else:
         raise ValueError("Unknown observation type")

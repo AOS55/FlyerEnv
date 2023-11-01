@@ -28,7 +28,7 @@ def main():
     }
 
     env = gym.make("trajectory-v1", config=env_config)
-    policy = SAC.load('logs/best_model.zip')
+    policy = SAC.load('logs/best_model')
     
     obs, info = env.reset()
     done = False

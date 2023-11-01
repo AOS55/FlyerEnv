@@ -11,7 +11,7 @@ def register_flyer_envs():
     # flyer_env.py
     register(
         id="flyer-v1",
-        entry_point="flyer_env.envs:FlyerEnv",
+        entry_point="flyer_env.envs:FlyerEnv"
     )
 
     # trajectory_env.py
@@ -29,5 +29,11 @@ def register_flyer_envs():
     # forced_landing_env.py
     register(
         id="forced_landing-v1",
-        entry_point="flyer_env.envs:ForcedLandingEnv",
+        entry_point="flyer_env.envs:ForcedLandingEnv"
+    )
+
+    # control_env.py
+    register(
+        id="control-v1",
+        entry_point="flyer_env.envs:ControlEnv"
     )

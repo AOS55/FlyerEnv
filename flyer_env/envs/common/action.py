@@ -45,10 +45,10 @@ class ActionType:
 
 class ContinuousAction(ActionType):
 
-    ELEVATOR_RANGE = (-5.0 * (-np.pi/180.0), 30.0 * (np.pi/180.0))
-    AILERON_RANGE = (-5.0 * (-np.pi/180.0), 5.0 * (-np.pi/180.0))
+    ELEVATOR_RANGE = (-5.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))
+    AILERON_RANGE = (-5.0 * (np.pi/180.0), 5.0 * (-np.pi/180.0))
     TLA_RANGE = (0.0, 1.0)
-    RUDDER_RANGE = (-30.0 * (-np.pi/180.0), 30.0 * (np.pi/180.0))
+    RUDDER_RANGE = (-30.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))  # removed rudder from action-space for now
 
     """
     A continuous action space for thrust-lever-angle and control surface deflections.
@@ -60,7 +60,6 @@ class ContinuousAction(ActionType):
                  elevator_range: Optional[Tuple[float, float]] = None,
                  aileron_range: Optional[Tuple[float, float]] = None,
                  tla_range: Optional[Tuple[float, float]] = None,
-                 rudder_range: Optional[Tuple[float, float]] = None,
                  powered: bool = True,
                  clip: bool = True,
                  **kwargs) -> None:
@@ -73,11 +72,10 @@ class ContinuousAction(ActionType):
         self.elevator_range = elevator_range if elevator_range else self.ELEVATOR_RANGE
         self.aileron_range = aileron_range if aileron_range else self.AILERON_RANGE
         self.tla_range = tla_range if tla_range else self.TLA_RANGE 
-        self.rudder_range = rudder_range if rudder_range else self.RUDDER_RANGE
 
         self.powered = powered
         self.clip = clip
-        self.size = 4 if self.powered else 3
+        self.size = 3 if self.powered else 2
 
         self.last_action = np.zeros(self.size)
 
@@ -108,6 +106,66 @@ class ContinuousAction(ActionType):
                 'rudder': 0.0
             })
         self.last_action = action
+
+
+class LongitudinalAction(ActionType):
+
+    ELEVATOR_RANGE = (-5.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))
+    TLA_RANGE = (0.0, 1.0)
+
+    """
+    A continuous action space for thrust-lever-angle and elevator control.
+    Controls are set in order [elevator, tla].
+    """ 
+
+    def __init__(self,
+                 env: 'AbstractEnv',
+                 elevator_range: Optional[Tuple[float, float]] = None,
+                 tla_range: Optional[Tuple[float, float]] = None,
+                 powered: bool = True,
+                 clip: bool = True,
+                 **kwargs) -> None:
+        
+        """
+        Create a continuous longitudinally constrained action space
+        """
+        super().__init__(env)
+
+        # Setup control limit ranges
+        self.elevator_range = elevator_range if elevator_range else self.ELEVATOR_RANGE
+        self.tla_range = tla_range if tla_range else self.TLA_RANGE
+
+        self.powered = powered
+        self.clip = clip
+        self.size = 2 if self.powered else 1
+
+        self.last_action = np.zeros(self.size)
+
+    def space(self) -> spaces.Box:
+        return spaces.Box(-1.0, 1.0, shape=(self.size,), dtype=np.float32)
+    
+    @property
+    def vehicle_class(self) -> Callable:
+        return Aircraft
+    
+    def act(self, action: np.ndarray) -> None:
+        if self.clip:
+            action = np.clip(action, -1.0, 1.0)
+        if self.powered:
+            self.controlled_vehicle.act({
+                'aileron': 0.0,
+                'elevator': utils.lmap(action[0], [-1.0, 1.0], self.elevator_range),
+                'tla': utils.lmap(action[1], [-1, 1], self.tla_range),
+                'rudder': 0.0
+            })
+        else:
+            self.controlled_vehicle.act({
+                'aileron': 0.0,
+                'elevator': utils.lmap(action[0], [-1.0, 1.0], self.elevator_range),
+                'tla': 0.0,
+                'rudder': 0.0
+            })
+        self.last_action = action 
 
 
 class ControlledAction(ActionType):
@@ -268,6 +326,8 @@ class TrackAction(ActionType):
 def action_factory(env: 'AbstractEnv', config: dict) -> ActionType:
     if config["type"] == "ContinuousAction":
         return ContinuousAction(env, **config)
+    elif config["type"] == "LongitudinalAction":
+        return LongitudinalAction(env, **config)
     elif config["type"] == "ControlledAction":
         return ControlledAction(env, **config)
     elif config["type"] == "PursuitAction":

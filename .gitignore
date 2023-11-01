@@ -26,6 +26,9 @@ wandb
 *.zip
 logs
 .runs
+old_logs
+models
+outputs
 
 # Docs
 docs/_build
