@@ -19,32 +19,27 @@ class Workspace:
         exp_name = '_'.join([
             cfg.env_name, cfg.agent_type, str(cfg.seed)
         ])
-
+        print(f'self.cfg: {self.cfg}')
         if cfg.use_wandb:
             self.run = wandb.init(project="flyer-train", group=cfg.env_name, config=OmegaConf.to_container(cfg, resolve=True), sync_tensorboard=True)
-
         if cfg.env_config:
             self.train_env = make_vec_env(cfg.env_name, n_envs=cfg.n_envs, seed=cfg.seed, env_kwargs={"config": cfg.env_config})
             self.eval_env = gym.make(cfg.env_name, config=cfg.env_config, render_mode="rgb_array")
         else:
             self.train_env = make_vec_env(cfg.env_name, n_envs=cfg.n_envs, seed=cfg.seed)
             self.eval_env = gym.make(cfg.env_name)
-
         self.eval_env = Monitor(self.eval_env)
-
         self.eval_callback = EvalCallback(self.eval_env,
                                           best_model_save_path=f"./logs/{exp_name}",
                                           eval_freq=cfg.eval_freq,
                                           deterministic=True,
                                           render=False)
-        
         self.model = SAC(
             "MlpPolicy",
             self.train_env,
             verbose=1,
             tensorboard_log=f".runs/sac"
         )
-
         return
 
     def train(self):
@@ -57,7 +52,6 @@ class Workspace:
                         ]
         else:
             callback = [self.eval_callback]
-
 
         self.model.learn(total_timesteps=self.cfg.total_timesteps,
                          log_interval=self.cfg.log_interval,
@@ -72,7 +66,7 @@ class Workspace:
     def load_snapshot(self):
         return
 
-@hydra.main(config_path='conf/.', config_name='control')
+@hydra.main(config_path='conf/.', config_name='trajectory')
 def main(cfg):
     from train import Workspace as W
     workspace = W(cfg)
