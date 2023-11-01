@@ -18,7 +18,7 @@ env_config:
 
 # train settings
 agent_type: SAC
-total_timesteps: 10000000
+total_timesteps: 20000000
 n_envs: 32
 log_interval: 4
 
