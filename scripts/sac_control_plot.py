@@ -18,18 +18,22 @@ def main():
 
     env_config = {
         "observation": {
-            "type": "Longitudinal"
+            "type": "Trajectory"
         },
         "action": {
-            "type": "LongitudinalAction"
+            "type": "ContinuousAction"
         },
         "area": (256, 256),
         "simulation_frequency": 100.0,
-        "duration": 10.0
+        "duration": 10.0,
+        "trajectory_config": {
+            "name": "sl",
+            "length": 10.0
+        }
     }
 
-    env = gym.make("control-v1", config=env_config)
-    policy = SAC.load('logs/longitudinal_control-v1/best_model')
+    env = gym.make("trajectory-v1", config=env_config)
+    policy = SAC.load('models/trajectory_full-v1/best_model.zip')
 
     control_env_config = {
         "observation": {
@@ -112,9 +116,9 @@ def main():
     env.close()
     observations = pd.DataFrame.from_dict(observations)
     plot_long(observations, times, env_config["duration"])
-    # plot_lat(observations, times, env_config["duration"])
+    plot_lat(observations, times, env_config["duration"])
     # plot_track(observations)
-    plt.show()
+    # plt.show()
 
 
 def plot_long(outputs, times, exp_len):
@@ -153,7 +157,7 @@ def plot_long(outputs, times, exp_len):
     [axis.set_xlim(0.0, exp_len) for axis in ax]
     [axis.xaxis.set_tick_params(labelsize=15) for axis in ax]
     [axis.yaxis.set_tick_params(labelsize=15) for axis in ax]
-    fig.savefig("long_control.pdf")
+    fig.savefig("traj_long.pdf")
 
 def plot_lat(outputs, times, exp_len):
 
@@ -184,6 +188,7 @@ def plot_lat(outputs, times, exp_len):
     [axis.set_xlim(0.0, exp_len) for axis in ax]
     [axis.xaxis.set_tick_params(labelsize=15) for axis in ax]
     [axis.yaxis.set_tick_params(labelsize=15) for axis in ax]
+    fig.savefig("traj_lat.pdf")
     fig.show()
 
 def plot_track(outputs):
