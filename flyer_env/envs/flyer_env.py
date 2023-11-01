@@ -30,7 +30,7 @@ class FlyerEnv(AbstractEnv):
             },
             "area": (1024, 1024),  # terrain map area [tiles]
             "vehicle_type": "Dynamic",  # vehicle type, only dynamic available
-            "duration": 10.0,  # simulation durati [s]
+            "duration": 10.0,  # simulation duration [s]
             "collision_reward": -200.0,  # max -ve reward for crashing
             "point_reward": 100.0,  # max +ve reward for hitting the goal
             "normalize_reward": True, # whether to normalize the reward [-1, +1]
