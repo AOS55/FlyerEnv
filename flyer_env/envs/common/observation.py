@@ -85,8 +85,8 @@ class TrajectoryObservation(ObservationType):
         self.features = features or self.FEATURES
         self.vehicles_count = vehicles_count
         self.features_range = features_range
-        if hasattr(env, "t_pos"):
-            self.t_pos = env.t_pos
+        if hasattr(env, "goal"):
+            self.goal = env.goal
 
     def space(self) -> spaces.Space:
         return spaces.Box(shape=(self.vehicles_count, len(self.features)), low=-np.inf, high=np.inf, dtype=np.float32)
@@ -96,9 +96,9 @@ class TrajectoryObservation(ObservationType):
         df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
         df = df[self.features]
         obs = df.values.copy()
-        obs[0, 0] = self.t_pos[0] - obs[0, 0]
-        obs[0, 1] = self.t_pos[1] - obs[0, 1]
-        obs[0, 2] = self.t_pos[2] - obs[0, 2]
+        obs[0, 0] = self.goal[0] - obs[0, 0]
+        obs[0, 1] = self.goal[1] - obs[0, 1]
+        obs[0, 2] = self.goal[2] - obs[0, 2]
         return obs.astype(self.space().dtype)
 
 
