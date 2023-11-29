@@ -163,6 +163,38 @@ class LongitudinalObservation(ObservationType):
         obs = df.values.copy()
         return obs.astype(self.space().dtype)
 
+class DynamicGoalObservation(DynamicObservation):
+    
+    def __init__(self, 
+                 env: "AbstractEnv",
+                 **kwargs: dict) -> None:
+        super().__init__(env, **kwargs)
+        if hasattr(env, "goal"):
+            self.goal = env.goal
+
+    def space(self) -> spaces.Space:
+        try:
+            obs = self.observe()
+            return spaces.Dict(dict(
+                desired_goal=spaces.Box(-np.inf, np.inf, shape=obs["desired_goal"].shape, dtype=np.float64),
+                achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs["achieved_goal"].shape, dtype=np.float64),
+                observation=spaces.Box(-np.inf, np.inf, shape=obs["observation"].shape, dtype=np.float64)
+            ))
+        except AttributeError:
+            return spaces.Space()
+    
+    def observe(self) -> Dict[str, np.ndarray]:
+        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
+        df = df[self.features]
+        obs = df.values.copy()
+        # obs = obs.astype(self.space().dtype)
+        obs = OrderedDict([
+            ("observation", obs[0]),
+            ("achieved_goal", obs[0][0:3]),
+            ("desired_goal", self.goal)
+        ])
+        return obs
+
 
 def observation_factory(env: "AbstractEnv", config: dict) -> ObservationType:
     if config["type"] == "Dynamics" or config["type"] == "dynamics":
@@ -173,5 +205,7 @@ def observation_factory(env: "AbstractEnv", config: dict) -> ObservationType:
         return ControlObservation(env, **config)
     elif config["type"] == "Longitudinal" or config["type"] == "longitudinal":
         return LongitudinalObservation(env, **config)
+    elif config["type"] == "Goal" or config["type"] == "goal" or config["type"] == "DynamicGoal":
+        return DynamicGoalObservation(env, **config)
     else:
         raise ValueError("Unknown observation type")

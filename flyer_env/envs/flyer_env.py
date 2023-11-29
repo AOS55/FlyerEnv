@@ -2,6 +2,8 @@ from typing import Dict, Text
 import sys
 import os
 import numpy as np
+from gymnasium import Env
+from abc import abstractmethod
 
 from flyer_env import utils
 from flyer_env.aircraft import ControlledAircraft
@@ -10,7 +12,32 @@ from flyer_env.envs.common.action import Action
 from pyflyer import World, Aircraft
 
 
-class FlyerEnv(AbstractEnv):
+class GoalEnv(Env):
+    """
+    Interface for a goal-based environment 
+
+    Similar to HighwayEnv https://github.com/Farama-Foundation/HighwayEnv/blob/master/highway_env/envs/parking_env.py. 
+    This interface is needed for agents to interact with agents such as Stable Baseline3's Hindsight Experience Replay (HER) agent.
+
+    As a goal-based environment it functions in the same way as any regular OpenAI Gym Environment, but imposes a required structure on the obs space.
+    More concretely, the observation space is required to contain at least 3 elements, namely `observation`, `desired_goal`, and `achieved goal`.
+    """
+
+    @abstractmethod
+    def compute_reward(self, achieved_goal: np.ndarray, desired_goal: np.ndarray, info: dict) -> float:
+        """
+        Compute the step reward. This externalizes the reward function and makes it dependent on a desired goal and the one that was achieved.
+
+        :param achieved_goal: the goal that was achieved during execution
+        :param desired_goal: the desired goal that we asked the agent to attempt to achieve
+        :param info (dict): an info dictionary with additional information
+        :return: the reward the corresponds to the provided goal achieved w.r.t. the desired goal
+
+        """
+        raise NotImplementedError
+
+
+class FlyerEnv(AbstractEnv, GoalEnv):
     """
     A goal-oriented flying environment
 
@@ -23,7 +50,7 @@ class FlyerEnv(AbstractEnv):
         config = super().default_config()
         config.update({
             "observation": {
-                "type": "Dynamics"
+                "type": "Goal"
             }, 
             "action": {
                 "type": "ContinuousAction"
@@ -31,9 +58,10 @@ class FlyerEnv(AbstractEnv):
             "area": (1024, 1024),  # terrain map area [tiles]
             "vehicle_type": "Dynamic",  # vehicle type, only dynamic available
             "duration": 10.0,  # simulation duration [s]
-            "collision_reward": -200.0,  # max -ve reward for crashing
-            "point_reward": 100.0,  # max +ve reward for hitting the goal
-            "normalize_reward": True, # whether to normalize the reward [-1, +1]
+            "collision_reward": -100.0,  # max -ve reward for crashing
+            "reward_type": "dense",  # reward type
+            "point_reward": 1.0,  # multiplier for distance from goal
+            "normalize_reward": False,  # whether to normalize the reward [-1, +1], not working at the moment
             "goal_generation": {
                 "heading_limits": [-np.pi, np.pi],
                 "pitch_limits": [-10.0 * np.pi/180.0, 10.0 * np.pi/180.0],
@@ -61,6 +89,7 @@ class FlyerEnv(AbstractEnv):
     
     def _create_vehicles(self) -> None:
         """Create an aircraft to fly around the world"""
+        self.controlled_vehicles = []
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/")
         start_pos = [0.0, 0.0, -1000.0]
         heading = 0.0
@@ -82,7 +111,6 @@ class FlyerEnv(AbstractEnv):
                 dt = 1/self.config["simulation_frequency"],
             )
         self.controlled_vehicles.append(vehicle)
-
     
     def _create_goal(self, seed) -> None:
         """Create a random goal in 3D space to navigate to, based on the aircraft's initial starting position"""
@@ -102,7 +130,25 @@ class FlyerEnv(AbstractEnv):
         g_pos = get_goal()
         self.goal = g_pos
         return
-    
+
+    def compute_reward(self, achieved_goal: np.ndarray, desired_goal: np.ndarray, info: dict) -> float:
+        """
+        Proximity to goal is rewarded
+        Just use _point_reward for now, could be more explicit.
+        TODO: look at how the gripper point robots select the points
+        """
+
+        def _goal_distance(goal_a, goal_b):
+            assert goal_a.shape == goal_b.shape
+            return np.linalg.norm(goal_a - goal_b, axis=-1)
+
+        dist_terminal = self.config["goal_generation"]["dist_terminal"]
+        d = _goal_distance(achieved_goal, desired_goal)
+        if self.config["reward_type"] == "sparse":
+            return -(d > dist_terminal).astype(np.float32)
+        else:
+            return -d * 100.0/(self.config["goal_generation"]["dist_limits"][1] * self.config["duration"] * self.config["simulation_frequency"])
+
     def _reward(self, action: Action) -> float:
         """
         Reward vehicle if it makes progress towards the goal state
@@ -136,9 +182,10 @@ class FlyerEnv(AbstractEnv):
         Reward for reaching the goal state
         """
         distance = self.vehicle.goal_dist(self.goal)
-        point_reward = self.config["point_reward"]
-        dist_terminal = self.config["goal_generation"]["dist_terminal"]
-        reward = point_reward * dist_terminal / distance
+        # point_reward = self.config["point_reward"]
+        # dist_terminal = self.config["goal_generation"]["dist_terminal"]
+        # reward = point_reward * dist_terminal / distance
+        reward = -distance * 100.0/(self.config["goal_generation"]["dist_limits"][1] * self.config["duration"] * self.config["simulation_frequency"])
         return reward
 
     def _crash_reward(self) -> float:
@@ -146,7 +193,7 @@ class FlyerEnv(AbstractEnv):
         Penalize if the aircraft crashes
         """
         if self.vehicle.crashed: 
-            return -200.0
+            return 1.0
         else: 
             return 0.0
 
