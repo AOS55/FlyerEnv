@@ -1,0 +1,23 @@
+defaults:
+  - override hydra/launcher: submitit_local
+
+# env settings
+policy_type: MlpPolicy
+env_name: parking-v0
+env_config: False
+
+# train settings 
+agent_type: SAC
+use_her: True
+total_timesteps: 10000000
+n_envs: 32
+log_interval: 4
+learning_starts: 100000
+
+# eval settings
+eval_freq: 500
+
+# misc
+use_wandb: True
+seed: 0
+render: False
