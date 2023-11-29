@@ -7,10 +7,10 @@ env_name: flyer-v1
 
 env_config:
   observation:
-    type: Trajectory
+    type: Goal
   action:
     type: ContinuousAction
-  duration: 10.0
+  duration: 100.0
   area:
     - 256
     - 256
@@ -18,9 +18,11 @@ env_config:
 
 # train settings
 agent_type: SAC
+use_her: True
 total_timesteps: 10000000
 n_envs: 32
 log_interval: 4
+learning_starts: 100000  # how many steps to sample before beginning learning
 
 # eval settings
 eval_freq: 500
