@@ -63,8 +63,8 @@ class FlyerEnv(AbstractEnv, GoalEnv):
             "point_reward": 1.0,  # multiplier for distance from goal
             "normalize_reward": False,  # whether to normalize the reward [-1, +1], not working at the moment
             "goal_generation": {
-                "heading_limits": [-np.pi, np.pi],
-                "pitch_limits": [-10.0 * np.pi/180.0, 10.0 * np.pi/180.0],
+                "heading_limits": [85.0 * np.pi/180.0, 95.0 * np.pi/180.0],
+                "pitch_limits": [-0.1 * np.pi/180.0, 0.1 * np.pi/180.0],
                 "dist_limits": [1000.0, 10000.0],
                 "dist_terminal": 20.0
             }  # goal generation details
@@ -124,6 +124,7 @@ class FlyerEnv(AbstractEnv, GoalEnv):
             pitch = np_random.uniform(gg["pitch_limits"][0], gg["pitch_limits"][1])
             dist = np_random.uniform(gg["dist_limits"][0], gg["dist_limits"][1])
             rel_pos = dist*np.array([np.cos(pitch)*np.sin(heading), np.cos(pitch)*np.cos(heading), np.sin(pitch)])
+            print(f'rel_pos: {rel_pos}, pitch: {pitch}, heading: {heading}, dist: {dist}')
             pos = v_pos + rel_pos
             return pos
 
