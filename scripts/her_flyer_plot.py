@@ -18,7 +18,7 @@ def main():
             "type": "Goal"
         },
         "action": {
-            "type": "ControlledAction"
+            "type": "ContinuousAction"
         },
         "duration": 100.0,
         "simulation_frequency": 100.0,
@@ -26,9 +26,14 @@ def main():
     }
 
     env = gym.make("flyer-v1", config=env_config)
-    policy = SAC.load("models/flyer_controlled_her-v1/best_model.zip", env=env)
+    print(f'reset_obs: {env.reset()}')
+
+    policy = SAC.load("models/flyer_her_simple-v1/best_model.zip", env=env)
 
     obs, info = env.reset()
+    print(f'env: {env}')
+    print(f'env.config: {env.config}')
+    print(f'obs: {obs}')
     done = False
 
     observations = []
@@ -39,16 +44,17 @@ def main():
 
     while not done:
         action, _states = policy.predict(obs, deterministic=True)
-        print(f'obs: {obs}')
-        print(f'action: {action}')
+        # print(f'obs: {obs}')
+        # print(f'action: {action}')
         obs, reward, terminated, truncated, info = env.step(action)
 
         v_dict = env.unwrapped.vehicle.dict
         controls = env.unwrapped.vehicle.controls
+        # print(f'controls: {controls}')
 
         obs_dict = {
-            'elevator': controls[1],
-            'aileron': controls[0],
+            'elevator': controls['elevator'],
+            'aileron': controls['aileron'],
             'rudder': 0.0,
             'x': v_dict['x'],
             'y': v_dict['y'],
