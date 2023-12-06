@@ -196,6 +196,42 @@ class DynamicGoalObservation(DynamicObservation):
         return obs
 
 
+class LateralGoalObservation(DynamicObservation):
+
+    FEATURES: List[str] = ['x', 'y',  'u', 'v', 'yaw']
+
+    def __init__(self,
+                 env: "AbstractEnv",
+                 features: List[str] = None,
+                 **kwargs: dict) -> None:
+        super().__init__(env, **kwargs)
+        self.features = features or self.FEATURES
+        if hasattr(env, "goal"):
+            self.goal = env.goal
+
+    def space(self) -> spaces.Space:
+        try:
+            obs = self.observe()
+            return spaces.Dict(dict(
+                desired_goal=spaces.Box(-np.inf, np.inf, shape=obs["desired_goal"].shape, dtype=np.float64),
+                achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs["achieved_goal"].shape, dtype=np.float64),
+                observation=spaces.Box(-np.inf, np.inf, shape=obs["observation"].shape, dtype=np.float64)
+            ))
+        except AttributeError:
+            return spaces.Space()
+        
+    def observe(self) -> Dict[str, np.ndarray]:
+        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
+        df = df[self.features]
+        obs = df.values.copy()
+        obs = OrderedDict([
+            ("observation", obs[0]),
+            ("achieved_goal", obs[0][0:3]),
+            ("desired_goal", self.goal)
+        ])
+        return obs
+
+
 def observation_factory(env: "AbstractEnv", config: dict) -> ObservationType:
     if config["type"] == "Dynamics" or config["type"] == "dynamics":
         return DynamicObservation(env, **config)
@@ -207,5 +243,7 @@ def observation_factory(env: "AbstractEnv", config: dict) -> ObservationType:
         return LongitudinalObservation(env, **config)
     elif config["type"] == "Goal" or config["type"] == "goal" or config["type"] == "DynamicGoal":
         return DynamicGoalObservation(env, **config)
+    elif config["type"] == "LateralGoal" or config["type"] == "lateral_goal":
+        return LateralGoalObservation(env, **config)
     else:
         raise ValueError("Unknown observation type")
