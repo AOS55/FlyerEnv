@@ -18,7 +18,7 @@ def main():
             "type": "Goal"
         },
         "action": {
-            "type": "ContinuousAction"
+            "type": "HeadingAction"
         },
         "duration": 100.0,
         "simulation_frequency": 100.0,
@@ -28,7 +28,7 @@ def main():
     env = gym.make("flyer-v1", config=env_config)
     print(f'reset_obs: {env.reset()}')
 
-    policy = SAC.load("models/flyer_her_simple-v1/best_model.zip", env=env)
+    policy = SAC.load("models/flyer_heading_her-v1/best_model.zip", env=env)
 
     obs, info = env.reset()
     print(f'env: {env}')
@@ -45,12 +45,15 @@ def main():
     while not done:
         action, _states = policy.predict(obs, deterministic=True)
         # print(f'obs: {obs}')
+        # action = np.array((0.0, 0.0))
         # print(f'action: {action}')
         obs, reward, terminated, truncated, info = env.step(action)
+        print(f'reward: {reward}')
 
         v_dict = env.unwrapped.vehicle.dict
-        controls = env.unwrapped.vehicle.controls
-        # print(f'controls: {controls}')
+        controls = env.unwrapped.vehicle.aircraft.controls
+        # print(f'vehicle: {env.unwrapped.vehicle.aircraft.controls}')
+        # print(f'v_dict: {v_dict}')
 
         obs_dict = {
             'elevator': controls['elevator'],
