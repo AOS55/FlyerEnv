@@ -124,7 +124,7 @@ class FlyerEnv(AbstractEnv, GoalEnv):
             pitch = np_random.uniform(gg["pitch_limits"][0], gg["pitch_limits"][1])
             dist = np_random.uniform(gg["dist_limits"][0], gg["dist_limits"][1])
             rel_pos = dist*np.array([np.cos(pitch)*np.sin(heading), np.cos(pitch)*np.cos(heading), np.sin(pitch)])
-            print(f'rel_pos: {rel_pos}, pitch: {pitch}, heading: {heading}, dist: {dist}')
+            # print(f'rel_pos: {rel_pos}, pitch: {pitch}, heading: {heading}, dist: {dist}')
             pos = v_pos + rel_pos
             return pos
 
@@ -186,6 +186,7 @@ class FlyerEnv(AbstractEnv, GoalEnv):
         # point_reward = self.config["point_reward"]
         # dist_terminal = self.config["goal_generation"]["dist_terminal"]
         # reward = point_reward * dist_terminal / distance
+        # print(f'distance: {distance}, self.goal: {self.goal}, pos: {self.vehicle.dict}')
         reward = -distance * 100.0/(self.config["goal_generation"]["dist_limits"][1] * self.config["duration"] * self.config["simulation_frequency"])
         return reward
 
