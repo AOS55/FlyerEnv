@@ -1,0 +1,48 @@
+defaults:
+  - override hydra/launcher: submitit_local
+
+# env settings
+policy_type: MlpPolicy
+env_name: flyer-v1
+
+env_config:
+  observation:
+    type: LateralTrajectory
+  action:
+    type: HeadingAction
+    heading_range:
+      - -0.5
+      - 0.5
+  duration: 100.0
+  area:
+    - 256
+    - 256
+  simulation_frequency: 100.0
+  goal_generation:
+    heading_limits:
+      - 1.0707
+      - 2.0708
+    pitch_limits:
+      - -0.0001
+      - 0.0001
+    dist_limits:
+      - 1000.0
+      - 1001.0
+    dist_terminal:
+      - 100.0
+
+# train settings
+agent_type: SAC
+use_her: False
+total_timesteps: 40000000
+n_envs: 32
+log_interval: 4
+learning_starts: 100000 # how many steps to sample before beginning learning
+
+# eval settings
+eval_freq: 10000
+
+# misc
+use_wandb: True
+seed: 0
+render: False
