@@ -101,6 +101,40 @@ class TrajectoryObservation(ObservationType):
         obs[0, 2] = self.goal[2] - obs[0, 2]
         return obs.astype(self.space().dtype)
 
+class LateralTrajectoryObservation(ObservationType):
+
+    """
+    Observe dynamics of vehicle relative to goal position, restricted to horizontal plane
+    ONLY FOR USE WITH TRAJECTORY ENV
+    """
+
+    FEATURES: List[str] = ['x', 'y', 'u', 'v', 'yaw']
+
+    def __init__(self,
+                 env: "AbstractEnv",
+                 features: List[str] = None,
+                 vehicles_count: int = 1,
+                 features_range: Dict[str, List[float]] = None,
+                 **kwargs: dict) -> None:
+        
+        super().__init__(env)
+        self.features = features or self.FEATURES
+        self.vehicles_count = vehicles_count
+        self.features_range = features_range
+        if hasattr(env, "goal"):
+            self.goal = env.goal
+
+    def space(self) -> spaces.Space:
+        return spaces.Box(shape=(self.vehicles_count, len(self.features)), low=-np.inf, high=np.inf, dtype=np.float32)
+    
+    def observe(self) -> np.ndarray:
+
+        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
+        df = df[self.features]
+        obs = df.values.copy()
+        obs[0, 0] = self.goal[0] - obs[0, 0]
+        obs[0, 1] = self.goal[1] - obs[0, 1]
+        return obs.astype(self.space().dtype)
 
 class ControlObservation(ObservationType):
     
@@ -226,8 +260,8 @@ class LateralGoalObservation(DynamicObservation):
         obs = df.values.copy()
         obs = OrderedDict([
             ("observation", obs[0]),
-            ("achieved_goal", obs[0][0:3]),
-            ("desired_goal", self.goal)
+            ("achieved_goal", obs[0][0:2]),
+            ("desired_goal", self.goal[0:2])
         ])
         return obs
 
@@ -237,6 +271,8 @@ def observation_factory(env: "AbstractEnv", config: dict) -> ObservationType:
         return DynamicObservation(env, **config)
     elif config["type"] == "Trajectory" or config["type"] == "trajectory":
         return TrajectoryObservation(env, **config)
+    elif config["type"] == "LateralTrajectory" or config["lateral_trajectory"]:
+        return LateralTrajectoryObservation(env, **config)
     elif config["type"] == "Control" or config["type"] == "control":
         return ControlObservation(env, **config)
     elif config["type"] == "Longitudinal" or config["type"] == "longitudinal":
