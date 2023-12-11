@@ -66,25 +66,33 @@ class FlyerEnv(AbstractEnv, GoalEnv):
                 "heading_limits": [85.0 * np.pi/180.0, 95.0 * np.pi/180.0],
                 "pitch_limits": [-0.1 * np.pi/180.0, 0.1 * np.pi/180.0],
                 "dist_limits": [1000.0, 10000.0],
-                "dist_terminal": 20.0
+                "dist_terminal": 100.0
             }  # goal generation details
         })
         return config
 
-    def _reset(self, seed) -> None:
-        if not seed: seed = 1  # set seed to 1 if None TODO: set to be random on None, look @ HighwayEnv
-        self._create_world(seed)
-        self._create_vehicles()
-        self._create_goal(seed)
+    def _info(self, obs, action) -> dict:
+        info = super(FlyerEnv, self)._info(obs, action)
+        success = self._is_success()
+        info.update({"is_success": success})
+        return info
 
-    def _create_world(self, seed) -> None:
+    def _reset(self) -> None:
+
+        self.np_random = np.random.RandomState()
+        self._create_world()
+        self._create_vehicles()
+        self._create_goal()
+
+    def _create_world(self) -> None:
         """Create the world map"""
         self.world = World()
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets")
         self.world.assets_dir = path
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "terrain_data")
         self.world.terrain_data_dir = path
-        self.world.create_map(seed, area=self.config["area"])
+        world_seed = self.np_random.randint(100)  # set 100 possible seeds by default 
+        self.world.create_map(world_seed, area=self.config["area"])
         return
     
     def _create_vehicles(self) -> None:
@@ -112,17 +120,15 @@ class FlyerEnv(AbstractEnv, GoalEnv):
             )
         self.controlled_vehicles.append(vehicle)
     
-    def _create_goal(self, seed) -> None:
+    def _create_goal(self) -> None:
         """Create a random goal in 3D space to navigate to, based on the aircraft's initial starting position"""
         v_pos = self.world.vehicles[0].position
         gg = self.config["goal_generation"]
 
-        np_random = np.random.RandomState(seed)
-
         def get_goal():
-            heading = np_random.uniform(gg["heading_limits"][0], gg["heading_limits"][1])
-            pitch = np_random.uniform(gg["pitch_limits"][0], gg["pitch_limits"][1])
-            dist = np_random.uniform(gg["dist_limits"][0], gg["dist_limits"][1])
+            heading = self.np_random.uniform(gg["heading_limits"][0], gg["heading_limits"][1])
+            pitch = self.np_random.uniform(gg["pitch_limits"][0], gg["pitch_limits"][1])
+            dist = self.np_random.uniform(gg["dist_limits"][0], gg["dist_limits"][1])
             rel_pos = dist*np.array([np.cos(pitch)*np.sin(heading), np.cos(pitch)*np.cos(heading), np.sin(pitch)])
             # print(f'rel_pos: {rel_pos}, pitch: {pitch}, heading: {heading}, dist: {dist}')
             pos = v_pos + rel_pos
@@ -145,6 +151,7 @@ class FlyerEnv(AbstractEnv, GoalEnv):
 
         dist_terminal = self.config["goal_generation"]["dist_terminal"]
         d = _goal_distance(achieved_goal, desired_goal)
+        # print(f'distance: {d}, achieved_goal: {achieved_goal}, desired_goal: {desired_goal}')
         if self.config["reward_type"] == "sparse":
             return -(d > dist_terminal).astype(np.float32)
         else:
@@ -199,15 +206,22 @@ class FlyerEnv(AbstractEnv, GoalEnv):
         else: 
             return 0.0
 
+    def _is_success(self) -> bool:
+        v_pos = self.vehicle.position
+        difference = np.subtract(v_pos, self.goal)
+        distance = np.linalg.norm(difference)
+        dist_terminal = self.config["goal_generation"]["dist_terminal"] 
+        return distance < dist_terminal 
+
     def _is_terminated(self) -> bool:
         """
         The episode is over if the the ego vehicle crashed, or it hits the ground
         """
 
-        v_pos = self.vehicle.position
-        difference = np.subtract(v_pos, self.goal)
-        distance = np.linalg.norm(difference)
-        dist_terminal = self.config["goal_generation"]["dist_terminal"]
+        # v_pos = self.vehicle.position
+        # difference = np.subtract(v_pos, self.goal)
+        # distance = np.linalg.norm(difference)
+        # dist_terminal = self.config["goal_generation"]["dist_terminal"]
 
         # If crashed terminate
         if self.vehicle.crashed:
@@ -216,7 +230,7 @@ class FlyerEnv(AbstractEnv, GoalEnv):
         if self.vehicle.position[-1] >= 0.0:
             return True
         # If reached goal region
-        if distance < dist_terminal:
+        if self._is_success():
             return True
         return False
 

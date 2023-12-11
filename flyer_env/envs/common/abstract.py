@@ -180,7 +180,7 @@ class AbstractEnv(gym.Env):
         self.time = 0.0
         self.steps = 0
         self.done = False
-        self._reset(seed)
+        self._reset()
 
         # Second, to link the obs and actions to the vehicles once the scene is created
         self.define_spaces()
