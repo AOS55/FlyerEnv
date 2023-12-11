@@ -189,15 +189,13 @@ class HeadingAction(ActionType):
         super().__init__(env)
 
         self.heading_range = heading_range if heading_range else self.HEADING_RANGE
-
         self.powered = powered
         self.clip = clip
-        self.size = 2 if self.powered else 1
-
+        self.size = 1
         self.last_action = np.zeros(self.size)
 
     def space(self) -> spaces.Box:
-        return spaces.Box(-1.0, 1.0, shape=(self.size,), dtype=np.float32)
+        return spaces.Box(self.heading_range[0], self.heading_range[1], shape=(self.size,), dtype=np.float32)
 
     @property
     def vehicle_class(self) -> Callable:
@@ -211,11 +209,11 @@ class HeadingAction(ActionType):
         """
         
         if self.clip:
-            action = np.clip(action, -1.0, 1.0)
+            action = np.clip(action, self.heading_range[0], self.heading_range[1])
         
         if self.powered:
             self.controlled_vehicle.act({
-               'heading': np.arctan2(action[0], action[1]),
+               'heading': action,
                'alt': -1000.0,
                'speed': 80.0
             })
