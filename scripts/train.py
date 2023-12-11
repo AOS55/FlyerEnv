@@ -30,11 +30,15 @@ class Workspace:
             self.train_env = make_vec_env(cfg.env_name, n_envs=cfg.n_envs, seed=cfg.seed)
             self.eval_env = gym.make(cfg.env_name)
         self.eval_env = Monitor(self.eval_env)
-        self.eval_callback = EvalCallback(self.eval_env,
-                                          best_model_save_path=f"./logs/{exp_name}",
-                                          eval_freq=cfg.eval_freq,
-                                          deterministic=True,
-                                          render=False)
+
+        # Supressed eval callback for now, seems to interfer with training
+        # print(f'self.eval_env: {self.eval_env.config}')
+
+        # self.eval_callback = EvalCallback(self.eval_env,
+        #                                   best_model_save_path=f"./logs/{exp_name}",
+        #                                   eval_freq=cfg.eval_freq,
+        #                                   deterministic=True,
+        #                                   render=False)
         
         if cfg.use_her:
             self.model = SAC(
@@ -65,7 +69,7 @@ class Workspace:
             callback = [WandbCallback(
                             model_save_path=f"{self.work_dir}/{self.run.id}",
                                 verbose=2
-                            ), self.eval_callback
+                            ) #, self.eval_callback
                         ]
         else:
             callback = [self.eval_callback]
@@ -74,6 +78,8 @@ class Workspace:
                          log_interval=self.cfg.log_interval,
                          progress_bar=True,
                          callback=callback)
+        
+        self.model.save(".runs/model")
 
         if self.cfg.use_wandb:
             self.run.finish()
