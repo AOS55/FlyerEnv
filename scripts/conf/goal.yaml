@@ -18,6 +18,18 @@ env_config:
     - 256
     - 256
   simulation_frequency: 100.0
+  goal_generation:
+    heading_limits:
+      - 1.4835
+      - 1.6580
+    pitch_limits:
+      - -0.0001
+      - 0.0001
+    dist_limits:
+      - 1000.0
+      - 2000.0
+    dist_terminal:
+      - 100.0
 
 # train settings
 agent_type: SAC
@@ -25,12 +37,12 @@ use_her: True
 total_timesteps: 100000000
 n_envs: 32
 log_interval: 4
-learning_starts: 100000  # how many steps to sample before beginning learning
+learning_starts: 1000000  # how many steps to sample before beginning learning
 
 # eval settings
 eval_freq: 500
 
 # misc
-use_wandb: True
+use_wandb: False
 seed: 0
 render: False
