@@ -15,20 +15,27 @@ def main():
 
     env_config = {
         "observation": {
-            "type": "Goal"
+            "type": "LateralGoal"
         },
         "action": {
-            "type": "HeadingAction"
+            "type": "HeadingAction",
+            "heading_range": (-0.1, 0.1)
         },
         "duration": 100.0,
         "simulation_frequency": 100.0,
-        "seed": 0
+        "seed": 0,
+        "goal_generation": {
+            "heading_limits": [85.0 * np.pi/180.0, 95.0 * np.pi/180.0],
+            "pitch_limits": [-0.0001, 0.0001],
+            "dist_limits": [1000.0, 2000.0],
+            "dist_terminal": 100.0
+        }
     }
 
     env = gym.make("flyer-v1", config=env_config)
     print(f'reset_obs: {env.reset()}')
 
-    policy = SAC.load("models/flyer_heading_her-v1/best_model.zip", env=env)
+    policy = SAC.load("models/flyer_heading_her_1000_2000-v1/best_model.zip", env=env)
 
     obs, info = env.reset()
     print(f'env: {env}')
@@ -44,11 +51,11 @@ def main():
 
     while not done:
         action, _states = policy.predict(obs, deterministic=True)
-        # print(f'obs: {obs}')
-        # action = np.array((0.0, 0.0))
-        # print(f'action: {action}')
+        print(f'obs: {obs}')
+        action = np.arctan2(obs['desired_goal'][1], obs['desired_goal'][0])
+        print(f'action: {action * (180.0/np.pi)}')
         obs, reward, terminated, truncated, info = env.step(action)
-        print(f'reward: {reward}')
+        # print(f'reward: {reward}')
 
         v_dict = env.unwrapped.vehicle.dict
         controls = env.unwrapped.vehicle.aircraft.controls
@@ -64,7 +71,7 @@ def main():
             'z': v_dict['z'],
             'x_com': obs['desired_goal'][0],
             'y_com': obs['desired_goal'][1],
-            'z_com': obs['desired_goal'][2],
+            'z_com': -1000.0,
             'pitch': v_dict['pitch'],
             'roll': v_dict['roll'],
             'yaw': v_dict['yaw'],
@@ -85,6 +92,7 @@ def main():
     plot_long(observations, times, env_config["duration"])
     plot_lat(observations, times, env_config["duration"])
     plot_track(observations)
+    print(f'return: {np.sum(observations["reward"])}')
     plt.show()
 
 def plot_long(outputs, times, exp_len):
