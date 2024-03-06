@@ -34,11 +34,11 @@ class Workspace:
         # Supressed eval callback for now, seems to interfer with training
         # print(f'self.eval_env: {self.eval_env.config}')
 
-        # self.eval_callback = EvalCallback(self.eval_env,
-        #                                   best_model_save_path=f"./logs/{exp_name}",
-        #                                   eval_freq=cfg.eval_freq,
-        #                                   deterministic=True,
-        #                                   render=False)
+        self.eval_callback = EvalCallback(self.eval_env,
+                                          best_model_save_path=f"./logs/{exp_name}",
+                                          eval_freq=cfg.eval_freq,
+                                          deterministic=True,
+                                          render=False)
         
         if cfg.use_her:
             self.model = SAC(
@@ -69,7 +69,7 @@ class Workspace:
             callback = [WandbCallback(
                             model_save_path=f"{self.work_dir}/{self.run.id}",
                                 verbose=2
-                            ) #, self.eval_callback
+                            ), self.eval_callback
                         ]
         else:
             callback = [self.eval_callback]
