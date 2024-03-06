@@ -41,20 +41,21 @@ class RunwayEnv(AbstractEnv):
         })
         return config
     
-    def _reset(self, seed) -> None:
-        if not seed: seed = 1
-        self._create_world(seed)
+    def _reset(self) -> None:
+        self.np_random = np.random.RandomState()
+        self._create_world()
         self._create_runway()
         self._create_vehicles()
 
-    def _create_world(self, seed) -> None:
+    def _create_world(self) -> None:
         """Create the world map"""
         self.world = World()
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets")
         self.world.assets_dir = path
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "terrain_data")
         self.world.terrain_data_dir = path
-        self.world.create_map(seed, area=self.config["area"])
+        world_seed = self.np_random.randint(100)  # set 100 possible seeds by default 
+        self.world.create_map(world_seed, area=self.config["area"])
         return
     
     def _create_runway(self) -> None:
