@@ -271,7 +271,7 @@ def observation_factory(env: "AbstractEnv", config: dict) -> ObservationType:
         return DynamicObservation(env, **config)
     elif config["type"] == "Trajectory" or config["type"] == "trajectory":
         return TrajectoryObservation(env, **config)
-    elif config["type"] == "LateralTrajectory" or config["lateral_trajectory"]:
+    elif config["type"] == "LateralTrajectory" or config["type"] == "lateral_trajectory":
         return LateralTrajectoryObservation(env, **config)
     elif config["type"] == "Control" or config["type"] == "control":
         return ControlObservation(env, **config)
