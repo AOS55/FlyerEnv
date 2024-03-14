@@ -1,11 +1,12 @@
-from typing import List, Tuple, Optional, TypeVar, Dict, Text
+from typing import Dict, List, Optional, Text, Tuple, TypeVar
+
 import gymnasium as gym
 import numpy as np
-
-from flyer_env.envs.common.action import action_factory, Action, ActionType
-from flyer_env.envs.common.observation import observation_factory, ObservationType
-
 from pyflyer import Aircraft
+
+from flyer_env.envs.common.action import Action, ActionType, action_factory
+from flyer_env.envs.common.observation import (ObservationType,
+                                               observation_factory)
 
 Observation = TypeVar("Observation")
 

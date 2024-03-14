@@ -1,14 +1,15 @@
-from typing import Dict, Text
 import os
+from abc import abstractmethod
+from typing import Dict, Text
+
 import numpy as np
 from gymnasium import Env
-from abc import abstractmethod
+from pyflyer import Aircraft, World
 
 from flyer_env import utils
 from flyer_env.aircraft import ControlledAircraft
 from flyer_env.envs.common.abstract import AbstractEnv
 from flyer_env.envs.common.action import Action
-from pyflyer import World, Aircraft
 
 
 class GoalEnv(Env):

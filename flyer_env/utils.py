@@ -1,5 +1,6 @@
+from typing import List, Sequence, Tuple, Union
+
 import numpy as np
-from typing import Tuple, List, Union, Sequence
 
 # Useful types
 Vector = Union[np.ndarray, Sequence[float]]

@@ -1,12 +1,13 @@
 import functools
-from typing import TYPE_CHECKING, Optional, Union, Tuple, Callable, Dict
-from gymnasium import spaces
-import numpy as np
+from typing import TYPE_CHECKING, Callable, Dict, Optional, Tuple, Union
 
+import numpy as np
+from gymnasium import spaces
 from pyflyer import Aircraft
+
 from flyer_env import utils
-from flyer_env.utils import Vector
 from flyer_env.aircraft import ControlledAircraft
+from flyer_env.utils import Vector
 
 if TYPE_CHECKING:
     from flyer_env.envs.common.abstract import AbstractEnv

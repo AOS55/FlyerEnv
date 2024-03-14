@@ -1,9 +1,11 @@
 import os
+
+from pyflyer import Aircraft, World
+
 from flyer_env import utils
 from flyer_env.aircraft import ControlledAircraft
 from flyer_env.envs.common.abstract import AbstractEnv
 from flyer_env.envs.common.action import Action
-from pyflyer import World, Aircraft
 
 
 class ForcedLandingEnv(AbstractEnv):

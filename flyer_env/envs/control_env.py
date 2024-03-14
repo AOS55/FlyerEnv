@@ -1,13 +1,13 @@
 import os
-import numpy as np
 from typing import Dict, Text
 
-from flyer_env import utils
-from flyer_env.envs.common.action import Action
-from flyer_env.envs.common.abstract import AbstractEnv
-from flyer_env.aircraft import ControlledAircraft
+import numpy as np
+from pyflyer import Aircraft, World
 
-from pyflyer import World, Aircraft
+from flyer_env import utils
+from flyer_env.aircraft import ControlledAircraft
+from flyer_env.envs.common.abstract import AbstractEnv
+from flyer_env.envs.common.action import Action
 
 
 class ControlEnv(AbstractEnv):
