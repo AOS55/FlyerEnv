@@ -28,22 +28,34 @@ def simulate():
     controls = []
     states = []
     times = []
+    duration = 100.0
 
-    for ids in range(int(30.0/dt)):
+    for ids in range(int(duration/dt)):
         
         time = ids*dt
 
+        # if 5.0 < time < 6.0:
+        #     control_input = [0.0, -5.0 * np.pi/180.0, tla, 0.0]
+        # elif 6.0 < time < 7.0:
+        #     control_input = [0.0, 5.0 * np.pi/180.0, tla, 0.0]
+        # if 12.0 < time < 13.0:
+        #     control_input = [-5.0 * np.pi/180.0, elevator, tla, 0.0]
+        # elif 13.0 < time < 14.0:
+        #     control_input = [5.0 * np.pi/180.0, elevator, tla, 0.0]
+        # elif 19.0 < time < 20.0:
+        #     control_input = [0.0, elevator, tla, -5.0 * np.pi/180.0]
+        # elif 20.0 < time < 21.0:
+        #     control_input = [0.0, elevator, tla, 5.0 * np.pi/180.0]
+        # else:
+        #     control_input = [0.0, elevator, tla, 0.0]
+
         if 5.0 < time < 6.0:
-            control_input = [0.0, -5.0 * np.pi/180.0, tla, 0.0]
-        elif 6.0 < time < 7.0:
-            control_input = [0.0, 5.0 * np.pi/180.0, tla, 0.0]
-        elif 12.0 < time < 13.0:
             control_input = [-5.0 * np.pi/180.0, elevator, tla, 0.0]
-        elif 13.0 < time < 14.0:
+        elif 6.0 < time < 7.0:
             control_input = [5.0 * np.pi/180.0, elevator, tla, 0.0]
-        elif 19.0 < time < 20.0:
-            control_input = [0.0, elevator, tla, -5.0 * np.pi/180.0]
         elif 20.0 < time < 21.0:
+            control_input = [0.0, elevator, tla, -5.0 * np.pi/180.0]
+        elif 21.0 < time < 22.0:
             control_input = [0.0, elevator, tla, 5.0 * np.pi/180.0]
         else:
             control_input = [0.0, elevator, tla, 0.0]
@@ -72,7 +84,7 @@ def plot_long(inputs, outputs, times):
     fig.set_figwidth(20)
 
     ax[0].set_title(r"\textbf{Longitudinal Disturbance}", fontsize=30)
-    ax[0].plot(times, inputs['elevator'], c=COLOURS[7])
+    ax[0].plot(times, inputs['elevator'] * (180.0/np.pi), c=COLOURS[7])
     ax[0].set_ylabel(r"$\delta_{e} [^{\circ}]$", fontsize=15)
 
     ax[1].plot(times, outputs['q'] * 180.0 / np.pi, c=COLOURS[1])
@@ -85,10 +97,10 @@ def plot_long(inputs, outputs, times):
     ax[3].set_ylabel(r"$V_{\infty} [m/s]$", fontsize=15)
     ax[3].set_xlabel(r"time [$s$]", fontsize=15)
 
-    [axis.set_xlim(0.0, 30.0) for axis in ax]
+    [axis.set_xlim(0.0, 100.0) for axis in ax]
     [axis.xaxis.set_tick_params(labelsize=15) for axis in ax]
     [axis.yaxis.set_tick_params(labelsize=15) for axis in ax]
-    fig.show()
+    fig.savefig("long_trim_dist.pdf")
 
 def plot_lat(inputs, outputs, times):
     fig, ax = plt.subplots(4, 1, sharex=True)
@@ -98,8 +110,8 @@ def plot_lat(inputs, outputs, times):
     fig.set_figwidth(20)
 
     ax[0].set_title(r"\textbf{Lateral-Directional Disturbance}", fontsize=30)
-    ax[0].plot(times, inputs['aileron'], c=COLOURS[5], label=r'aileron')
-    ax[0].plot(times, inputs['rudder'], c=COLOURS[7], linestyle='dashed', label=r'rudder')
+    ax[0].plot(times, inputs['aileron'] * (180.0/np.pi), c=COLOURS[5], label=r'aileron')
+    ax[0].plot(times, inputs['rudder'] * (180.0/np.pi), c=COLOURS[7], linestyle='dashed', label=r'rudder')
     ax[0].set_ylabel(r"$\delta [^{\circ}]$", fontsize=15)
     ax[0].legend(title=r'\textbf{Control}')
 
@@ -115,10 +127,10 @@ def plot_lat(inputs, outputs, times):
     ax[3].set_xlabel(r"time [$s$]", fontsize=15)
     ax[3].legend(title=r'\textbf{Attitude}')
 
-    [axis.set_xlim(10.0, 30.0) for axis in ax]
+    [axis.set_xlim(0.0, 40.0) for axis in ax]
     [axis.xaxis.set_tick_params(labelsize=15) for axis in ax]
     [axis.yaxis.set_tick_params(labelsize=15) for axis in ax]
-    fig.show()
+    fig.savefig("lat_trim_dist.pdf")
 
 def main():
     simulate()

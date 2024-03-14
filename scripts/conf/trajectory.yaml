@@ -24,6 +24,7 @@ agent_type: SAC
 total_timesteps: 50000000
 n_envs: 32
 log_interval: 4
+use_her: False
 
 # eval settings
 eval_freq: 500

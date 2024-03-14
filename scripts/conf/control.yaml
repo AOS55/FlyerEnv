@@ -7,9 +7,9 @@ env_name: control-v1
 
 env_config:
   observation:
-    type: Dynamics
+    type: Longitudinal
   action:
-    type: ContinuousAction
+    type: LongitudinalAction
   duration: 10.0
   area:
     - 256
@@ -18,6 +18,7 @@ env_config:
 
 # train settings
 agent_type: SAC
+use_her: False
 total_timesteps: 20000000
 n_envs: 32
 log_interval: 4
@@ -27,5 +28,5 @@ eval_freq: 500
 
 # misc
 use_wandb: True
-seed: 0
+seed: 5
 render: False

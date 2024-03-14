@@ -10,6 +10,7 @@ from flyer_env.aircraft.trajectory import TrajectoryTarget
 
 from pyflyer import World, Aircraft
 
+
 class TrajectoryEnv(AbstractEnv):
 
     """

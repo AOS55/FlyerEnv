@@ -2,7 +2,8 @@ import gymnasium as gym
 import hydra
 from pathlib import Path
 from omegaconf import DictConfig, OmegaConf
-from stable_baselines3 import SAC, PPO, DDPG
+
+from stable_baselines3 import HerReplayBuffer, SAC, PPO, DDPG
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.monitor import Monitor
@@ -29,17 +30,37 @@ class Workspace:
             self.train_env = make_vec_env(cfg.env_name, n_envs=cfg.n_envs, seed=cfg.seed)
             self.eval_env = gym.make(cfg.env_name)
         self.eval_env = Monitor(self.eval_env)
+
+        # Supressed eval callback for now, seems to interfer with training
+        # print(f'self.eval_env: {self.eval_env.config}')
+
         self.eval_callback = EvalCallback(self.eval_env,
                                           best_model_save_path=f"./logs/{exp_name}",
                                           eval_freq=cfg.eval_freq,
                                           deterministic=True,
                                           render=False)
-        self.model = SAC(
-            "MlpPolicy",
-            self.train_env,
-            verbose=1,
-            tensorboard_log=f".runs/sac"
-        )
+        
+        if cfg.use_her:
+            self.model = SAC(
+                "MultiInputPolicy",
+                self.train_env,
+                verbose=1,
+                replay_buffer_class=HerReplayBuffer,
+                # Parameters for HER
+                replay_buffer_kwargs=dict(
+                    n_sampled_goal=4,
+                    goal_selection_strategy="future"
+                ),
+                learning_starts=self.cfg.learning_starts,
+                tensorboard_log=f".runs/sac"
+            )
+        else:
+            self.model = SAC(
+                "MlpPolicy",
+                self.train_env,
+                verbose=1,
+                tensorboard_log=f".runs/sac"
+            )
         return
 
     def train(self):
@@ -57,6 +78,8 @@ class Workspace:
                          log_interval=self.cfg.log_interval,
                          progress_bar=True,
                          callback=callback)
+        
+        self.model.save(".runs/model")
 
         if self.cfg.use_wandb:
             self.run.finish()

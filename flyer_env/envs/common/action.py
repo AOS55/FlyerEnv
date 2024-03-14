@@ -168,6 +168,58 @@ class LongitudinalAction(ActionType):
         self.last_action = action 
 
 
+class HeadingAction(ActionType):
+    
+    HEADING_RANGE = (-np.pi, np.pi)
+
+    """
+    A continuous action space with a fixed altitude and speed.
+    Controls are only [aileron].
+    """
+
+    def __init__(self,
+                 env: 'AbstractEnv',
+                 heading_range: Optional[Tuple[float, float]] = None,
+                 powered: bool = True,
+                 clip: bool = True,
+                 **kwargs) -> None:
+        """
+        Create a continuous laterally constrained action space
+        """
+        super().__init__(env)
+
+        self.heading_range = heading_range if heading_range else self.HEADING_RANGE
+        self.powered = powered
+        self.clip = clip
+        self.size = 1
+        self.last_action = np.zeros(self.size)
+
+    def space(self) -> spaces.Box:
+        return spaces.Box(self.heading_range[0], self.heading_range[1], shape=(self.size,), dtype=np.float32)
+
+    @property
+    def vehicle_class(self) -> Callable:
+        return functools.partial(ControlledAircraft)
+
+    def act(self, action: np.ndarray) -> None:
+        """
+        Apply the action to the controlled vehicle
+        
+        :param action: action array with [sine, cosine] mapped between ranges
+        """
+        
+        if self.clip:
+            action = np.clip(action, self.heading_range[0], self.heading_range[1])
+        
+        if self.powered:
+            self.controlled_vehicle.act({
+               'heading': action,
+               'alt': -1000.0,
+               'speed': 80.0
+            })
+        self.last_action = action
+
+
 class ControlledAction(ActionType):
     """
     An action that controls the aircraft using a PID controller to track towards the target.
@@ -328,6 +380,8 @@ def action_factory(env: 'AbstractEnv', config: dict) -> ActionType:
         return ContinuousAction(env, **config)
     elif config["type"] == "LongitudinalAction":
         return LongitudinalAction(env, **config)
+    elif config["type"] == "HeadingAction":
+        return HeadingAction(env, **config)
     elif config["type"] == "ControlledAction":
         return ControlledAction(env, **config)
     elif config["type"] == "PursuitAction":
