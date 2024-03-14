@@ -1,9 +1,9 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
-from flyer_env.utils import Vector
 from flyer_env.aircraft import TrackPoints
+from flyer_env.utils import Vector
 
 plt.rcParams.update({"text.usetex": True})
 

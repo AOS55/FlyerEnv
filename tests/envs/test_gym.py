@@ -1,5 +1,6 @@
 import gymnasium as gym
 import pytest
+
 import flyer_env
 
 flyer_env.register_flyer_envs()
