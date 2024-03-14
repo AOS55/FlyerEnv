@@ -14,25 +14,26 @@ if TYPE_CHECKING:
 
 Action = Union[int, np.ndarray]
 
+
 class ActionType:
 
-    def __init__(self, env: 'AbstractEnv', **kwargs) -> None:
+    def __init__(self, env: "AbstractEnv", **kwargs) -> None:
         self.env = env
         self.__controlled_vehicle = None
 
     def space(self) -> spaces.Space:
         """The action space"""
         raise NotImplementedError
-    
+
     @property
     def vehicle_class(self) -> Callable:
         """The class of vehicle capable of executing this action"""
         raise NotImplementedError
-    
+
     def act(self, action: Action) -> None:
         """Execute the action on the ego vehicle"""
         raise NotImplementedError
-    
+
     @property
     def controlled_vehicle(self):
         """The vehicle acted upon"""
@@ -45,33 +46,38 @@ class ActionType:
 
 class ContinuousAction(ActionType):
 
-    ELEVATOR_RANGE = (-5.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))
-    AILERON_RANGE = (-5.0 * (np.pi/180.0), 5.0 * (-np.pi/180.0))
+    ELEVATOR_RANGE = (-5.0 * (np.pi / 180.0), 30.0 * (np.pi / 180.0))
+    AILERON_RANGE = (-5.0 * (np.pi / 180.0), 5.0 * (-np.pi / 180.0))
     TLA_RANGE = (0.0, 1.0)
-    RUDDER_RANGE = (-30.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))  # removed rudder from action-space for now
+    RUDDER_RANGE = (
+        -30.0 * (np.pi / 180.0),
+        30.0 * (np.pi / 180.0),
+    )  # removed rudder from action-space for now
 
     """
     A continuous action space for thrust-lever-angle and control surface deflections.
     Controls are set in order [elevator, aileron, tla, rudder].
     """
 
-    def __init__(self,
-                 env: 'AbstractEnv',
-                 elevator_range: Optional[Tuple[float, float]] = None,
-                 aileron_range: Optional[Tuple[float, float]] = None,
-                 tla_range: Optional[Tuple[float, float]] = None,
-                 powered: bool = True,
-                 clip: bool = True,
-                 **kwargs) -> None:
+    def __init__(
+        self,
+        env: "AbstractEnv",
+        elevator_range: Optional[Tuple[float, float]] = None,
+        aileron_range: Optional[Tuple[float, float]] = None,
+        tla_range: Optional[Tuple[float, float]] = None,
+        powered: bool = True,
+        clip: bool = True,
+        **kwargs
+    ) -> None:
         """
-        Create a continuous action space 
+        Create a continuous action space
         """
         super().__init__(env)
 
         # Setup control limit ranges
         self.elevator_range = elevator_range if elevator_range else self.ELEVATOR_RANGE
         self.aileron_range = aileron_range if aileron_range else self.AILERON_RANGE
-        self.tla_range = tla_range if tla_range else self.TLA_RANGE 
+        self.tla_range = tla_range if tla_range else self.TLA_RANGE
 
         self.powered = powered
         self.clip = clip
@@ -81,51 +87,56 @@ class ContinuousAction(ActionType):
 
     def space(self) -> spaces.Box:
         return spaces.Box(-1.0, 1.0, shape=(self.size,), dtype=np.float32)
-    
+
     @property
     def vehicle_class(self) -> Callable:
         return Aircraft
-    
+
     def act(self, action: np.ndarray) -> None:
         if self.clip:
             action = np.clip(action, -1, 1)
         if self.powered:
-            self.controlled_vehicle.act({
-                'aileron': utils.lmap(action[0], [-1, 1], self.aileron_range),
-                'elevator': utils.lmap(action[1], [-1, 1], self.elevator_range),
-                'tla': utils.lmap(action[2], [-1, 1], self.tla_range),
-                # 'rudder': utils.lmap(action[3], [-1, 1], self.rudder_range)
-                'rudder': 0.0
-            })
+            self.controlled_vehicle.act(
+                {
+                    "aileron": utils.lmap(action[0], [-1, 1], self.aileron_range),
+                    "elevator": utils.lmap(action[1], [-1, 1], self.elevator_range),
+                    "tla": utils.lmap(action[2], [-1, 1], self.tla_range),
+                    # 'rudder': utils.lmap(action[3], [-1, 1], self.rudder_range)
+                    "rudder": 0.0,
+                }
+            )
         else:
-            self.controlled_vehicle.act({
-                'aileron': utils.lmap(action[0], [-1, 1], self.aileron_range),
-                'elevator': utils.lmap(action[1], [-1, 1], self.elevator_range),
-                'tla': 0.0,
-                # 'rudder': utils.lmap(action[2], [-1, 1], self.rudder_range)
-                'rudder': 0.0
-            })
+            self.controlled_vehicle.act(
+                {
+                    "aileron": utils.lmap(action[0], [-1, 1], self.aileron_range),
+                    "elevator": utils.lmap(action[1], [-1, 1], self.elevator_range),
+                    "tla": 0.0,
+                    # 'rudder': utils.lmap(action[2], [-1, 1], self.rudder_range)
+                    "rudder": 0.0,
+                }
+            )
         self.last_action = action
 
 
 class LongitudinalAction(ActionType):
 
-    ELEVATOR_RANGE = (-5.0 * (np.pi/180.0), 30.0 * (np.pi/180.0))
+    ELEVATOR_RANGE = (-5.0 * (np.pi / 180.0), 30.0 * (np.pi / 180.0))
     TLA_RANGE = (0.0, 1.0)
 
     """
     A continuous action space for thrust-lever-angle and elevator control.
     Controls are set in order [elevator, tla].
-    """ 
+    """
 
-    def __init__(self,
-                 env: 'AbstractEnv',
-                 elevator_range: Optional[Tuple[float, float]] = None,
-                 tla_range: Optional[Tuple[float, float]] = None,
-                 powered: bool = True,
-                 clip: bool = True,
-                 **kwargs) -> None:
-        
+    def __init__(
+        self,
+        env: "AbstractEnv",
+        elevator_range: Optional[Tuple[float, float]] = None,
+        tla_range: Optional[Tuple[float, float]] = None,
+        powered: bool = True,
+        clip: bool = True,
+        **kwargs
+    ) -> None:
         """
         Create a continuous longitudinally constrained action space
         """
@@ -143,33 +154,37 @@ class LongitudinalAction(ActionType):
 
     def space(self) -> spaces.Box:
         return spaces.Box(-1.0, 1.0, shape=(self.size,), dtype=np.float32)
-    
+
     @property
     def vehicle_class(self) -> Callable:
         return Aircraft
-    
+
     def act(self, action: np.ndarray) -> None:
         if self.clip:
             action = np.clip(action, -1.0, 1.0)
         if self.powered:
-            self.controlled_vehicle.act({
-                'aileron': 0.0,
-                'elevator': utils.lmap(action[0], [-1.0, 1.0], self.elevator_range),
-                'tla': utils.lmap(action[1], [-1, 1], self.tla_range),
-                'rudder': 0.0
-            })
+            self.controlled_vehicle.act(
+                {
+                    "aileron": 0.0,
+                    "elevator": utils.lmap(action[0], [-1.0, 1.0], self.elevator_range),
+                    "tla": utils.lmap(action[1], [-1, 1], self.tla_range),
+                    "rudder": 0.0,
+                }
+            )
         else:
-            self.controlled_vehicle.act({
-                'aileron': 0.0,
-                'elevator': utils.lmap(action[0], [-1.0, 1.0], self.elevator_range),
-                'tla': 0.0,
-                'rudder': 0.0
-            })
-        self.last_action = action 
+            self.controlled_vehicle.act(
+                {
+                    "aileron": 0.0,
+                    "elevator": utils.lmap(action[0], [-1.0, 1.0], self.elevator_range),
+                    "tla": 0.0,
+                    "rudder": 0.0,
+                }
+            )
+        self.last_action = action
 
 
 class HeadingAction(ActionType):
-    
+
     HEADING_RANGE = (-np.pi, np.pi)
 
     """
@@ -177,12 +192,14 @@ class HeadingAction(ActionType):
     Controls are only [aileron].
     """
 
-    def __init__(self,
-                 env: 'AbstractEnv',
-                 heading_range: Optional[Tuple[float, float]] = None,
-                 powered: bool = True,
-                 clip: bool = True,
-                 **kwargs) -> None:
+    def __init__(
+        self,
+        env: "AbstractEnv",
+        heading_range: Optional[Tuple[float, float]] = None,
+        powered: bool = True,
+        clip: bool = True,
+        **kwargs
+    ) -> None:
         """
         Create a continuous laterally constrained action space
         """
@@ -195,7 +212,12 @@ class HeadingAction(ActionType):
         self.last_action = np.zeros(self.size)
 
     def space(self) -> spaces.Box:
-        return spaces.Box(self.heading_range[0], self.heading_range[1], shape=(self.size,), dtype=np.float32)
+        return spaces.Box(
+            self.heading_range[0],
+            self.heading_range[1],
+            shape=(self.size,),
+            dtype=np.float32,
+        )
 
     @property
     def vehicle_class(self) -> Callable:
@@ -204,19 +226,17 @@ class HeadingAction(ActionType):
     def act(self, action: np.ndarray) -> None:
         """
         Apply the action to the controlled vehicle
-        
+
         :param action: action array with [sine, cosine] mapped between ranges
         """
-        
+
         if self.clip:
             action = np.clip(action, self.heading_range[0], self.heading_range[1])
-        
+
         if self.powered:
-            self.controlled_vehicle.act({
-               'heading': action,
-               'alt': -1000.0,
-               'speed': 80.0
-            })
+            self.controlled_vehicle.act(
+                {"heading": action, "alt": -1000.0, "speed": 80.0}
+            )
         self.last_action = action
 
 
@@ -225,17 +245,20 @@ class ControlledAction(ActionType):
     An action that controls the aircraft using a PID controller to track towards the target.
     Controls are set in the order: [HeadingSin, HeadingCos, Alt, Speed]
     """
+
     HEADING_RANGE = (-np.pi, np.pi)
     ALT_RANGE = (0.0, -10000)
     SPEED_RANGE = (60.0, 110.0)
 
-    def __init__(self,
-                 env: 'AbstractEnv',
-                 heading_range: Optional[Tuple[float, float]] = None,
-                 alt_range: Optional[Tuple[float, float]] = None,
-                 speed_range: Optional[Tuple[float, float]] = None,
-                 clip: bool = True,
-                 **kwargs) -> None:
+    def __init__(
+        self,
+        env: "AbstractEnv",
+        heading_range: Optional[Tuple[float, float]] = None,
+        alt_range: Optional[Tuple[float, float]] = None,
+        speed_range: Optional[Tuple[float, float]] = None,
+        clip: bool = True,
+        **kwargs
+    ) -> None:
         """
         Create a controlled action space
 
@@ -259,7 +282,7 @@ class ControlledAction(ActionType):
     @property
     def vehicle_class(self) -> Callable:
         return functools.partial(ControlledAircraft)
-    
+
     def act(self, action: np.array) -> None:
         """
         Apply the action to the controlled vehicle
@@ -269,11 +292,13 @@ class ControlledAction(ActionType):
         if self.clip:
             action = np.clip(action, -1, 1)
 
-        self.controlled_vehicle.act({
-            'heading': np.arctan2(action[0], action[1]),
-            'alt': utils.lmap(action[2], [-1, 1], self.alt_range),
-            'speed': utils.lmap(action[3], [-1, 1], self.speed_range)
-        })
+        self.controlled_vehicle.act(
+            {
+                "heading": np.arctan2(action[0], action[1]),
+                "alt": utils.lmap(action[2], [-1, 1], self.alt_range),
+                "speed": utils.lmap(action[3], [-1, 1], self.speed_range),
+            }
+        )
         self.last_action = action
 
 
@@ -286,12 +311,15 @@ class PursuitAction(ActionType):
     A high level action to navigate to a 2D point in space at a fixed altitude and speed.
     Actions are set in the order: [{GoalPosX, GoalPosY}, {Alt, Speed}]
     """
-    def __init__(self,
-                env: 'AbstractEnv',
-                alt_range: Optional[Tuple[float, float]] = None,
-                speed_range: Optional[Tuple[float, float]] = None,
-                clip: bool = True,
-                **kwargs) -> None:
+
+    def __init__(
+        self,
+        env: "AbstractEnv",
+        alt_range: Optional[Tuple[float, float]] = None,
+        speed_range: Optional[Tuple[float, float]] = None,
+        clip: bool = True,
+        **kwargs
+    ) -> None:
 
         super().__init__(env)
         self.alt_range = alt_range if alt_range else self.ALT_RANGE
@@ -301,17 +329,22 @@ class PursuitAction(ActionType):
         self.last_action = {"goal_pos": np.zeros(2), "other_controls": np.zeros(2)}
 
     def space(self) -> spaces.Dict:
-        return spaces.Dict({
-            "goal_pos": spaces.Box(low=-np.infty, high=np.infty, shape=(2,), dtype=np.float32),
-            "other_controls": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
-        })
+        return spaces.Dict(
+            {
+                "goal_pos": spaces.Box(
+                    low=-np.infty, high=np.infty, shape=(2,), dtype=np.float32
+                ),
+                "other_controls": spaces.Box(
+                    low=-1.0, high=1.0, shape=(2,), dtype=np.float32
+                ),
+            }
+        )
 
     @property
     def vehicle_class(self) -> Callable:
         return functools.partial(ControlledAircraft)
 
     def act(self, action: Dict[str, Vector]) -> None:
-
         """
         Apply the action to the controlled vehicle
 
@@ -319,45 +352,56 @@ class PursuitAction(ActionType):
         """
 
         if self.clip:
-            action['other_controls'] = np.clip(action['other_controls'], -1, 1)
+            action["other_controls"] = np.clip(action["other_controls"], -1, 1)
 
-        self.controlled_vehicle.act({
-            'pursuit_target': action['goal_pos'],
-            'alt': utils.lmap(action['other_controls'][0], [0, 1], self.alt_range),
-            'speed': utils.lmap(action['other_controls'][1], [0, 1], self.speed_range)
-        })
+        self.controlled_vehicle.act(
+            {
+                "pursuit_target": action["goal_pos"],
+                "alt": utils.lmap(action["other_controls"][0], [0, 1], self.alt_range),
+                "speed": utils.lmap(
+                    action["other_controls"][1], [0, 1], self.speed_range
+                ),
+            }
+        )
 
         self.last_action = action
 
 
 class TrackAction(ActionType):
-    
+
     SPEED_RANGE = (0.0, 300.0)
-    
-    def __init__(self,
-                 env: 'AbstractEnv',
-                 speed_range: Optional[Tuple[float, float]] = None,
-                 clip: bool = None,
-                 **kwargs) -> None:
-        
+
+    def __init__(
+        self,
+        env: "AbstractEnv",
+        speed_range: Optional[Tuple[float, float]] = None,
+        clip: bool = None,
+        **kwargs
+    ) -> None:
+
         super().__init__(env)
         self.speed_range = speed_range if speed_range else self.SPEED_RANGE
         self.size = 4
         self.clip = clip
-        self.last_action = {"track_points": np.zeros(3), "other_controls": np.zeros(1)} 
+        self.last_action = {"track_points": np.zeros(3), "other_controls": np.zeros(1)}
 
     def space(self) -> spaces.Dict:
-        return spaces.Dict({
-            "targets": spaces.Box(low=-np.infty, high=np.infty, shape=(3,), dtype=np.float32),
-            "other_controls": spaces.Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
-        })
+        return spaces.Dict(
+            {
+                "targets": spaces.Box(
+                    low=-np.infty, high=np.infty, shape=(3,), dtype=np.float32
+                ),
+                "other_controls": spaces.Box(
+                    low=-1.0, high=1.0, shape=(1,), dtype=np.float32
+                ),
+            }
+        )
 
     @property
     def vehicle_class(self) -> Callable:
         return functools.partial(ControlledAircraft)
-    
-    def act(self, action: Dict[str, Vector]) -> None:
 
+    def act(self, action: Dict[str, Vector]) -> None:
         """
         Apply the action to the controlled vehicle
 
@@ -365,17 +409,19 @@ class TrackAction(ActionType):
         """
 
         if self.clip:
-            action['other_controls'] = np.clip(action['other_controls'], -1, 1)
+            action["other_controls"] = np.clip(action["other_controls"], -1, 1)
 
-        self.controlled_vehicle.act({
-            'track_points': action['targets'],
-            'speed': utils.lmap(action['other_controls'], [0, 1], self.speed_range)
-        })
+        self.controlled_vehicle.act(
+            {
+                "track_points": action["targets"],
+                "speed": utils.lmap(action["other_controls"], [0, 1], self.speed_range),
+            }
+        )
 
         self.last_action = action
 
 
-def action_factory(env: 'AbstractEnv', config: dict) -> ActionType:
+def action_factory(env: "AbstractEnv", config: dict) -> ActionType:
     if config["type"] == "ContinuousAction":
         return ContinuousAction(env, **config)
     elif config["type"] == "LongitudinalAction":

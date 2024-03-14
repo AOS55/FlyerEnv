@@ -1,4 +1,5 @@
 """Wrapper for recording videos."""
+
 import os
 from typing import Callable, Optional
 

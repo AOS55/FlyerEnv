@@ -4,11 +4,13 @@ from flyer_env.utils import Vector
 
 class TrajectoryTarget:
 
-    def __init__(self,
-                 speed: float,
-                 start_position: Vector,
-                 start_heading: float = 0.0,
-                 start_time: float = 0.0):
+    def __init__(
+        self,
+        speed: float,
+        start_position: Vector,
+        start_heading: float = 0.0,
+        start_time: float = 0.0,
+    ):
         """
         Target Object used to generate error for trajectory following objectives
 
@@ -23,7 +25,9 @@ class TrajectoryTarget:
 
     def update(self, traj_func, dt: float):
         self.time += dt
-        self.position, done, self.heading = traj_func(self.position, self.time, dt, self.heading)
+        self.position, done, self.heading = traj_func(
+            self.position, self.time, dt, self.heading
+        )
         return self.position.copy(), done
 
     def straight_and_level(self, length: float = 40.0, **kwargs):
@@ -33,6 +37,7 @@ class TrajectoryTarget:
         :param length: length of time to run for [s]
         :return: function used to update the targets position
         """
+
         def traj_func(position: Vector, time: float, dt: float, heading: float):
             position[0] += np.cos(heading) * self.speed * dt
             position[1] += np.sin(heading) * self.speed * dt
@@ -44,10 +49,16 @@ class TrajectoryTarget:
                 done = False
 
             return position, done, heading
+
         return traj_func
 
-    def climb(self, final_height: float = 200.0,
-              climb_angle: float = 20.0 * np.pi/180.0, length: float = 15.0, **kwargs):
+    def climb(
+        self,
+        final_height: float = 200.0,
+        climb_angle: float = 20.0 * np.pi / 180.0,
+        length: float = 15.0,
+        **kwargs
+    ):
         """
         Create an update function to climb to an altitude
 
@@ -82,10 +93,16 @@ class TrajectoryTarget:
                 done = False
 
             return position, done, heading
+
         return traj_func
 
-    def descend(self, final_height: float = 200.0, climb_angle: float = -20.0 * np.pi/180.0,
-                length: float = 15.0, **kwargs):
+    def descend(
+        self,
+        final_height: float = 200.0,
+        climb_angle: float = -20.0 * np.pi / 180.0,
+        length: float = 15.0,
+        **kwargs
+    ):
         """
         Create an update function to descend to an altitude
 
@@ -120,10 +137,16 @@ class TrajectoryTarget:
                 done = False
 
             return position, done, heading
+
         return traj_func
 
-    def left_turn(self, end_heading: float = -90.0*(np.pi/180.0),
-                  turn_rate: float = 3.0*(np.pi/180.0), length: float = 45.0, **kwargs):
+    def left_turn(
+        self,
+        end_heading: float = -90.0 * (np.pi / 180.0),
+        turn_rate: float = 3.0 * (np.pi / 180.0),
+        length: float = 45.0,
+        **kwargs
+    ):
         """
         Create an update function to turn, left, to a new heading
 
@@ -132,6 +155,7 @@ class TrajectoryTarget:
         :param length: length of time to run for [s]
         :return: function used to update the targets position
         """
+
         def traj_func(position: Vector, time: float, dt: float, heading: float):
             # Straight and Level
             if time < 5.0:
@@ -156,10 +180,16 @@ class TrajectoryTarget:
                 done = False
 
             return position, done, heading
+
         return traj_func
 
-    def right_turn(self, end_heading: float = 90.0*(np.pi/180.0),
-                   turn_rate: float = 5.0*(np.pi/180.0), length: float = 45.0, **kwargs):
+    def right_turn(
+        self,
+        end_heading: float = 90.0 * (np.pi / 180.0),
+        turn_rate: float = 5.0 * (np.pi / 180.0),
+        length: float = 45.0,
+        **kwargs
+    ):
         """
         Create an update function to turn, right, to a new heading
 
@@ -168,6 +198,7 @@ class TrajectoryTarget:
         :param length: length of time to run for [s]
         :return: function used to update the targets position
         """
+
         def traj_func(position: Vector, time: float, dt: float, heading: float):
             # Straight and Level
             if time < 5.0:
@@ -192,6 +223,7 @@ class TrajectoryTarget:
                 done = False
 
             return position, done, heading
+
         return traj_func
 
 
@@ -199,7 +231,7 @@ if __name__ == "__main__":
 
     SPEED = 100.0
     START_POSITION = np.array([0.0, 0.0, 1000.0])
-    dT = 1/60.0
+    dT = 1 / 60.0
     START_TIME = 0.0
 
     tt = TrajectoryTarget(SPEED, START_POSITION, START_TIME)

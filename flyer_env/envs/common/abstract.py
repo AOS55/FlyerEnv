@@ -10,25 +10,23 @@ from pyflyer import Aircraft
 
 Observation = TypeVar("Observation")
 
-class AbstractEnv(gym.Env):
 
+class AbstractEnv(gym.Env):
     """
     A generic environment for various aircraft flight related tasks
-    
+
     """
 
     observation_type: ObservationType
     action_type: ActionType
-    metadata = {
-        'render_modes': ['human', 'rgb_array']
-    }
+    metadata = {"render_modes": ["human", "rgb_array"]}
 
     def __init__(
         self,
         config: dict = None,
         render_mode: Optional[str] = None,
     ) -> None:
-        
+
         super().__init__()
 
         # Configuration
@@ -54,14 +52,14 @@ class AbstractEnv(gym.Env):
         self.viewer = None
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
-    
+
         self.reset()
 
     @property
     def vehicle(self) -> Aircraft:
         """First (default) controlled vehicle"""
         return self.controlled_vehicles[0] if self.controlled_vehicles else None
-    
+
     @vehicle.setter
     def vehicle(self, vehicle: Aircraft) -> None:
         """Set a unique controlled vehicle"""
@@ -76,17 +74,13 @@ class AbstractEnv(gym.Env):
         :return: a configuration dict
         """
         return {
-            "observation": {
-                "type": "Dynamics"
-            },
-            "action": {
-                "type": "ContinuousAction"
-            },
+            "observation": {"type": "Dynamics"},
+            "action": {"type": "ContinuousAction"},
             "simulation_frequency": 120.0,  # [Hz]
             "policy_frequency": 10.0,  # [Hz]
             "render_frequency": 1.0,  # [Hz]
             "screen_size": 600,  # [px], forced to be square viewport for now
-            "scaling": 25,  # [m/px], ratio of how large the default tile is in [m] 
+            "scaling": 25,  # [m/px], ratio of how large the default tile is in [m]
         }
 
     def configure(self, config: dict) -> None:
@@ -122,7 +116,7 @@ class AbstractEnv(gym.Env):
         :return: a dict of {'reward_name': reward_value}
         """
         raise NotImplementedError
-    
+
     def _is_terminated(self) -> bool:
         """
         Check whether the current state is a terminal state
@@ -130,7 +124,7 @@ class AbstractEnv(gym.Env):
         :return: True: if terminal, False: if not
         """
         raise NotImplementedError
-    
+
     def _is_truncated(self) -> bool:
         """
         Check if the episode is truncated at the current step
@@ -138,7 +132,7 @@ class AbstractEnv(gym.Env):
         :return: True: if truncated, False: if not
         """
         raise NotImplementedError
-    
+
     def _info(self, obs, action) -> dict:
         """
         Return a dictionary of additional information
@@ -149,7 +143,7 @@ class AbstractEnv(gym.Env):
         """
 
         info = {
-            #TODO: Add key information we might want here
+            # TODO: Add key information we might want here
         }
 
         try:
@@ -157,12 +151,10 @@ class AbstractEnv(gym.Env):
         except NotImplementedError:
             pass
         return info
-    
-    def reset(self,
-        *,
-        seed: Optional[int] = None,
-        options: Optional[dict] = None
-        ) -> Tuple[Observation, dict]:
+
+    def reset(
+        self, *, seed: Optional[int] = None, options: Optional[dict] = None
+    ) -> Tuple[Observation, dict]:
         """
         Reset the environment to it's initial configuration
 
@@ -173,10 +165,10 @@ class AbstractEnv(gym.Env):
         super().reset(seed=seed, options=options)
         if options and "config" in options:
             self.configure(options["config"])
-        
+
         # First, to set the controlled vehicle class depending on the action space
         self.define_spaces()
-        
+
         self.time = 0.0
         self.steps = 0
         self.done = False
@@ -207,7 +199,7 @@ class AbstractEnv(gym.Env):
         :param action: the action performed by the ego-vehicle
         :return: a tuple (observation, reward, terminated, truncated, info)
         """
-        
+
         # Call from the simulator and update the values of each
         self._simulate(action)
 
@@ -223,7 +215,7 @@ class AbstractEnv(gym.Env):
         """
         Simulate the world
         """
-        dt = 1/self.config["simulation_frequency"]
+        dt = 1 / self.config["simulation_frequency"]
         self.time += dt
         self.action_type.act(action)  # set the action on the aircraft
         self.vehicle.step(dt)  # update the aircraft
@@ -243,15 +235,17 @@ class AbstractEnv(gym.Env):
                 f"e.g. gym.make({self.spec.id}, render_mode='rgb_array')"
             )
             return
-        
+
         if self.render_mode == "rgb_array":
             bytes = self.world.render()
             img = np.array(bytes, dtype=np.uint8)
-            img = img.reshape((int(self.world.screen_width), int(self.world.screen_height), 4))
+            img = img.reshape(
+                (int(self.world.screen_width), int(self.world.screen_height), 4)
+            )
             img = img[:, :, :3]
 
             return img
-    
+
     def close(self) -> None:
         """
         Close the environment
