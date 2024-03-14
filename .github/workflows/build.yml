@@ -24,6 +24,12 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Build PyRust module
+      uses: PyO3/maturin-action@v1.42.0
+      with:
+        command: build
+        args: --release
+        target: pyflyer-rs
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
