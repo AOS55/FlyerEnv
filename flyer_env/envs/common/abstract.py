@@ -5,8 +5,7 @@ import numpy as np
 from pyflyer import Aircraft
 
 from flyer_env.envs.common.action import Action, ActionType, action_factory
-from flyer_env.envs.common.observation import (ObservationType,
-                                               observation_factory)
+from flyer_env.envs.common.observation import ObservationType, observation_factory
 
 Observation = TypeVar("Observation")
 
