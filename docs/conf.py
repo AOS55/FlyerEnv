@@ -12,13 +12,12 @@
 #
 import os
 import sys
+from typing import Any, Dict
 
 sys.path.insert(0, os.path.abspath(".."))
 print(f"sys.executable: {sys.executable}")
 
 # -- Project information -----------------------------------------------------
-import os
-from typing import Any, Dict
 
 # import flyer_env
 
