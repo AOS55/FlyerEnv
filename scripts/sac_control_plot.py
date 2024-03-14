@@ -45,8 +45,8 @@ def main():
     }
 
     c_env = gym.make("control-v1", config=control_env_config)
-    c_obs, c_info = c_env.reset()
-    c_done = False
+    _, _ = c_env.reset()
+    # c_done = False
     c_action = [
         0.0,
         1.0,
@@ -54,7 +54,7 @@ def main():
         lmap(100.0, [60.0, 110.0], [-1.0, 1.0]),
     ]
 
-    obs, info = env.reset()
+    obs, _ = env.reset()
     done = False
 
     observations = []

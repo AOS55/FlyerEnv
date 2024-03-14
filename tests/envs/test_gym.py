@@ -1,9 +1,6 @@
 import gymnasium as gym
 import pytest
 import flyer_env
-import numpy as np
-from flyer_env.envs.flyer_env import FlyerEnv
-from PIL import Image
 
 flyer_env.register_flyer_envs()
 
@@ -15,7 +12,7 @@ def test_env_step(env_spec):
 
     env_configuration = {"screen_size": 256, "duration": 10.0}
     env = gym.make(env_spec, config=env_configuration, render_mode="rgb_array")
-    obs, info = env.reset()
+    obs, _ = env.reset()
     assert env.observation_space.contains(obs)
     observations = []
     terminated = truncated = False

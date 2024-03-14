@@ -1,4 +1,3 @@
-import pytest
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -40,7 +39,7 @@ class PointBot:
 def test_trajectory():
 
     dt = 0.01
-    start_pos = np.array([0.0, 0.0])
+    # start_pos = np.array([0.0, 0.0])
     # target_points = [
     #     [0.0, 0.0],
     #     [24060.25390625, -15000.0],

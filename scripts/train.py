@@ -1,9 +1,9 @@
 import gymnasium as gym
 import hydra
 from pathlib import Path
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 
-from stable_baselines3 import HerReplayBuffer, SAC, PPO, DDPG
+from stable_baselines3 import HerReplayBuffer, SAC
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.monitor import Monitor
@@ -65,11 +65,11 @@ class Workspace:
                     n_sampled_goal=4, goal_selection_strategy="future"
                 ),
                 learning_starts=self.cfg.learning_starts,
-                tensorboard_log=f".runs/sac",
+                tensorboard_log=".runs/sac",
             )
         else:
             self.model = SAC(
-                "MlpPolicy", self.train_env, verbose=1, tensorboard_log=f".runs/sac"
+                "MlpPolicy", self.train_env, verbose=1, tensorboard_log=".runs/sac"
             )
         return
 

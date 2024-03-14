@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from gymnasium import spaces
-from typing import List, Dict, TYPE_CHECKING, Tuple, OrderedDict
+from typing import List, Dict, TYPE_CHECKING, OrderedDict
 
 if TYPE_CHECKING:
     from flyer_env.envs.common.abstract import AbstractEnv

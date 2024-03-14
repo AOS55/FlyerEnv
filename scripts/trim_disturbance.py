@@ -24,7 +24,7 @@ COLOURS = [[value / 255 for value in rgb] for rgb in COLOURS]
 def simulate():
 
     # Trim values for given airspeed and conditions
-    pitch = -0.06081844622950141
+    # pitch = -0.06081844622950141
     elevator = 0.04055471935347572
     tla = 0.6730648623679762
 

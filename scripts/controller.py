@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from typing import List, Union, DefaultDict
+from typing import Union, DefaultDict
 from flyer_env.utils import Vector
 from simple_pid import PID
 from pyflyer import Aircraft
@@ -255,9 +255,9 @@ class ControlledAircraft:
 def simulate():
 
     # Trim values for given airspeed and conditions
-    pitch = -0.06081844622950141
-    elevator = 0.04055471935347572
-    tla = 0.6730648623679762
+    # pitch = -0.06081844622950141
+    # elevator = 0.04055471935347572
+    # tla = 0.6730648623679762
 
     dt = 0.01
     c_ac = ControlledAircraft(dt)

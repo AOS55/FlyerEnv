@@ -65,7 +65,6 @@ class TrackPoints:
     def arc_path(self, pos):
 
         if self.goal_state < len(self.goal_set) - 2:
-            final_state = False
 
             # Get points defining trajecotries
             point_a = self.goal_set[self.goal_state]
@@ -149,7 +148,6 @@ class TrackPoints:
                 heading = tangent_track + (np.arctan(k_orbit * error))
                 # heading = tangent_track
         else:
-            final_state = True
             points = list(self.goal_set.values())
 
             point_a = points[-2]

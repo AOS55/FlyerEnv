@@ -1,5 +1,4 @@
 from typing import Dict, Text
-import sys
 import os
 import numpy as np
 from flyer_env import utils

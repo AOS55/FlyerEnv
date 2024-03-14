@@ -1,6 +1,5 @@
 import functools
-import itertools
-from typing import TYPE_CHECKING, Optional, Union, Tuple, Callable, List, Dict
+from typing import TYPE_CHECKING, Optional, Union, Tuple, Callable, Dict
 from gymnasium import spaces
 import numpy as np
 

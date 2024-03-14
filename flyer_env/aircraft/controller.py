@@ -1,6 +1,5 @@
 import numpy as np
-import os
-from typing import List, Tuple, Union, Optional
+from typing import Union
 from flyer_env.utils import Vector
 from simple_pid import PID
 from pyflyer import Aircraft

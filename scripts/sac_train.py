@@ -49,7 +49,7 @@ def main():
         render=False,
     )
 
-    model = SAC("MlpPolicy", env, verbose=1, tensorboard_log=f".runs/sac")
+    model = SAC("MlpPolicy", env, verbose=1, tensorboard_log=".runs/sac")
     model.learn(
         total_timesteps=config["total_timesteps"],
         log_interval=4,

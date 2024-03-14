@@ -1,6 +1,4 @@
-from typing import Dict, Text
 import os
-import numpy as np
 from flyer_env import utils
 from flyer_env.aircraft import ControlledAircraft
 from flyer_env.envs.common.abstract import AbstractEnv

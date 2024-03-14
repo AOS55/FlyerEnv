@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from typing import Dict
 from flyer_env import utils
 
 plt.rcParams.update({"text.usetex": True})
@@ -55,10 +54,10 @@ def main():
             "other_controls": np.array([alt, speed]),
         }
 
-        v_dict = env.unwrapped.vehicle.dict
+        # v_dict = env.unwrapped.vehicle.dict
         controls = env.unwrapped.vehicle.aircraft.controls
 
-        obs, reward, terminated, truncated, info = env.step(action)
+        _, reward, terminated, truncated, info = env.step(action)
         obs_dict = {
             "elevator": controls["elevator"],
             "aileron": controls["aileron"],

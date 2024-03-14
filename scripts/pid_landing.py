@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from typing import Dict
 from flyer_env import utils
 from flyer_env.aircraft import TrackPoints
 
@@ -104,7 +103,7 @@ def main():
         obs, reward, terminated, truncated, info = env.step(action)
 
         v_dict = env.unwrapped.vehicle.dict
-        controls = env.unwrapped.vehicle.aircraft.controls
+        # controls = env.unwrapped.vehicle.aircraft.controls
         obs_dict = {"x": v_dict["x"], "y": v_dict["y"], "z": v_dict["z"]}
         # print(f'z: {v_dict["z"]}')
         observations.append(obs_dict)
