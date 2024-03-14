@@ -1,9 +1,10 @@
+import gymnasium as gym
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import gymnasium as gym
-from flyer_env.utils import lmap
 from stable_baselines3 import SAC
+
+from flyer_env.utils import lmap
 
 plt.rcParams.update({"text.usetex": True})
 

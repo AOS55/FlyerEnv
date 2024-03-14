@@ -1,13 +1,13 @@
+from pathlib import Path
+
 import gymnasium as gym
 import hydra
-from pathlib import Path
-from omegaconf import OmegaConf
-
-from stable_baselines3 import HerReplayBuffer, SAC
-from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.callbacks import EvalCallback
-from stable_baselines3.common.monitor import Monitor
 import wandb
+from omegaconf import OmegaConf
+from stable_baselines3 import SAC, HerReplayBuffer
+from stable_baselines3.common.callbacks import EvalCallback
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.monitor import Monitor
 from wandb.integration.sb3 import WandbCallback
 
 

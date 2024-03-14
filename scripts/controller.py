@@ -1,11 +1,12 @@
+from typing import DefaultDict, Union
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
-from typing import Union, DefaultDict
-from flyer_env.utils import Vector
-from simple_pid import PID
 from pyflyer import Aircraft
+from simple_pid import PID
+
+from flyer_env.utils import Vector
 
 plt.rcParams.update({"text.usetex": True})
 

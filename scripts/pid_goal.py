@@ -1,8 +1,9 @@
-import gymnasium as gym
-import numpy as np
-import matplotlib.pyplot as plt
-
 from typing import Dict
+
+import gymnasium as gym
+import matplotlib.pyplot as plt
+import numpy as np
+
 from flyer_env import RecordVideo
 
 # from gymnasium.wrappers.record_video import RecordVideo

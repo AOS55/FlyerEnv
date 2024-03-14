@@ -1,11 +1,10 @@
 import gymnasium as gym
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from flyer_env import utils
 from flyer_env.aircraft import TrackPoints
-
 
 plt.rcParams.update({"text.usetex": True})
 

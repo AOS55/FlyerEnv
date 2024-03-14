@@ -1,6 +1,6 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 import gymnasium as gym
+import matplotlib.pyplot as plt
+import pandas as pd
 from stable_baselines3 import SAC
 
 plt.rcParams.update({"text.usetex": True})
