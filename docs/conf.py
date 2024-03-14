@@ -12,8 +12,9 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
-print(f'sys.executable: {sys.executable}')
+
+sys.path.insert(0, os.path.abspath(".."))
+print(f"sys.executable: {sys.executable}")
 
 # -- Project information -----------------------------------------------------
 import os
@@ -27,7 +28,7 @@ copyright = "2023 Farama Foundation"
 author = "Alexander Quessy"
 
 # The full version, including alpha/beta/rc tags
-release = ''
+release = ""
 
 # -- General configuration ---------------------------------------------------
 
@@ -36,33 +37,36 @@ release = ''
 # ones.
 extensions = [
     "sphinx.ext.napoleon",
-    'sphinx.ext.coverage',
+    "sphinx.ext.coverage",
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
     "sphinx.ext.githubpages",
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autosectionlabel',
-    'sphinxcontrib.bibtex',
-    'sphinxcontrib.mermaid',
-    'jupyter_sphinx',
-    'myst_parser',
-    'python_docs_theme',
+    "sphinx.ext.viewcode",
+    "sphinx.ext.autosectionlabel",
+    "sphinxcontrib.bibtex",
+    "sphinxcontrib.mermaid",
+    "jupyter_sphinx",
+    "myst_parser",
+    "python_docs_theme",
 ]
 
-autodoc_default_flags = ['members', 'private-members', 'undoc-members', 'special-members']
-autodoc_member_order = 'bysource'
+autodoc_default_flags = [
+    "members",
+    "private-members",
+    "undoc-members",
+    "special-members",
+]
+autodoc_member_order = "bysource"
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
-source_suffix = {
-    '.md': 'markdown'
-}
+source_suffix = {".md": "markdown"}
 
 # Napoleon settings
 # napoleon_use_ivar = True
@@ -107,9 +111,9 @@ html_css_files = []
 
 # -- BibTeX -------------------------------------------------------------
 
-bibtex_bibfiles = ['bibliography/biblio.bib']
-bibtex_encoding = 'latin'
-bibtex_default_style = 'alpha'
+bibtex_bibfiles = ["bibliography/biblio.bib"]
+bibtex_encoding = "latin"
+bibtex_default_style = "alpha"
 
 # -- Generate Changelog -------------------------------------------------
 
