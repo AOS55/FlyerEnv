@@ -5,6 +5,7 @@ from flyer_env.envs.common.observation import observation_factory
 
 spec = ["Dynamics"]
 
+
 @pytest.mark.parametrize("obs_spec", spec)
 def test_observation(obs_spec):
     config = {"type": obs_spec}

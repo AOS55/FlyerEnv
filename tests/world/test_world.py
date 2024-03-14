@@ -5,10 +5,7 @@ from PIL import Image
 
 def test_aircraft():
     ac = Aircraft()
-    ac.reset(
-        [0.0, 0.0, 1000.0],
-        0.0,
-        100.0)
+    ac.reset([0.0, 0.0, 1000.0], 0.0, 100.0)
     dt = 0.001
     input_state = [0.0, 0.0, 0.0, 0.0]
     ac.step(dt, input_state)
@@ -17,7 +14,7 @@ def test_aircraft():
     vel = ac.velocity
     att = ac.attitude
     rate = ac.rates
-    print(f'pos: {pos}, vel: {vel}, att: {att}, rate: {rate}')
+    print(f"pos: {pos}, vel: {vel}, att: {att}, rate: {rate}")
 
 
 def test_world():
