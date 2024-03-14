@@ -19,6 +19,6 @@ repos:
         args: ["--profile", "black"]
         exclude: "__init__.py"
   - repo: https://github.com/python/black
-    rev: 23.3.0
+    rev: 24.2.0
     hooks:
       - id: black
