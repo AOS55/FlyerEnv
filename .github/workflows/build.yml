@@ -40,7 +40,7 @@ jobs:
           WHEEL_FILE=$file
           echo The wheel file: $WHEEL_FILE
         done
-        sudo pip install $WHEEL_DIR/$WHEEL_FILE
+        sudo pip install $WHEEL_FILE
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
