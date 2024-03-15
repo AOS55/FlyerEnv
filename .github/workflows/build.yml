@@ -29,7 +29,7 @@ jobs:
     - name: Build PyRust module
       uses: PyO3/maturin-action@v1.42.0
       with:
-        command: develop
+        command: build
         args: --release
         working-directory: ./pyflyer-rs
     - name: Install dependencies
@@ -37,6 +37,9 @@ jobs:
         python -m pip install --upgrade pip
         sudo pip install pygame
         pip install -e .[deploy]
+    - name: Install PyRust module
+      run: |
+        sudo pip install ./pyflyer-rs
     - name: Lint with flake8
       run: |
         pip install flake8
