@@ -35,7 +35,7 @@ jobs:
     - name: Build pyflyer-rs wheels
       uses: PyO3/maturin-action@v1.42.0
       with:
-        target: ${{ matrix.python-version }}
+        target: ${{ matrix.target }}
         manylinux: auto
         args: --release --out dist -m python/Cargo.toml
         working-directory: ./pyflyer-rs
