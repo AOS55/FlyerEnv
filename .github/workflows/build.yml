@@ -39,7 +39,13 @@ jobs:
         pip install -e .[deploy]
     - name: Install PyRust module
       run: |
-        sudo pip install ./pyflyer-rs/target/wheels/
+        $wheel_dir = ./pyflyer-rs/target/wheels/
+        for file in "$wheel_dir"/*.whl
+        do  
+          $wheel_file = file
+          echo $wheel_file
+        done
+        sudo pip install $wheel_dir/$wheel_file
     - name: Lint with flake8
       run: |
         pip install flake8
