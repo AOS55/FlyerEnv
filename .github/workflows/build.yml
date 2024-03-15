@@ -34,27 +34,18 @@ jobs:
         working-directory: ./pyflyer-rs
     - name: Install PyRust module
       run: |
-        wheel_dir = ./pyflyer-rs/target/wheels/
-        for file in "$wheel_dir"/*.whl
+        WHEEL_DIR=./pyflyer-rs/target/wheels/
+        for file in "$WHEEL_DIR"/*.whl
         do  
-          wheel_file = file
-          echo $wheel_file
+          WHEEL_FILE=file
+          echo $WHEEL_FILE
         done
-        sudo pip install $wheel_dir/$wheel_file
+        sudo pip install $WHEEL_DIR/$WHEEL_FILE
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         sudo pip install pygame
         pip install -e .[deploy]
-    - name: Install PyRust module
-      run: |
-        wheel_dir = ./pyflyer-rs/target/wheels/
-        for file in "$wheel_dir"/*.whl
-        do  
-          wheel_file = file
-          echo $wheel_file
-        done
-        sudo pip install $wheel_dir/$wheel_file
     - name: Lint with flake8
       run: |
         pip install flake8
