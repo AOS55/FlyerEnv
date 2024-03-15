@@ -17,6 +17,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+        target: [x86_64]
 
     steps:
     - uses: actions/checkout@v2
@@ -31,21 +32,18 @@ jobs:
         python -m pip install --upgrade pip
         sudo pip install pygame
         pip install -e .[deploy]
-    - name: Build PyRust module
+    - name: Build pyflyer-rs wheels
       uses: PyO3/maturin-action@v1.42.0
       with:
-        command: build
-        args: --release
+        target: ${{ matrix.python-version }}
+        manylinux: auto
+        args: --release --out dist -m python/Cargo.toml
         working-directory: ./pyflyer-rs
-    - name: Install PyRust module
+    - name: Install pyflyer-rs wheels
+      if: matrix.target == 'x86_64'
       run: |
-        WHEEL_DIR=./pyflyer-rs/target/wheels
-        for file in "$WHEEL_DIR"/*.whl
-        do  
-          WHEEL_FILE=$file
-          echo The wheel file: $WHEEL_FILE
-        done
-        sudo pip install $WHEEL_FILE
+        pip install pyflyer --no-index --find-links dist --force-reinstall
+        python -c "import pyflyer"
     - name: Lint with flake8
       run: |
         pip install flake8
