@@ -39,7 +39,7 @@ jobs:
         pip install -e .[deploy]
     - name: Install PyRust module
       run: |
-        sudo pip install ./pyflyer-rs
+        sudo pip install ./pyflyer-rs/target/wheels/
     - name: Lint with flake8
       run: |
         pip install flake8
