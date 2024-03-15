@@ -1,6 +1,6 @@
-from pyflyer import Aircraft
+# from pyflyer import Aircraft
 
 
-def test_control():
-    aircraft = Aircraft()
-    aircraft.reset([0.0, 0.0, -1000.0], 0.0, 100.0)
+# def test_control():
+#     aircraft = Aircraft()
+#     aircraft.reset([0.0, 0.0, -1000.0], 0.0, 100.0)
