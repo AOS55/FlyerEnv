@@ -32,6 +32,15 @@ jobs:
         command: build
         args: --release
         working-directory: ./pyflyer-rs
+    - name: Install PyRust module
+      run: |
+        wheel_dir = ./pyflyer-rs/target/wheels/
+        for file in "$wheel_dir"/*.whl
+        do  
+          wheel_file = file
+          echo $wheel_file
+        done
+        sudo pip install $wheel_dir/$wheel_file
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -39,10 +48,10 @@ jobs:
         pip install -e .[deploy]
     - name: Install PyRust module
       run: |
-        $wheel_dir = ./pyflyer-rs/target/wheels/
+        wheel_dir = ./pyflyer-rs/target/wheels/
         for file in "$wheel_dir"/*.whl
         do  
-          $wheel_file = file
+          wheel_file = file
           echo $wheel_file
         done
         sudo pip install $wheel_dir/$wheel_file
