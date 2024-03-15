@@ -29,7 +29,7 @@ jobs:
     - name: Build PyRust module
       uses: PyO3/maturin-action@v1.42.0
       with:
-        command: build
+        command: develop
         args: --release
         working-directory: ./pyflyer-rs
     - name: Install dependencies
