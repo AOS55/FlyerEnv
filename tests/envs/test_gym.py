@@ -1,40 +1,31 @@
-# import gymnasium as gym
-# import pytest
+import gymnasium as gym
+import pytest
 
-# import flyer_env
+import flyer_env
 
 # flyer_env.register_flyer_envs()
 
-# envs = ["flyer-v1"]
+envs = ["flyer-v1",
+        "trajectory-v1",
+        "runway-v1",
+        "forced_landing-v1",
+        "control-v1"]
 
 
-# @pytest.mark.parametrize("env_spec", envs)
-# def test_env_step(env_spec):
+@pytest.mark.parametrize("env_spec", envs)
+def test_env_step(env_spec):
+    env = gym.make(env_spec)
 
-#     env_configuration = {"screen_size": 256, "duration": 10.0}
-#     env = gym.make(env_spec, config=env_configuration, render_mode="rgb_array")
-#     obs, _ = env.reset()
-#     assert env.observation_space.contains(obs)
-#     observations = []
-#     terminated = truncated = False
+    obs, info = env.reset()
+    assert env.observation_space.contains(obs)
 
-#     img = env.render()
-#     assert img.shape == (
-#         int(env.unwrapped.world.screen_width),
-#         int(env.unwrapped.world.screen_height),
-#         3,
-#     )
+    terminated = truncated = False
+    while not (terminated or truncated):
+        action = env.action_space.sample()
+        obs, reward, terminated, truncated, info = env.step(action)
+        assert env.observation_space.contains(obs)
+    env.close()
 
-#     ids = 0
-
-#     while not (terminated or truncated):
-#         action = env.action_space.sample()
-#         obs, reward, terminated, truncated, info = env.step(action)
-#         observations.append(obs[0])
-#         assert env.observation_space.contains(obs)
-#         ids += 1
-#     env.close()
-
-
-# if __name__ == "__main__":
-#     test_env_step("flyer-v1")
+def test_env_reset_options(env_spec: str = "flyer-v1"):
+    env = gym.make(env_spec)
+    # TODO: test all env reset options
