@@ -77,9 +77,9 @@ class FlyerEnv(AbstractEnv, GoalEnv):
         info.update({"is_success": success})
         return info
 
-    def _reset(self) -> None:
+    def _reset(self, seed=None) -> None:
 
-        self.np_random = np.random.RandomState()
+        self.np_random = np.random.RandomState(seed)
         self._create_world()
         self._create_vehicles()
         self._create_goal()

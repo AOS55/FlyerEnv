@@ -40,7 +40,7 @@ class TrajectoryEnv(AbstractEnv):
         )
         return config
 
-    def _reset(self, seed) -> None:
+    def _reset(self, seed=None) -> None:
         if not seed:
             seed = 1
         self._create_world(seed)

@@ -1,4 +1,5 @@
 import os
+from typing import Dict, Text
 
 from pyflyer import Aircraft, World
 
@@ -30,8 +31,9 @@ class ForcedLandingEnv(AbstractEnv):
                 "normalize_reward": True,
             }
         )
+        return config
 
-    def _reset(self, seed) -> None:
+    def _reset(self, seed=None) -> None:
         if not seed:
             seed = 1
         self._create_world(seed)
@@ -81,11 +83,20 @@ class ForcedLandingEnv(AbstractEnv):
             )
         return reward
 
+    def _rewards(self, action: Action) -> Dict[Text, float]:
+        """
+        Calculate landing based rewards
+        """
+        crash_reward = self._crash_reward()
+        landing_reward = self._landing_reward()
+        return {"collision_reward": crash_reward, "landing_reward": landing_reward}
+
     def _landing_reward(self):
         """
         Reward for successfully landing without crashing
         """
-        return
+        # TODO: Implement reward for succesfully landing in correct location
+        return 0.0
 
     def _crash_reward(self):
         """

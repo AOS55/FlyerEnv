@@ -40,8 +40,8 @@ class RunwayEnv(AbstractEnv):
         )
         return config
 
-    def _reset(self) -> None:
-        self.np_random = np.random.RandomState()
+    def _reset(self, seed=None) -> None:
+        self.np_random = np.random.RandomState(seed)
         self._create_world()
         self._create_runway()
         self._create_vehicles()
