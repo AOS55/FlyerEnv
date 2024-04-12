@@ -53,6 +53,7 @@ class ControlEnv(AbstractEnv):
         self.world.terrain_data_dir = path
         world_seed = self.np_random.randint(100)  # set 100 possible seeds by default
         self.world.create_map(world_seed, area=self.config["area"])
+        self.world.render_type = "aircraft"
 
     def _create_vehicles(self) -> None:
         """Create an aircraft to fly around the world"""
