@@ -6,10 +6,10 @@
 <link rel="index" title="Index" href="../genindex/" /><link rel="search" title="Search" href="../search/" /><link rel="next" title="Frequently Asked Questions" href="../faq/" /><link rel="prev" title="Graphics" href="../graphics/" />
         <link rel="canonical" href=" https://aos55.github.io/FlyerEnv/make_your_own/" />
 
-    <link rel="shortcut icon" href="../_static/flyericon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+    <link rel="shortcut icon" href="../_static/flyericon.png"/><!-- Generated with Sphinx 7.3.7 and Furo 2024.04.27 -->
         <title>Make your own environment - FlyerEnv Documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
@@ -114,6 +114,8 @@
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 
 
@@ -223,12 +225,12 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="make-your-own-environment">
-<span id="make-your-own"></span><h1>Make your own environment<a class="headerlink" href="#make-your-own-environment" title="Link to this heading">#</a></h1>
+<span id="make-your-own"></span><h1>Make your own environment<a class="headerlink" href="#make-your-own-environment" title="Link to this heading">¶</a></h1>
 <p>The following are steps required to create a new environment!</p>
 <section id="set-up-files">
-<h2>Set up files<a class="headerlink" href="#set-up-files" title="Link to this heading">#</a></h2>
+<h2>Set up files<a class="headerlink" href="#set-up-files" title="Link to this heading">¶</a></h2>
 <ol class="arabic simple">
 <li><p>Create a new <code class="docutils literal notranslate"><span class="pre">&lt;my_env&gt;.py</span></code> file in <code class="docutils literal notranslate"><span class="pre">flyer_env/envs/</span></code></p></li>
 <li><p>Define a class MyEnv, that <em>must</em> inherit <code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractEnv</span></code></p></li>
@@ -244,7 +246,7 @@ and action types, set within the environment configuration.</p></li>
 </ul>
 </section>
 <section id="create-the-world">
-<h2>Create the world<a class="headerlink" href="#create-the-world" title="Link to this heading">#</a></h2>
+<h2>Create the world<a class="headerlink" href="#create-the-world" title="Link to this heading">¶</a></h2>
 <p>Initially create a <code class="xref py py-class docutils literal notranslate"><span class="pre">flyer_env.world.world.World</span></code> which is a generic container for:</p>
 <ul class="simple">
 <li><p><strong>Terrain</strong>: the base ground geometry</p></li>
@@ -255,7 +257,7 @@ and action types, set within the environment configuration.</p></li>
 Construction of this should be achieved with <code class="docutils literal notranslate"><span class="pre">MyEnv._make_world()</span></code> called from MyEnv.reset() to populate the <code class="docutils literal notranslate"><span class="pre">self.</span> <span class="pre">world</span></code> field.</p>
 </section>
 <section id="create-the-aircraft">
-<h2>Create the aircraft<a class="headerlink" href="#create-the-aircraft" title="Link to this heading">#</a></h2>
+<h2>Create the aircraft<a class="headerlink" href="#create-the-aircraft" title="Link to this heading">¶</a></h2>
 <p>Populate the world with aircraft. This should be done with <code class="docutils literal notranslate"><span class="pre">MyEnv._make_aircraft()</span></code> called from <code class="docutils literal notranslate"><span class="pre">MyEnv.reset()</span></code> to
 set the <code class="docutils literal notranslate"><span class="pre">self.world.vehicles</span></code> list of aircraft which are either based on:</p>
 <ol class="arabic simple">
@@ -265,13 +267,13 @@ set the <code class="docutils literal notranslate"><span class="pre">self.world.
 <p>The controlled ego-vehicle is defined by setting <code class="docutils literal notranslate"><span class="pre">self.vehicle</span></code>, the class depends upon <code class="docutils literal notranslate"><span class="pre">self.action_type.</span> <span class="pre">vehicle_class</span></code>. Other vehicles can be added freely to the <code class="docutils literal notranslate"><span class="pre">self.world.vehicles</span></code> list.</p>
 </section>
 <section id="make-the-environment-configurable">
-<h2>Make the environment configurable<a class="headerlink" href="#make-the-environment-configurable" title="Link to this heading">#</a></h2>
+<h2>Make the environment configurable<a class="headerlink" href="#make-the-environment-configurable" title="Link to this heading">¶</a></h2>
 <p>To make part of the environment configurable overload the default configuration in <code class="xref py py-meth docutils literal notranslate"><span class="pre">default_config()</span></code> to define new <code class="docutils literal notranslate"><span class="pre">{&quot;config_key&quot;:</span> <span class="pre">value}</span></code> pairs with default values. These
 configurations can then be accessed within the environment implementation <code class="docutils literal notranslate"><span class="pre">self.config[&quot;config_key]</span></code>, and once
 created configured with <code class="docutils literal notranslate"><span class="pre">env.configure({&quot;config_key&quot;:</span> <span class="pre">other_value})</span></code> followed by <code class="docutils literal notranslate"><span class="pre">env.reset()</span></code>.</p>
 </section>
 <section id="register-the-environment">
-<h2>Register the environment<a class="headerlink" href="#register-the-environment" title="Link to this heading">#</a></h2>
+<h2>Register the environment<a class="headerlink" href="#register-the-environment" title="Link to this heading">¶</a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">flyer_env/envs/__init__.py</span></code>, add the following line:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">register</span><span class="p">(</span>
   <span class="nb">id</span><span class="o">=</span><span class="s1">&#39;my-env-v0&#39;</span><span class="p">,</span>
@@ -281,7 +283,7 @@ created configured with <code class="docutils literal notranslate"><span class="
 </div>
 </section>
 <section id="test-the-environment">
-<h2>Test the environment<a class="headerlink" href="#test-the-environment" title="Link to this heading">#</a></h2>
+<h2>Test the environment<a class="headerlink" href="#test-the-environment" title="Link to this heading">¶</a></h2>
 <p>You should now be able to run the environment:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gymnasium</span> <span class="k">as</span> <span class="nn">gym</span>
 
@@ -293,7 +295,7 @@ created configured with <code class="docutils literal notranslate"><span class="
 </div>
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Link to this heading">#</a></h2>
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>..automodule:: flyer_env.envs.common.abstract</dt><dd><dl class="field-list simple">
 <dt class="field-odd">members<span class="colon">:</span></dt>
@@ -381,9 +383,9 @@ created configured with <code class="docutils literal notranslate"><span class="
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=a5603611"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/thebelab-helper.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
