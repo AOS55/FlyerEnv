@@ -34,7 +34,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        sudo pip install pygame
+        pip install pygame
         pip install -e .[deploy]
     - name: Build pyflyer-rs wheels
       uses: PyO3/maturin-action@v1.42.0
