@@ -12,15 +12,15 @@ envs = ["flyer-v1",
 @pytest.mark.parametrize("env_spec", envs)
 def test_render(env_spec):
     env = gym.make(env_spec, render_mode="rgb_array")
-    env.configure({"offscreen_rendering": True})
+    env.unwrapped.configure({"offscreen_rendering": True})
     env.reset()
     img = env.render()
     print(f'type(image): {type(img)}')
     env.close()
     assert isinstance(img, np.ndarray)
     assert img.shape == (
-        env.config["screen_height"],
-        env.config["screen_width"],
+        env.unwrapped.config["screen_size"],
+        env.unwrapped.config["screen_size"],
         3
     )  # (H,W,C)
 
