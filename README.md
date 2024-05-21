@@ -14,7 +14,10 @@ env = gymnasium.make("flyer-v1")
 
 In this task the aircraft must navigate to a specified 3D goal point in space in the shortest possible time.
 
-
+<p align="center">
+    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/straight_level.mp4"><br/>
+    <em>An episode of one of the environments available in highway-env.</em>
+</p>
 
 
 ### Trajectory Following
