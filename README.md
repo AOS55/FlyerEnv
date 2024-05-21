@@ -22,7 +22,7 @@ env = gymnasium.make("trajectory-v1")
 ```
 
 <p align="center">
-    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/straight_level.mp4"><br/>
+    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/straight_level.gif"><br/>
     <em>Straight and Level flight</em>
 </p>
 
