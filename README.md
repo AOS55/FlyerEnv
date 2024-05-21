@@ -23,7 +23,7 @@ env = gymnasium.make("trajectory-v1")
 
 <p align="center">
     <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/straight_level.gif"><br/>
-    <em>Straight and Level flight</em>
+    <em>Trajectory Following</em>
 </p>
 
 In this task the aircraft must follow a trajectory created by a moving target, maintaining on target maximizes the reward. The possible trajectory primitives are as follows:
