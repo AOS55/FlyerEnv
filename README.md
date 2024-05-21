@@ -2,7 +2,9 @@
 
 [![build](https://github.com/AOS55/FlyerEnv/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/AOS55/FlyerEnv/actions/workflows/build.yml)
 
-## The environments
+A gymnasium environment for autonomous decision making in fixed-wing aircraft
+
+## The Environments
 
 ### Point Navigation
 
@@ -12,6 +14,9 @@ env = gymnasium.make("flyer-v1")
 
 In this task the aircraft must navigate to a specified 3D goal point in space in the shortest possible time.
 
+
+
+
 ### Trajectory Following
 
 ```python
@@ -20,10 +25,10 @@ env = gymnasium.make("trajectory-v1")
 
 In this task the aircraft must follow a trajectory created by a moving target, maintaining on target maximizes the reward. The possible trajectory primitives are as follows:
 - `sl`, maintain straight and level flight.
-- `climb`, climb to a specified level at a given climb angle.
-- `descend`, descend to a specified level at a given descent angle.
-- `lt`, turn left to a specified heading at a given rate.
-- `rt`, turn right to a specified heading at a given rate.
+- `climb`, climb to a specified level at a fixed climb angle.
+- `descend`, descend to a specified level at a fixed descent angle.
+- `lt`, turn left to a specified heading at a fixed rate.
+- `rt`, turn right to a specified heading at a fixed rate.
 
 
 ### Runway Landing
