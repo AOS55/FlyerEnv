@@ -1,3 +1,0 @@
-[submodule "pyflyer-rs"]
-	path = pyflyer-rs
-	url = git@github.com:AOS55/pyflyer-rs.git

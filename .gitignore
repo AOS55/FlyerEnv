@@ -1,7 +1,5 @@
 # Compiled sources
 *.pyc
-build/
-dist/
 
 # Setup
 **.egg*
@@ -21,16 +19,3 @@ _build
 
 # Outputs
 **/out/*
-wandb
-*.out
-*.zip
-logs
-.runs
-old_logs
-models
-outputs
-
-# Docs
-docs/_build
-**jupyter_execute
-flyer_env/envs/terrain_data
