@@ -14,17 +14,17 @@ env = gymnasium.make("flyer-v1")
 
 In this task the aircraft must navigate to a specified 3D goal point in space in the shortest possible time.
 
-<p align="center">
-    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/straight_level.mp4"><br/>
-    <em>An episode of one of the environments available in highway-env.</em>
-</p>
-
 
 ### Trajectory Following
 
 ```python
 env = gymnasium.make("trajectory-v1")
 ```
+
+<p align="center">
+    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/straight_level.mp4"><br/>
+    <em>Straight and Level flight</em>
+</p>
 
 In this task the aircraft must follow a trajectory created by a moving target, maintaining on target maximizes the reward. The possible trajectory primitives are as follows:
 - `sl`, maintain straight and level flight.
