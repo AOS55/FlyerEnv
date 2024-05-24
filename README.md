@@ -37,7 +37,7 @@ In this task the aircraft must follow a trajectory created by a moving target, m
 ### Runway Landing
 
 ```python
-env = gymnasium.make("runway_landing-v1")
+env = gymnasium.make("runway-v1")
 ```
 
 ### Forced Landing
