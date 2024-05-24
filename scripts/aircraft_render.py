@@ -2,21 +2,26 @@ import gymnasium as gym
 
 
 def main():
-    env = gym.make("flyer-v1", render_mode="rgb_array")
-    env.config['action'] = {'type': 'HeadingAction'}
-    v_env = gym.wrappers.RecordVideo(env, 'videos', step_trigger = lambda x: x % 100 == 0)
-    # v_env = env
+    env = gym.make("runway-v1", render_mode="rgb_array")
+    # env.config['action'] = {'type': 'HeadingAction'}
+    v_env = gym.wrappers.RecordVideo(env, 'videos')
     v_env.reset()
     idr = 0
-    for _ in range(100000):
-        action = 0.5
+    done = False
+    while not done:
+        action = v_env.action_space.sample()
+        # print(f'action sample: {action}')
+        # action = 0.5
         obs, reward, terminated, truncated, info = v_env.step(action)
-        # if idr == 100:
-        #     v_env.render()
+        done = terminated or truncated
+        # print(f'terminate: {terminated, env.vehicle.crashed}')
+        # env.render()
+        # if idr == 1:
+        #     env.render()
         #     idr = 0
         # else:
         #     idr += 1
-
+    v_env.close()
 
 if __name__ == "__main__":
     main()
