@@ -14,6 +14,7 @@ step_results = {
 }
 # Only tests for TO aircraft type as the only gains provided are for this aircraft
 
+
 def test_step():
     a = _get_controlled_aircraft()
     for _ in range(10):
@@ -31,6 +32,7 @@ def test_step():
     assert step_results["p"] == pytest.approx(a_dict["p"])
     assert step_results["q"] == pytest.approx(a_dict["q"])
     assert step_results["r"] == pytest.approx(a_dict["r"])
+
 
 def test_pitch():
     pitch_com = -0.5 * np.pi/180.0
