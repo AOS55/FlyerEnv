@@ -41,7 +41,7 @@ env = gymnasium.make("runway-v1")
 ```
 
 <p align="center">
-    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/meda/runway.gif"><br/>
+    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/runway.gif"><br/>
     <em>Runway Landing</em>
 </p>
 
