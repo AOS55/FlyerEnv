@@ -40,6 +40,11 @@ In this task the aircraft must follow a trajectory created by a moving target, m
 env = gymnasium.make("runway-v1")
 ```
 
+<p align="center">
+    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/meda/runway.gif"><br/>
+    <em>Runway Landing</em>
+</p>
+
 ### Forced Landing
 
 ```python
