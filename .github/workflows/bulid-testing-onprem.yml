@@ -1,18 +1,18 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: build 
+name: on-prem build
 
 on:
   push:
-    branches: [ master ]
+    branches: [ testing ]
   pull_request:
-    branches: [ master ]
+    branches: [ testing ]
 
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     strategy:
       matrix:
@@ -20,17 +20,21 @@ jobs:
         target: [x86_64]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v2
       with: 
         submodules: recursive
     - name: Set up Python
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+        architecture: "x64"
+      # env:
+      #   AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        sudo pip install pygame
+        pip install pygame
         pip install -e .[deploy]
     - name: Build pyflyer-rs wheels
       uses: PyO3/maturin-action@v1.42.0

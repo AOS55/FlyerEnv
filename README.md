@@ -1,8 +1,10 @@
-# 🏗️FlyerEnv🏗️ (Under Construction)
+# FlyerEnv
 
 [![build](https://github.com/AOS55/FlyerEnv/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/AOS55/FlyerEnv/actions/workflows/build.yml)
 
-## The environments
+A gymnasium environment for autonomous decision-making in fixed-wing aircraft
+
+## The Environments
 
 ### Point Navigation
 
@@ -12,31 +14,51 @@ env = gymnasium.make("flyer-v1")
 
 In this task the aircraft must navigate to a specified 3D goal point in space in the shortest possible time.
 
+
 ### Trajectory Following
 
 ```python
 env = gymnasium.make("trajectory-v1")
 ```
 
+<p align="center">
+    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/straight_level.gif"><br/>
+    <em>Trajectory Following</em>
+</p>
+
 In this task the aircraft must follow a trajectory created by a moving target, maintaining on target maximizes the reward. The possible trajectory primitives are as follows:
 - `sl`, maintain straight and level flight.
-- `climb`, climb to a specified level at a given climb angle.
-- `descend`, descend to a specified level at a given descent angle.
-- `lt`, turn left to a specified heading at a given rate.
-- `rt`, turn right to a specified heading at a given rate.
+- `climb`, climb to a specified level at a fixed climb angle.
+- `descend`, descend to a specified level at a fixed descent angle.
+- `lt`, turn left to a specified heading at a fixed rate.
+- `rt`, turn right to a specified heading at a fixed rate.
 
 
 ### Runway Landing
 
 ```python
-env = gymnasium.make("runway_landing-v1")
+env = gymnasium.make("runway-v1")
 ```
+
+<p align="center">
+    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/runway.gif"><br/>
+    <em>Runway Landing</em>
+</p>
+
+In this task the aircraft needs to navigate to a runway to land.
 
 ### Forced Landing
 
 ```python
 env = gymnasium.make("forced_landing-v1")
 ```
+
+<p align="center">
+    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/forced_landing.gif"><br/>
+    <em>Forced Landing</em>
+</p>
+
+In this task the aircraft needs to find a suitable landing spot in an unprepared location.
 
 ## Installation
 
@@ -57,7 +79,7 @@ while not (done or truncated):
 
 ## Documentation
 
-TODO: add the documentation
+Read the documentation: https://aos55.github.io/FlyerEnv/
 
 ## Citing
 

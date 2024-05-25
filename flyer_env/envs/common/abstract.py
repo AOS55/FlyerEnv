@@ -1,11 +1,13 @@
 from typing import Dict, List, Optional, Text, Tuple, TypeVar
 
 import gymnasium as gym
+import pygame
 import numpy as np
 from pyflyer import Aircraft
 
 from flyer_env.envs.common.action import Action, ActionType, action_factory
 from flyer_env.envs.common.observation import ObservationType, observation_factory
+from flyer_env.aircraft.controller import ControlledAircraft
 
 Observation = TypeVar("Observation")
 
@@ -177,7 +179,7 @@ class AbstractEnv(gym.Env):
         self.define_spaces()
         obs = self.observation_type.observe()
         info = self._info(obs, action=self.action_space.sample())
-        self.world.screen_dim = [self.config["screen_size"], self.config["screen_size"]]
+        self.world.screen_dim = [self.config["screen_size"], self.config["screen_size"]]  # This sets the viewport for the renderer
 
         return obs, info
 
@@ -219,6 +221,13 @@ class AbstractEnv(gym.Env):
         self.action_type.act(action)  # set the action on the aircraft
         self.vehicle.step(dt)  # update the aircraft
         self.world.camera_pos = self.vehicle.position  # move the camera in the world
+
+        if self.world.render_type == "aircraft":
+            if type(self.vehicle) == ControlledAircraft:
+                self.world.update_aircraft(self.vehicle.aircraft, 0)
+            else:
+                self.world.update_aircraft(self.vehicle, 0)  # Update vehicle in world
+
         # print(f"self.world.camera_pos: {self.world.camera_pos}")
         # self.world.step()  # Step the world
 
@@ -234,6 +243,31 @@ class AbstractEnv(gym.Env):
                 f"e.g. gym.make({self.spec.id}, render_mode='rgb_array')"
             )
             return
+
+        if self.render_mode == "human":
+            if self.viewer == None:
+                pygame.init()
+                self.viewer = pygame.display.set_mode(
+                    (self.config["screen_size"], self.config["screen_size"]) 
+                )
+            
+            bytes = self.world.render()
+
+            # print(f'type(bytes): {type(bytes)}, len(bytes): {len(bytes)}, screen_width: {self.world.screen_width}, screen_height: {self.world.screen_height}')
+            # print(f'sample: {bytes[0:4]}')
+            
+            img = np.array(bytes, dtype=np.uint8)
+            img = img.reshape(
+                (int(self.world.screen_width), int(self.world.screen_height), 4)
+            )
+            img = img[:, :, :3]
+            # img = np.flip(img, axis=1)
+            img = np.rot90(img)  # TODO: This isn't the correct shape, look @ bytes to see how they work
+            img = np.flipud(img)
+            surf = pygame.surfarray.make_surface(img)
+            
+            self.viewer.blit(surf, (0, 0))
+            pygame.display.update()
 
         if self.render_mode == "rgb_array":
             bytes = self.world.render()

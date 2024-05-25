@@ -40,7 +40,7 @@ class TrajectoryEnv(AbstractEnv):
         )
         return config
 
-    def _reset(self, seed) -> None:
+    def _reset(self, seed=None) -> None:
         if not seed:
             seed = 1
         self._create_world(seed)
@@ -67,6 +67,7 @@ class TrajectoryEnv(AbstractEnv):
         aircraft = Aircraft(data_path=path)
         aircraft.reset(pos=start_pos, heading=heading, airspeed=airspeed)
         self.world.add_aircraft(aircraft)
+        self.world.render_type = "aircraft"
 
         # Due to borrow checker of World.rs need to build from this reference
         if self.config["action"]["type"] == "ContinuousAction":
