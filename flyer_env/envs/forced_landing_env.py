@@ -118,10 +118,13 @@ class ForcedLandingEnv(AbstractEnv):
         if self.vehicle.crashed:
             print("Crashed!")
             return True
-        # If landed
-        if v_pos[-1] > -4 and self.world.point_on_runway(v_pos[0:2]):
-            print("Landed!")
+        if self.vehicle.position[2] > 0:
             return True
+        # TODO: Fix Termination
+        # # If landed
+        # if v_pos[-1] > -4 and self.world.point_on_runway(v_pos[0:2]):
+        #     print("Landed!")
+        #     return True
         return False
 
     def _is_truncated(self) -> bool:
