@@ -110,6 +110,7 @@ def test_aileron(aircraft_type):
     assert aileron_results[aircraft_type]["q"] == pytest.approx(a_dict["q"])
     assert aileron_results[aircraft_type]["r"] == pytest.approx(a_dict["r"]) 
 
+
 @pytest.mark.parametrize("aircraft_type", aircraft_types)
 def test_tla(aircraft_type):
     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/")
