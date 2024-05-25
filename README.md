@@ -79,7 +79,7 @@ while not (done or truncated):
 
 ## Documentation
 
-Read the documentation: 
+Read the documentation: https://aos55.github.io/FlyerEnv/
 
 ## Citing
 
