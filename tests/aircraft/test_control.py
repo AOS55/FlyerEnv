@@ -101,6 +101,7 @@ def test_alt():
             assert False
     assert True
 
+
 def test_heading():
 
     hdg_com = 10.0 * np.pi/180.0
@@ -118,6 +119,7 @@ def test_heading():
         if ids > max_steps:
             assert False
     assert True
+
 
 def test_pursuit_target():
 
