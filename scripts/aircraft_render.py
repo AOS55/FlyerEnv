@@ -2,7 +2,7 @@ import gymnasium as gym
 
 
 def main():
-    env = gym.make("runway-v1", render_mode="rgb_array")
+    env = gym.make("forced_landing-v1", render_mode="rgb_array")
     # env.config['action'] = {'type': 'HeadingAction'}
     v_env = gym.wrappers.RecordVideo(env, 'videos')
     v_env.reset()
