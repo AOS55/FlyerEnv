@@ -11,6 +11,7 @@ trim_results = {
 
 @pytest.mark.parametrize("aircraft_type", aircraft_types)
 def test_trim(aircraft_type):
+    # TODO: Look at way to make trim routine more robust
     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/")
     aircraft = Aircraft(data_path = path)
     altitude = 1000.0  # trim altitude to maintain
