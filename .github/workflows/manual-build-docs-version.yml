@@ -28,8 +28,8 @@ jobs:
           pip install sphinx sphinx_rtd_theme myst_parser
           pip install -r docs/requirements.txt
 
-      # - name: Register Envs
-      #   run: pip install -e .
+      - name: Register Envs
+        run: pip install -e .
 
       - name: Build
         run: sphinx-build -b dirhtml -v docs _build
