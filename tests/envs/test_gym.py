@@ -1,9 +1,7 @@
 import gymnasium as gym
 import pytest
 
-import flyer_env
-
-# flyer_env.register_flyer_envs()
+from flyer_env.envs.flyer_env import FlyerEnv
 
 envs = ["flyer-v1",
         "trajectory-v1",
@@ -16,16 +14,24 @@ envs = ["flyer-v1",
 def test_env_step(env_spec):
     env = gym.make(env_spec)
 
-    obs, info = env.reset()
+    obs, _ = env.reset()
     assert env.observation_space.contains(obs)
 
     terminated = truncated = False
     while not (terminated or truncated):
         action = env.action_space.sample()
-        obs, reward, terminated, truncated, info = env.step(action)
+        obs, _, terminated, truncated, _ = env.step(action)
         assert env.observation_space.contains(obs)
     env.close()
 
 def test_env_reset_options(env_spec: str = "flyer-v1"):
     env = gym.make(env_spec)
-    # TODO: test all env reset options
+    
+    # Might want to add some more parameters to test here
+
+    default_duration =  FlyerEnv().default_config()["duration"]
+    assert env.unwrapped.config["duration"] == default_duration
+
+    update_duration = default_duration * 2
+    env.reset(options={"config": {"duration": update_duration}})
+    assert env.unwrapped.config["duration"] == update_duration
