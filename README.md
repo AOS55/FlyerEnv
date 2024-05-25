@@ -45,11 +45,20 @@ env = gymnasium.make("runway-v1")
     <em>Runway Landing</em>
 </p>
 
+In this task the aircraft needs to navigate to a runway to land.
+
 ### Forced Landing
 
 ```python
 env = gymnasium.make("forced_landing-v1")
 ```
+
+<p align="center">
+    <img src="https://github.com/AOS55/FlyerEnv/blob/gh-media/docs/media/forced_landing.gif"><br/>
+    <em>Forced Landing</em>
+</p>
+
+In this task the aircraft needs to find a suitable landing spot in an unprepared location.
 
 ## Installation
 
