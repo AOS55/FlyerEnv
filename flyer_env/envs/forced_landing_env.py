@@ -112,8 +112,6 @@ class ForcedLandingEnv(AbstractEnv):
         The episode is over if the the ego vehicle crashed, or it hits the ground
         """
 
-        v_pos = self.vehicle.position
-
         # If crashed terminate
         if self.vehicle.crashed:
             print("Crashed!")
