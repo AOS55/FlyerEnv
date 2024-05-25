@@ -2,7 +2,7 @@
 
 [![build](https://github.com/AOS55/FlyerEnv/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/AOS55/FlyerEnv/actions/workflows/build.yml)
 
-A gymnasium environment for autonomous decision making in fixed-wing aircraft
+A gymnasium environment for autonomous decision-making in fixed-wing aircraft
 
 ## The Environments
 
@@ -79,7 +79,7 @@ while not (done or truncated):
 
 ## Documentation
 
-TODO: add the documentation
+Read the documentation: 
 
 ## Citing
 
