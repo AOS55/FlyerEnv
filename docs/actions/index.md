@@ -2,14 +2,14 @@
 _actions:
 ---
 
-<!-- ```{eval-rst}
+```{eval-rst}
 .. py:module:: flyer_env.envs.common.action
-``` -->
+```
 
 # Actions
 
-<!-- Similarly to {ref}`observations <observations>`, a variety of action types can be used within each environment. 
-These are defined in the {py:mod}`~flyer_env.envs.common.action` module. -->
+Similarly to {ref}`observations <observations>`, a variety of action types can be used within each environment. 
+These are defined in the {py:mod}`~flyer_env.envs.common.action` module.
 Each environment comes with a *default* action type, that can be customized using {ref}`environment configurations 
 <configuration>`. As an example:
 
@@ -58,3 +58,10 @@ The {py:class}`~flyer_env.envs.common.action.PursuitAction` type is a higher ord
 | **GoalPos**          |   $s_{g}$    |      [-]      |  [$m$]  |
 | **Altitude**         |     $H$      | [0.0, 10,000] |  [$m$]  |
 | **Airspeed**         | $V_{\infty}$ |  [0.0, 300.0] | [$m/s$] |
+
+## API
+
+```{eval-rst}
+.. automodule:: flyer_env.envs.common.action
+    :members:
+```
