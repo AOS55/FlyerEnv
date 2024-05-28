@@ -10,10 +10,10 @@ into 2 types of behaviors:
   straight direction over the ground. 
 
 ## World
-<!-- 
+
 A {py:class}`~flyer_env.world.world.World` is composed of a {py:class}`~flyer_env.terrain.terrain.TerrainMap` and a 
 list of {py:class}`~flyer_env.aircraft.objects.DynamicObject` which are usually either {py:class}`~flyer_env.aircraft.
-kinematics.FlyingVehicle` or {py:class}`~flyer_env.aircraft.dynamics.AircraftVehicle`. -->
+kinematics.FlyingVehicle` or {py:class}`~flyer_env.aircraft.dynamics.AircraftVehicle`.
 
 ```{toctree}
 :maxdepth: 1

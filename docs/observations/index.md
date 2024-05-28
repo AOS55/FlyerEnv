@@ -21,7 +21,7 @@ env.configure({
 env.reset()
 ```
 
-<!-- # Kinematics
+# Kinematics
 
 The {py:class}`~flyer_env.envs.common.observation.KinematicObservation` is a $V \times F$ array containing a list of 
 $V$ nearby vehicles by a set of features of size $F$, listed in the `"features"` configuration field. For example:
@@ -51,6 +51,6 @@ $V$ nearby vehicles by a set of features of size $F$, listed in the `"features"`
 |   `w`   |    $w$   |   Aircraft's linear velocity in the $z$-axis   |  [$m/s$]  |
 |   `p`   |    $p$   | Aircraft's rotational velocity in the $x$-axis | [$rad/s$] |
 |   `q`   |    $q$   | Aircraft's rotational velocity in the $y$-axis | [$rad/s$] |
-|   `r`   |    $r$   | Aircraft's rotational velocity in the $z$-axis | [$rad/s$] | -->
+|   `r`   |    $r$   | Aircraft's rotational velocity in the $z$-axis | [$rad/s$] |
 
 
