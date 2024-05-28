@@ -225,6 +225,8 @@
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../../user_guide/">User Guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of User Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../../observations/">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../observations/#kinematics">Kinematics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../observations/#dynamics">Dynamics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../actions/">Actions</a></li>
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../../">Dynamics</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Dynamics</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../../world/terrain/">Terrain</a></li>
@@ -236,7 +238,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../rewards/">Rewards</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../graphics/">Graphics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../make_your_own/">Make your own environment</a></li>
 </ul>
 </li>
@@ -285,9 +286,9 @@
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="control">
 <span id="aircraft-controller"></span><h1>Control<a class="headerlink" href="#control" title="Link to this heading">¶</a></h1>
-<!-- All control occurs within the {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle` and is broken 
-down into low-level loop-closure based PID controllers and high-level control. Each allowing for increasing level of 
-abstraction in the action space.  -->
+<p>All control occurs within the <code class="xref py py-class docutils literal notranslate"><span class="pre">ControlledAircraft</span></code> and is broken
+down into low-level loop-closure based PID controllers and high-level control. Each allowing for increasing level of
+abstraction in the action space.  –&gt;</p>
 <section id="low-level-control">
 <h2>Low-level control<a class="headerlink" href="#low-level-control" title="Link to this heading">¶</a></h2>
 <p>Low-level controllers are used to hold and maintain the Kinematic aircraft in a fixed attitude and speed. Each
@@ -305,24 +306,24 @@ follow a PID type controller.</p>
   ControlSum --&gt; Aircraft: u(t)
   Aircraft --&gt; [*]: y(t)
         </div><p>Controllers include:</p>
-<!-- - Pitch {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.pitch_controller`
-- Roll {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.roll_controller`
-- Speed {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.speed_controller` -->
+<ul class="simple">
+<li><p>Pitch <code class="xref py py-class docutils literal notranslate"><span class="pre">pitch_controller</span></code></p></li>
+<li><p>Roll <code class="xref py py-class docutils literal notranslate"><span class="pre">roll_controller</span></code></p></li>
+<li><p>Speed <code class="xref py py-class docutils literal notranslate"><span class="pre">speed_controller</span></code></p></li>
+</ul>
 </section>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="high-level-control">
 <h1>High-level control<a class="headerlink" href="#high-level-control" title="Link to this heading">¶</a></h1>
 <p>High-level controllers are used to control higher order functions allowing offloading the problem of decision-making
 to be a higher-order task. These build on the low level controllers to include:</p>
-<!-- - Altitude {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.alt_controller`
-- Heading {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.heading_controller`
-- Pursuit {py:class}`~flyer_env.aircraft.contoller.ControlledKinematicVehicle.pursuit_controller` -->
+<ul class="simple">
+<li><p>Altitude <code class="xref py py-class docutils literal notranslate"><span class="pre">alt_controller</span></code></p></li>
+<li><p>Heading <code class="xref py py-class docutils literal notranslate"><span class="pre">heading_controller</span></code></p></li>
+<li><p>Pursuit <code class="xref py py-class docutils literal notranslate"><span class="pre">pursuit_controller</span></code></p></li>
+</ul>
 <section id="api">
 <h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
-<!-- ```{eval-rst}
-.. automodule:: flyer_env.aircraft.contoller
-    :members:
-``` -->
 </section>
 </section>
 
