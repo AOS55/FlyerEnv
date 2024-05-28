@@ -44,7 +44,7 @@ aircraft's heading, altitude, and speed with a {ref}`FlyingVehicle <vehicle_kine
 
 | Controlled Parameter | Nomenclature |      Range     |   Unit   |
 |----------------------|:------------:|:--------------:|:--------:|
-| **Heading**          |   $\theta$   | [-$\pi$,$\pi$] | [$rads$] |
+| **Heading**          |   $\theta$   | [$- \pi , \pi $] | [$rads$] |
 | **Altitude**         |     $H$      |  [0.0, 10,000] |   [$m$]  |
 | **Airspeed**         | $V_{\infty}$ |  [0.0, 300.0]  |  [$m/s$] |
 
