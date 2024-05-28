@@ -284,14 +284,11 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <!-- ```{eval-rst}
-.. py:module:: flyer_env.envs.common.action
-``` -->
-<section class="tex2jax_ignore mathjax_ignore" id="actions">
-<h1>Actions<a class="headerlink" href="#actions" title="Link to this heading">¶</a></h1>
-<!-- Similarly to {ref}`observations <observations>`, a variety of action types can be used within each environment. 
-These are defined in the {py:mod}`~flyer_env.envs.common.action` module. -->
-<p>Each environment comes with a <em>default</em> action type, that can be customized using <a class="reference internal" href="../quickstart/#configuration"><span class="std std-ref">environment configurations</span></a>. As an example:</p>
+          <section class="tex2jax_ignore mathjax_ignore" id="actions">
+<span id="module-flyer_env.envs.common.action"></span><h1>Actions<a class="headerlink" href="#actions" title="Link to this heading">¶</a></h1>
+<p>Similarly to <a class="reference internal" href="../observations/#id1"><span class="std std-ref">observations</span></a>, a variety of action types can be used within each environment.
+These are defined in the <a class="reference internal" href="#module-flyer_env.envs.common.action" title="flyer_env.envs.common.action"><code class="xref py py-mod docutils literal notranslate"><span class="pre">action</span></code></a> module.
+Each environment comes with a <em>default</em> action type, that can be customized using <a class="reference internal" href="../quickstart/#configuration"><span class="std std-ref">environment configurations</span></a>. As an example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gymnasium</span> <span class="k">as</span> <span class="nn">gym</span>
 
 <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s1">&#39;flyer-v1&#39;</span><span class="p">)</span>
@@ -403,6 +400,9 @@ aircraft’s heading, altitude, and speed with a <span class="xref std std-ref">
 </table>
 </div>
 </section>
+<section id="api">
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
+</section>
 </section>
 
         </article>
@@ -464,6 +464,7 @@ aircraft’s heading, altitude, and speed with a <span class="xref std std-ref">
 <li><a class="reference internal" href="#continuous-actions">Continuous Actions</a></li>
 <li><a class="reference internal" href="#controlled-actions">Controlled Actions</a></li>
 <li><a class="reference internal" href="#pursuit-actions">Pursuit Actions</a></li>
+<li><a class="reference internal" href="#api">API</a></li>
 </ul>
 </li>
 </ul>
