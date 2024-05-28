@@ -225,6 +225,8 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../user_guide/">User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of User Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../observations/">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../observations/#kinematics">Kinematics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../observations/#dynamics">Dynamics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../actions/">Actions</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../dynamics/">Dynamics</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Dynamics</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../dynamics/world/terrain/">Terrain</a></li>
@@ -236,7 +238,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../rewards/">Rewards</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../graphics/">Graphics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../make_your_own/">Make your own environment</a></li>
 </ul>
 </li>
@@ -320,7 +321,7 @@
 </section>
 <section id="configuring-an-environment">
 <span id="configuration"></span><h2>Configuring an environment<a class="headerlink" href="#configuring-an-environment" title="Link to this heading">¶</a></h2>
-<p>The <a class="reference internal" href="../observations/#id1"><span class="std std-ref">observations</span></a>, <a class="reference internal" href="../actions/#actions"><span class="std std-ref">actions</span></a>, <a class="reference internal" href="../dynamics/#dynamics"><span class="std std-ref">dynamics</span></a> and <a class="reference internal" href="../rewards/#rewards"><span class="std std-ref">rewards</span></a> of an environment are parametrized by the configuration <code class="xref py py-attr docutils literal notranslate"><span class="pre">config</span></code> dictionary. After environment creation, the configuration can be accessed using the {py:attr}
+<p>The <a class="reference internal" href="../observations/#id1"><span class="std std-ref">observations</span></a>, <a class="reference internal" href="../actions/#actions"><span class="std std-ref">actions</span></a>, <a class="reference internal" href="../observations/#dynamics"><span class="std std-ref">dynamics</span></a> and <a class="reference internal" href="../rewards/#rewards"><span class="std std-ref">rewards</span></a> of an environment are parametrized by the configuration <code class="xref py py-attr docutils literal notranslate"><span class="pre">config</span></code> dictionary. After environment creation, the configuration can be accessed using the {py:attr}
 <code class="docutils literal notranslate"><span class="pre">~flyer_env.envs.common.abstract.AbstractEnv.config</span></code> attribute.</p>
 <!-- ```{eval-rst}
 .. jupyter-execute::

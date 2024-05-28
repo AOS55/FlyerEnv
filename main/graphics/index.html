@@ -7,7 +7,7 @@
         <link rel="canonical" href=" https://aos55.github.io/FlyerEnv/graphics/" />
 
     <link rel="shortcut icon" href="../_static/flyericon.png"/><!-- Generated with Sphinx 7.3.7 and Furo 2024.05.06 -->
-        <title>Graphics - FlyerEnv Documentation</title>
+        <title>&lt;no title&gt; - FlyerEnv Documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
@@ -194,7 +194,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -214,7 +214,7 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <ul class="current">
+  <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../quickstart/">Getting Started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../environments/flyer/">Flyer</a></li>
@@ -223,8 +223,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../environments/forced_landing/">Forced Landing</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="../user_guide/">User Guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of User Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user_guide/">User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of User Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../observations/">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../observations/#kinematics">Kinematics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../observations/#dynamics">Dynamics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../actions/">Actions</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../dynamics/">Dynamics</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Dynamics</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../dynamics/world/terrain/">Terrain</a></li>
@@ -236,7 +238,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../rewards/">Rewards</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Graphics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../make_your_own/">Make your own environment</a></li>
 </ul>
 </li>
@@ -277,40 +278,45 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <span class="target" id="graphics"></span><section class="tex2jax_ignore mathjax_ignore" id="id1">
-<h1>Graphics<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h1>
-<p>Environment rendering is achieved with <a class="reference external" href="https://www.pygame.org/news">pygame</a>, which must be <a class="reference internal" href="../installation/#installation"><span class="std std-ref">installed separately</span></a></p>
-<p>When <code class="docutils literal notranslate"><span class="pre">env.render()</span></code> is first called a window is created, dimensions are configured with:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s1">&#39;flyer-v1&#39;</span><span class="p">)</span>
-<span class="n">env</span><span class="o">.</span><span class="n">configure</span><span class="p">({</span>
-    <span class="s2">&quot;screen_width&quot;</span><span class="p">:</span> <span class="mi">640</span><span class="p">,</span>
-    <span class="s2">&quot;screen_height&quot;</span><span class="p">:</span> <span class="mi">480</span>
-<span class="p">})</span>
-<span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-<span class="n">env</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
-</pre></div>
-</div>
-<section id="surface">
-<h2>Surface<a class="headerlink" href="#surface" title="Link to this heading">¶</a></h2>
-<!-- The 2.5D simulation is rendered in a {py:class}`~flyer_env.world.graphics.WorldSurface` pygame surface, which 
+          <!-- % py:currentmodule::flyer_env.envs.common.graphics
+
+# Graphics
+
+Environment rendering is achieved with [pygame](https://www.pygame.org/news), which must be {ref}`installed separately <installation>`
+
+When `env.render()` is first called a window is created, dimensions are configured with:
+
+```python
+env = gym.make('flyer-v1')
+env.configure({
+    "screen_width": 640,
+    "screen_height": 480
+})
+env.reset()
+env.render()
+```
+
+## Surface
+
+The 2.5D simulation is rendered in a {py:class}`~flyer_env.world.graphics.WorldSurface` pygame surface, which 
 provides the location and zoom level of the rendered location. By default, this is centered on the ego-vehicle and 
 can be adjusted using `"scaling"` and `"centering_position"` configurations. This is controlled with {py:class}
-`~flyer_env.envs.common.graphics.EnvViewer`. -->
-</section>
-<section id="scene-graphics">
-<h2>Scene graphics<a class="headerlink" href="#scene-graphics" title="Link to this heading">¶</a></h2>
-<!-- - The terrain base layer and static objects are rendered using {~flyer_env.world.graphics.WorldGraphics} class. -->
-<!-- - Aircraft are rendered using {py:class}`~flyer_env.aircraft.graphics.VehicleGraphics` -->
-</section>
-<section id="api">
-<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
-<!-- ```{eval-rst}
+`~flyer_env.envs.common.graphics.EnvViewer`.
+
+## Scene graphics
+
+- The terrain base layer and static objects are rendered using {~flyer_env.world.graphics.WorldGraphics} class.
+- Aircraft are rendered using {py:class}`~flyer_env.aircraft.graphics.VehicleGraphics`
+
+## API
+
+```{eval-rst}
 .. automodule:: flyer_env.envs.common.graphics
     :members:
 ```
@@ -324,8 +330,6 @@ can be adjusted using `"scaling"` and `"centering_position"` configurations. Thi
 .. automodule:: flyer_env.aircraft.graphics
     :members:
 ``` -->
-</section>
-</section>
 
         </article>
       </div>
@@ -370,29 +374,8 @@ can be adjusted using `"scaling"` and `"centering_position"` configurations. Thi
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Graphics</a><ul>
-<li><a class="reference internal" href="#surface">Surface</a></li>
-<li><a class="reference internal" href="#scene-graphics">Scene graphics</a></li>
-<li><a class="reference internal" href="#api">API</a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>
