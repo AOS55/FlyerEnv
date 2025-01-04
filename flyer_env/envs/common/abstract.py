@@ -1,70 +1,187 @@
 from typing import Dict, List, Optional, Text, Tuple, TypeVar
-
 import gymnasium as gym
-import pygame
 import numpy as np
-from pyflyer import Aircraft
-
-from flyer_env.envs.common.action import Action, ActionType, action_factory
-from flyer_env.envs.common.observation import ObservationType, observation_factory
-from flyer_env.aircraft.controller import ControlledAircraft
+import json
+import socket
+import time
+import subprocess
+from dataclasses import dataclass
+from contextlib import contextmanager
 
 Observation = TypeVar("Observation")
 
+@dataclass
+class ConnectionConfig:
+    """Configuration for TCP connection to Rust server"""
+    host: str = "127.0.0.1"
+    connection_timeout: float = 30.0
+    response_timeout: float = 5.0
+    retry_interval: float = 0.1
 
 class AbstractEnv(gym.Env):
     """
-    A generic environment for various aircraft flight related tasks
-
+    A generic environment that serves as the basis for the FlyerEnv
+    This environment creates a server to connect to the Bevy Running app.
     """
 
-    observation_type: ObservationType
-    action_type: ActionType
+    # observation_type: ObservationType
+    # action_type: ActionType
     metadata = {"render_modes": ["human", "rgb_array"]}
 
     def __init__(
         self,
         config: dict = None,
         render_mode: Optional[str] = None,
+        connection_config: Optional[ConnectionConfig] = None
     ) -> None:
 
         super().__init__()
 
+        # Connection management
+        self._connection_config = connection_config or ConnectionConfig()
+        self._process = None
+        self._sock = None
+        self._connected = False
+    
         # Configuration
         self.config = self.default_config()
-        self.configure(config)
+        if config:
+            self.configure(config)
 
-        # Scene
+        # Scene and vehicle management
         self.controlled_vehicles = []
+        # self._setup_spaces()  # Initialize action and observation spaces
 
-        # Spaces
-        self.action_type = None
-        self.action_space = None
-        self.observation_type = None
-        self.observation_space = None
-        self.define_spaces()
-
-        # Running
-        self.time = 0.0  # Simulation time
-        self.steps = 0  # Actions performed
+        # State tracking
+        self.time = 0.0
+        self.steps = 0
         self.done = False
 
         # Rendering
-        self.viewer = None
+        self.viewer = None  # TODO: This would have been a pygame object, should delete? 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
-        self.reset()
+        # Initialize connection to Rust server
+        try:
+            self._start_game()
+        except Exception as e:
+            self.close()
+            raise
+        
+    @contextmanager
+    def _managed_connection(self, timeout: float) -> socket.socket:
+        """Context manager for handling socket operations with timeout"""
+        if not self._sock:
+            raise RuntimeError("Socket not initialized")
+            
+        original_timeout = self._sock.gettimeout()
+        try:
+            self._sock.settimeout(timeout)
+            yield self._sock
+        finally:
+            if self._sock:
+                self._sock.settimeout(original_timeout)
 
-    @property
-    def vehicle(self) -> Aircraft:
-        """First (default) controlled vehicle"""
-        return self.controlled_vehicles[0] if self.controlled_vehicles else None
+    def _send_command(self, command: dict, timeout: float = None) -> dict:
+        """Send command to Rust server and receive response"""
+        if not self._connected:
+            raise RuntimeError("Not connected to server")
+        
+        timeout = timeout or self._connection_config.response_timeout
+        command_str = json.dumps(command) + "\n"
+        
+        with self._managed_connection(timeout) as sock:
+            try:
+                sock.sendall(command_str.encode())
+                return self._read_response(timeout)
+            except (socket.timeout, json.JSONDecodeError) as e:
+                raise RuntimeError(f"Command failed: {e}")
 
-    @vehicle.setter
-    def vehicle(self, vehicle: Aircraft) -> None:
-        """Set a unique controlled vehicle"""
-        self.controlled_vehicles = [vehicle]
+    def _read_response(self, timeout: float) -> dict:
+        """Read and parse response from socket with timeout"""
+        buffer = ""
+        start_time = time.time()
+        
+        while time.time() - start_time < timeout:
+            try:
+                chunk = self._sock.recv(4096).decode()
+                if not chunk:
+                    time.sleep(self._connection_config.retry_interval)
+                    continue
+                    
+                buffer += chunk
+                if '\n' in buffer:
+                    message, buffer = buffer.split('\n', 1)
+                    return json.loads(message)
+            except socket.timeout:
+                continue
+                
+        raise TimeoutError("Timeout waiting for response")
+    
+    def _start_game(self) -> None:
+        """Initialize connection to Rust server"""
+        print("Starting Flyer initialization...")
+        
+        # Start Bevy process
+        try:
+            self._process = subprocess.Popen(
+                ["pyflyer-rs/target/release/bevy_server"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+                universal_newlines=True
+            )
+        except FileNotFoundError as e:
+            raise RuntimeError("Check 'pyflyer-rs/target/release/bevy_server' exists and is executable.")
+        
+        # Get port from process output with timeout
+        start_time = time.time()
+        self.port = None
+        
+        while time.time() - start_time < self._connection_config.connection_timeout:
+            line = self._process.stdout.readline()
+            if line.startswith("PORT="):
+                self.port = int(line.strip().split("=")[1])
+                break
+                
+        if not self.port:
+            self._cleanup_process()
+            raise TimeoutError("Timeout waiting for server port")
+            
+        # Connect socket
+        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self._sock.connect((self._connection_config.host, self.port))
+            self._connected = True
+            self._initialize_env()
+        except Exception as e:
+            self._cleanup_socket()
+            self._cleanup_process()
+            raise
+
+    def _initialize_env(self) -> None:
+        """Send initial configuration to server"""
+        init_msg = {
+            "Initialize": {
+                "config": self.config
+            }
+        }
+        
+        response = self._send_command(init_msg)
+        if response.get("status") != "ready":
+            raise RuntimeError(f"Failed to initialize: {response}")
+    
+    # @property
+    # def vehicle(self) -> Aircraft:
+    #     """First (default) controlled vehicle"""
+    #     return self.controlled_vehicles[0] if self.controlled_vehicles else None
+
+    # @vehicle.setter
+    # def vehicle(self, vehicle: Aircraft) -> None:
+    #     """Set a unique controlled vehicle"""
+    #     self.controlled_vehicles = [vehicle]
 
     @classmethod
     def default_config(cls) -> dict:
@@ -75,219 +192,141 @@ class AbstractEnv(gym.Env):
         :return: a configuration dict
         """
         return {
-            "observation": {"type": "Dynamics"},
-            "action": {"type": "ContinuousAction"},
-            "simulation_frequency": 120.0,  # [Hz]
-            "policy_frequency": 10.0,  # [Hz]
-            "render_frequency": 1.0,  # [Hz]
-            "screen_size": 600,  # [px], forced to be square viewport for now
-            "scaling": 25,  # [m/px], ratio of how large the default tile is in [m]
+            "max_episode_steps": 1000,
+            "steps_per_action": 4,
+            "time_step": 1.0/120.0,
+            "aircraft_config": [{
+                "type": "dubins",
+                "action_type": "Continuous",
+                "observation_type": "Continuous"
+            }],
+            "agent_config": {
+                "render_width": 800.0,
+                "render_height": 600.0
+            }
         }
-
+    
     def configure(self, config: dict) -> None:
         if config:
-            self.config.update(config)
+            self.config.update(config)     
+            
+    def step(self, action: np.ndarray) -> Tuple[Observation, float, bool, bool, dict]:
+        """Execute action and get new state"""
+        if not self._connected:
+            raise RuntimeError("Not connected to server")
 
-    def define_spaces(self) -> None:
-        """
-        Setup the types and spaces of observation from the config
-        """
-        self.observation_type = observation_factory(self, self.config["observation"])
-        self.action_type = action_factory(self, self.config["action"])
-        self.observation_space = self.observation_type.space()
-        self.action_space = self.action_type.space()
+        # Basic input validation
+        if not isinstance(action, (list, np.ndarray)):
+            raise TypeError(f"Action must be list or ndarray, got {type(action)}")
 
-    def _reward(self, action: Action) -> float:
-        """
-        Return the reward associated with performing a given action and ending in the given state
+        if len(self.controlled_vehicles) == 0:
+            raise RuntimeError("No controlled vehicles available")
 
-        :param action: the last action performed
-        :return: the reward
-        """
-        raise NotImplementedError
+        # Validate number of actions matches number of vehicles
+        if isinstance(action, np.ndarray):
+            # For numpy arrays, first dimension should match number of vehicles
+            if len(action.shape) < 1 or action.shape[0] != len(self.controlled_vehicles):
+                raise IndexError(f"Action shape {action.shape} does not match number of vehicles {len(self.controlled_vehicles)}")
+        else:
+            # For lists, length should match number of vehicles
+            if len(action) != len(self.controlled_vehicles):
+                raise IndexError(f"Action length {len(action)} does not match number of vehicles {len(self.controlled_vehicles)}")
 
-    def _rewards(self, action: Action) -> Dict[Text, float]:
-        """
-        Returns a multi-objective vector of rewards.
+        # Create action dictionary with native Python types
+        action_dict = {}
+        for i in range(len(self.controlled_vehicles)):
+            if isinstance(action[i], np.ndarray):
+                action_dict[f"aircraft_{i}"] = action[i].tolist()
+            elif isinstance(action[i], list):
+                action_dict[f"aircraft_{i}"] = action[i]
+            else:
+                # Single value
+                action_dict[f"aircraft_{i}"] = float(action[i])
 
-        If implemented, this reward vector should be aggregated into a scalar in _reward().
-        This vector value should only be returned inside the info dict.
-
-        :param action: the last action performed
-        :return: a dict of {'reward_name': reward_value}
-        """
-        raise NotImplementedError
-
-    def _is_terminated(self) -> bool:
-        """
-        Check whether the current state is a terminal state
-
-        :return: True: if terminal, False: if not
-        """
-        raise NotImplementedError
-
-    def _is_truncated(self) -> bool:
-        """
-        Check if the episode is truncated at the current step
-
-        :return: True: if truncated, False: if not
-        """
-        raise NotImplementedError
-
-    def _info(self, obs, action) -> dict:
-        """
-        Return a dictionary of additional information
-
-        :param obs: current observation
-        :param action: current action
-        :return: info dict
-        """
-
-        info = {
-            # TODO: Add key information we might want here
+        command = {
+            "Step": {
+                "actions": action_dict
+            }
         }
 
         try:
-            info["rewards"] = self._rewards(action)
-        except NotImplementedError:
-            pass
-        return info
+            response = self._send_command(command)
+            return (
+                np.array(response["obs"]),
+                response["reward"],
+                response["terminated"],
+                response["truncated"],
+                response["info"]
+            )
+        except Exception as e:
+            self.close()
+            raise RuntimeError(f"Step failed: {e}")
 
     def reset(
-        self, *, seed: Optional[int] = None, options: Optional[dict] = None
+        self,
+        *,
+        seed: Optional[int] = None,
+        options: Optional[dict] = None
     ) -> Tuple[Observation, dict]:
-        """
-        Reset the environment to it's initial configuration
+        """Reset environment state"""
+        # super().reset(seed=seed, options=options)
+        
+        # if options and "config" in options:
+        #     self.configure(options["config"])
+        
+        command = {
+            "Reset": {
+                "seed": seed
+            }
+        }
+        
+        try:
+            response = self._send_command(command)
+            print(f"Response: {response}")
+            return np.array(response["obs"]), response["info"]
+        except Exception as e:
+            self.close()
+            raise RuntimeError(f"Reset failed: {e}")
+    
+    def _cleanup_socket(self) -> None:
+        """Clean up socket connection"""
+        if self._sock:
+            try:
+                self._sock.close()
+            except Exception:
+                pass
+            finally:
+                self._sock = None
+                self._connected = False
 
-        :param seed: The seed that is used to initialize the environment's PRNG
-        :param options: Allows the environment configuration to specified through options["config"]
-        :return: the observation of the reset state and information about the environment
-        """
-        super().reset(seed=seed, options=options)
-        if options and "config" in options:
-            self.configure(options["config"])
-
-        # First, to set the controlled vehicle class depending on the action space
-        self.define_spaces()
-
-        self.time = 0.0
-        self.steps = 0
-        self.done = False
-        self._reset()
-
-        # Second, to link the obs and actions to the vehicles once the scene is created
-        self.define_spaces()
-        obs = self.observation_type.observe()
-        info = self._info(obs, action=self.action_space.sample())
-        self.world.screen_dim = [self.config["screen_size"], self.config["screen_size"]]  # This sets the viewport for the renderer
-
-        return obs, info
-
-    def _reset(self) -> None:
-        """
-        Reset the scene
-
-        Method overloaded by the environments
-        """
-
-    def step(self, action: Action) -> Tuple[Observation, float, bool, bool, dict]:
-        """
-        Perform an action and step the environment dynamics.
-
-        The action is executed by the ego-vehicle, and all other vehicles on the road performs their default behavior
-        for several simulation time-steps until the next decision-making step.
-
-        :param action: the action performed by the ego-vehicle
-        :return: a tuple (observation, reward, terminated, truncated, info)
-        """
-
-        # Call from the simulator and update the values of each
-        self._simulate(action)
-
-        obs = self.observation_type.observe()
-        reward = self._reward(action)
-        terminated = self._is_terminated()
-        truncated = self._is_truncated()
-        info = self._info(obs, action)
-
-        return obs, reward, terminated, truncated, info
-
-    def _simulate(self, action) -> None:
-        """
-        Simulate the world
-        """
-        dt = 1 / self.config["simulation_frequency"]
-        self.time += dt
-        self.action_type.act(action)  # set the action on the aircraft
-        self.vehicle.step(dt)  # update the aircraft
-        self.world.camera_pos = self.vehicle.position  # move the camera in the world
-
-        if self.world.render_type == "aircraft":
-            if type(self.vehicle) == ControlledAircraft:
-                self.world.update_aircraft(self.vehicle.aircraft, 0)
-            else:
-                self.world.update_aircraft(self.vehicle, 0)  # Update vehicle in world
-
-        # print(f"self.world.camera_pos: {self.world.camera_pos}")
-        # self.world.step()  # Step the world
-
-    def render(self) -> Optional[np.ndarray]:
-        """
-        Render the environment
-        """
-        if self.render_mode is None:
-            assert self.spec is not None
-            gym.logger.warn(
-                "You are calling render method without specifying any render mode."
-                "You can specify the render_mode at initialization."
-                f"e.g. gym.make({self.spec.id}, render_mode='rgb_array')"
-            )
-            return
-
-        if self.render_mode == "human":
-            if self.viewer == None:
-                pygame.init()
-                self.viewer = pygame.display.set_mode(
-                    (self.config["screen_size"], self.config["screen_size"]) 
-                )
-            
-            bytes = self.world.render()
-
-            # print(f'type(bytes): {type(bytes)}, len(bytes): {len(bytes)}, screen_width: {self.world.screen_width}, screen_height: {self.world.screen_height}')
-            # print(f'sample: {bytes[0:4]}')
-            
-            img = np.array(bytes, dtype=np.uint8)
-            img = img.reshape(
-                (int(self.world.screen_width), int(self.world.screen_height), 4)
-            )
-            img = img[:, :, :3]
-            # img = np.flip(img, axis=1)
-            img = np.rot90(img)  # TODO: This isn't the correct shape, look @ bytes to see how they work
-            img = np.flipud(img)
-            surf = pygame.surfarray.make_surface(img)
-            
-            self.viewer.blit(surf, (0, 0))
-            pygame.display.update()
-
-        if self.render_mode == "rgb_array":
-            bytes = self.world.render()
-            img = np.array(bytes, dtype=np.uint8)
-            img = img.reshape(
-                (int(self.world.screen_width), int(self.world.screen_height), 4)
-            )
-            img = img[:, :, :3]
-
-            return img
+    def _cleanup_process(self) -> None:
+        """Clean up Bevy server process"""
+        if self._process:
+            try:
+                self._process.terminate()
+                self._process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self._process.kill()
+            finally:
+                self._process = None
 
     def close(self) -> None:
-        """
-        Close the environment
-        """
+        """Clean up resources"""
+        if self._connected:
+            try:
+                self._send_command({"Close": {}})
+            except Exception:
+                pass
+                
+        self._cleanup_socket()
+        self._cleanup_process()
+        
+        if self.viewer:
+            pygame.quit()
+            self.viewer = None
+            
         self.done = True
-        # TODO: Find a way to close the viewer if it exists
 
-    def get_available_actions(self) -> List[int]:
-        """
-        Helper method to provide available actions in the current environment
-        """
-        return self.action_type.get_availale_actions()
+    def __del__(self) -> None:
+        """Ensure cleanup on deletion"""
+        self.close()

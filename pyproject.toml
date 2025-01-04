@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools==68.2.2",
+    "setuptools>=75.3.0",
     "setuptools-rust",
     "wheel"
 ]
@@ -8,14 +8,32 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flyer-env"
-version = "0.1"
+version = "0.2.0"
+description = "An environment for simulated fixed-wing aircraft guidance, navigation, and control tasks"
+readme = {file = "README.md", content-type = "text/markdown"}  # Combine both file and content type
+license = {text = "MIT"}
+authors = [{name = "Alexander Quessy", email = "aq15777@bristol.ac.uk"}]
+urls = {homepage = "https://github.com/aos55/FlyerEnv"}  # Use 'urls' for links
 
-# [[tool.setuptools-rust.ext-modules]]
-# # Build rust extension for FlyerEnv
-# target = "pyflyer.pyflyer"
-# path = "pyflyer-rs/Cargo.toml"
-# binding = "PyO3"
+dependencies = [
+    "gymnasium>=1.0.0",
+    "moviepy",
+    "numpy",
+    "pygame>=2.0.2",
+    "matplotlib",
+    "pandas",
+    "scipy",
+    "simple-pid",
+    "pyYAML",
+    "scikit-image",
+    "opensimplex"
+]
 
-[tool.maturin]
-python-source = "python"
-module-name = "pyflyer-rs.pyflyer"
+optional-dependencies = {deploy = ["pytest-runner", "sphinx<1.7.3", "sphinx_rtd_theme"]}
+
+[project.entry-points]
+"gymnasium.envs" = {"__root__" = "flyer_env.__init__:register_flyer_envs"}
+
+[tool.setuptools.packages.find]
+include = ["flyer_env", "flyer_env.*"]
+exclude = ["tests", "docs", "scripts"]

@@ -1,6 +1,14 @@
-# Welcome to [FlyerEnv](https://github.com/AOS55/FlyerEnv)'s documentation!
+---
+hide-toc: true
+firstpage:
+lastpage:
+---
 
-This project contains a collection of environments for *guidance, navigation and control* in aerial vehicles.
+```{project-heading}
+FlyerEnv is a flight simulator environment for reinforcement learning. It connects a Python Gym interface to a Rust-based physics engine, allowing AI agents to learn flight control.
+```
+
+The environments are designed to be modular and customizable, allowing users to create a wide variety of tasks and scenarios. The environments are built on top of the [Gymnasium](https://gymnasium.farama.org) framework, making them easy to integrate with existing reinforcement learning algorithms and tools.
 
 The purpose of this documentation is to provide:
 
@@ -26,14 +34,36 @@ If you use this package, please consider citing it:
 
 ```{toctree}
 :hidden:
-:maxdepth: 2
+:caption: Introduction
 
-installation
-quickstart
-user_guide
-faq
-bibliography/index
+introduction/basic_usage
+introduction/installation
+introduction/architecture
 ```
+
+```{toctree}
+:hidden:
+:caption: API
+
+api/environment
+api/observation
+api/action
+api/reward
+api/termination
+api/rendering
+```
+
+```{toctree}
+:hidden:
+:caption: Environments
+
+environments/flyer
+envrionments/control
+environments/trajectory
+environments/forced_landing
+environments/runway
+```
+
 
 ```{toctree}
 :hidden:

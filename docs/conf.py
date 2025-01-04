@@ -11,23 +11,28 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import re
 import sys
-from typing import Any, Dict
+import time
+
+import sphinx_gallery.gen_rst
 
 sys.path.insert(0, os.path.abspath(".."))
 print(f"sys.executable: {sys.executable}")
 
 # -- Project information -----------------------------------------------------
 
-# import flyer_env
+sys.path.insert(0, os.path.abspath("."))  # For building from root
+sys.path.insert(0, os.path.abspath(".."))  # For building from docs dir
 
+import flyer_env
 
 project = "FlyerEnv"
-copyright = "2023 Farama Foundation"
+copyright = f"{time.localtime().tm_year} Alexander Quessy"
 author = "Alexander Quessy"
 
 # The full version, including alpha/beta/rc tags
-release = ""
+release = flyer_env.__version__
 
 # -- General configuration ---------------------------------------------------
 
@@ -57,6 +62,15 @@ autodoc_default_flags = [
 ]
 autodoc_member_order = "bysource"
 
+# Mermaid SVG configuration
+mermaid_output_format = 'svg'
+mermaid_cmd = 'mmdc'
+mermaid_params = [
+    '--theme', 'default',
+    '--width', '100%',
+    '--backgroundColor', 'transparent'
+]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -80,7 +94,15 @@ autodoc_preserve_defaults = True
 # -- MyST configuration -----------------------------------------------------
 myst_enable_extensions = [
     "dollarmath",
+    "mermaid"
 ]
+
+myst_enable_extensions.extend([
+    "colon_fence",
+    "deflist",
+    "tasklist",
+    "attrs_block"
+])
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -95,6 +117,7 @@ html_favicon = "_static/img/flyericon.png"
 html_theme_options = {
     "description": "A collection of environments for fixed wing aircraft control and decision-making tasks",
     "versioning": True,
+    "source_repository": "https://github.com/AOS55/FlyerEnv",
 }
 html_context: Dict[str, Any] = {}
 html_context["conf_py_path"] = "/docs/"

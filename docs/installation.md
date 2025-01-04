@@ -6,8 +6,6 @@
 
 This project requires python3 (>=3.8)
 
-
-
 ### Ubuntu
 
 We recommend using [apt](https://ubuntu.com/server/docs/package-management)

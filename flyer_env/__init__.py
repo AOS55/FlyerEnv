@@ -1,26 +1,28 @@
-import os
+# import os
+from importlib.metadata import version
 
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
+__version__ = version("flyer-env")
 
-from gymnasium.envs.registration import register
+# os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
-from flyer_env.wrappers import RecordVideo
+# from gymnasium.envs.registration import register
 
+# # from flyer_env.wrappers import RecordVideo
 
-def register_flyer_envs():
-    """Import the envs module so that the environs register themselves."""
+# def register_flyer_envs():
+#     """Import the envs module so that the environs register themselves."""
 
-    # flyer_env.py
-    register(id="flyer-v1", entry_point="flyer_env.envs:FlyerEnv")
+#     # flyer_env.py
+#     register(id="flyer-v1", entry_point="flyer_env.envs:FlyerEnv")
 
-    # trajectory_env.py
-    register(id="trajectory-v1", entry_point="flyer_env.envs:TrajectoryEnv")
+#     # trajectory_env.py
+#     register(id="trajectory-v1", entry_point="flyer_env.envs:TrajectoryEnv")
 
-    # runway_env.py
-    register(id="runway-v1", entry_point="flyer_env.envs:RunwayEnv")
+#     # runway_env.py
+#     register(id="runway-v1", entry_point="flyer_env.envs:RunwayEnv")
 
-    # forced_landing_env.py
-    register(id="forced_landing-v1", entry_point="flyer_env.envs:ForcedLandingEnv")
+#     # forced_landing_env.py
+#     register(id="forced_landing-v1", entry_point="flyer_env.envs:ForcedLandingEnv")
 
-    # control_env.py
-    register(id="control-v1", entry_point="flyer_env.envs:ControlEnv")
+#     # control_env.py
+#     register(id="control-v1", entry_point="flyer_env.envs:ControlEnv")
