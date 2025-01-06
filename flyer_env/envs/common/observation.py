@@ -1,43 +1,68 @@
-from typing import TYPE_CHECKING, Dict, List, OrderedDict
-
 import numpy as np
-import pandas as pd
 from gymnasium import spaces
 
-if TYPE_CHECKING:
-    from flyer_env.envs.common.abstract import AbstractEnv
-
+from typing import List, Dict
 
 class ObservationType:
 
-    def __init__(self, env: "AbstractEnv", **kwargs) -> None:
-        self.env = env
-        self.__observer_vehicle = None
+    def __init__(self) -> None:
+        return
 
     def space(self) -> spaces.Space:
-        """Get the observation space"""
+        """The observation space"""
         raise NotImplementedError
 
     def observe(self):
-        """Get an observation of the environment state"""
+        "Get an observation of the environment"
         raise NotImplementedError
 
-    @property
-    def observer_vehicle(self):
-        """
-        The vehicle observing the scene
+class DubinsObservation(ObservationType):
 
-        If not set, the first controlled vehicle is used.
-        """
-        return self.__observer_vehicle or self.env.vehicle
+    FEATURES: List[str] = [
+        "x",
+        "y",
+        "heading",
+        "altitude",
+        "airspeed"
+    ]
 
-    @observer_vehicle.setter
-    def observer_vehicle(self, vehicle):
-        self.__observer_vehicle = vehicle
+    def __init__(self, features_range: Dict[str, List[float]] = None, normalize: bool = False) -> None:
+        """Initialize the Dubins aircraft observation type"""
+        if (features_range and normalize):
+            self.normalize = True
+        else:
+            self.normalize = False
 
+        if features_range:
+            self.features = list(features_range.keys())
+            self.features_range = features_range
+        else:
+            self.features = self.FEATURES
 
-class DynamicObservation(ObservationType):
-    """Observe the dynamics of a vehicle"""
+    def space(self) -> spaces.Space:
+        """Observation space for the Dubins aircraft"""
+        if self.normalize:
+            return spaces.Box(low=-1, high=1, shape=len(self.features))
+        else:
+            return spaces.Box(low=-np.inf, high=np.inf, shape=len(self.features))
+
+    def observe(self, obs_dict: Dict[str, float]) -> np.ndarray:
+        """Generate observation vector from the observation dictionary."""
+        obs_vector = []
+        for feature in self.features:
+            value = obs_dict.get(feature, 0.0)  # Default to 0.0 if the feature is missing
+            if self.normalize:
+                # Perform normalization using the range
+                feature_range = self.features_range.get(feature, [-np.inf, np.inf])
+                min_val, max_val = feature_range
+                if max_val > min_val:  # Avoid division by zero
+                    value = 2 * (value - min_val) / (max_val - min_val) - 1
+                else:
+                    value = 0.0  # Handle edge cases where min and max are the same
+            obs_vector.append(value)
+        return np.array(obs_vector)
+
+class FullObservation(ObservationType):
 
     FEATURES: List[str] = [
         "x",
@@ -54,333 +79,54 @@ class DynamicObservation(ObservationType):
         "r",
     ]
 
-    def __init__(
-        self,
-        env: "AbstractEnv",
-        features: List[str] = None,
-        vehicles_count: int = 1,
-        features_range: Dict[str, List[float]] = None,
-        **kwargs: dict
-    ) -> None:
+    def __init__(self, features_range: Dict[str, List[float]] = None, normalize: bool = False) -> None:
+        """Initialize the Full aircraft observation type"""
+        if (features_range and normalize):
+            self.normalize = True
+        else:
+            self.normalize = False
 
-        super().__init__(env)
-        self.features = features or self.FEATURES
-        self.vehicles_count = vehicles_count
-        self.features_range = features_range
-
-    def space(self) -> spaces.Space:
-        return spaces.Box(
-            shape=(self.vehicles_count, len(self.features)),
-            low=-np.inf,
-            high=np.inf,
-            dtype=np.float32,
-        )
-
-    def observe(self) -> np.ndarray:
-
-        # TODO: this is probably a slow way to collect data, can we speed it up?
-        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
-        df = df[self.features]
-        obs = df.values.copy()
-        return obs.astype(self.space().dtype)
-
-
-class TrajectoryObservation(ObservationType):
-    """
-    Observe dynamics of vehicle relative to goal position
-    ONLY FOR USE WITH TRAJECTORY ENV
-    """
-
-    FEATURES: List[str] = [
-        "x",
-        "y",
-        "z",
-        "roll",
-        "pitch",
-        "yaw",
-        "u",
-        "v",
-        "w",
-        "p",
-        "q",
-        "r",
-    ]
-
-    def __init__(
-        self,
-        env: "AbstractEnv",
-        features: List[str] = None,
-        vehicles_count: int = 1,
-        features_range: Dict[str, List[float]] = None,
-        **kwargs: dict
-    ) -> None:
-
-        super().__init__(env)
-        self.features = features or self.FEATURES
-        self.vehicles_count = vehicles_count
-        self.features_range = features_range
-        if hasattr(env, "goal"):
-            self.goal = env.goal
+        if features_range:
+            self.features = list(features_range.keys())
+            self.features_range = features_range
+        else:
+            self.features = self.FEATURES
 
     def space(self) -> spaces.Space:
-        return spaces.Box(
-            shape=(self.vehicles_count, len(self.features)),
-            low=-np.inf,
-            high=np.inf,
-            dtype=np.float32,
-        )
+        """Observation space for the Dubins aircraft"""
+        if self.normalize:
+            return spaces.Box(low=-1, high=1, shape=len(self.features))
+        else:
+            return spaces.Box(low=-np.inf, high=np.inf, shape=len(self.features))
 
-    def observe(self) -> np.ndarray:
+    def observe(self, obs_dict):
+        """Generate observation vector from the observation dictionary."""
+        obs_vector = []
+        for feature in self.features:
+            value = obs_dict.get(feature, 0.0)  # Default to 0.0 if the feature is missing
+            if self.normalize:
+                # Perform normalization using the range
+                feature_range = self.features_range.get(feature, [-np.inf, np.inf])
+                min_val, max_val = feature_range
+                if max_val > min_val:  # Avoid division by zero
+                    value = 2 * (value - min_val) / (max_val - min_val) - 1
+                else:
+                    value = 0.0  # Handle edge cases where min and max are the same
+            obs_vector.append(value)
+        return np.array(obs_vector)
 
-        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
-        df = df[self.features]
-        obs = df.values.copy()
-        obs[0, 0] = self.goal[0] - obs[0, 0]
-        obs[0, 1] = self.goal[1] - obs[0, 1]
-        obs[0, 2] = self.goal[2] - obs[0, 2]
-        return obs.astype(self.space().dtype)
+def observation_factory(aircraft_type: str, observation_type: str, **kwargs) -> ObservationType:
+    if aircraft_type == "Dubins":
+        if observation_type == "Continuous":
+            return DubinsObservation(**kwargs)
+        else:
+            raise ValueError(f"Invalid observation type: {observation_type}")
 
+    elif aircraft_type == "Full":
+        if observation_type == "Continuous":
+            return FullObservation(**kwargs)
+        else:
+            raise ValueError(f"Invalid observation type: {observation_type}")
 
-class LateralTrajectoryObservation(ObservationType):
-    """
-    Observe dynamics of vehicle relative to goal position, restricted to horizontal plane
-    ONLY FOR USE WITH TRAJECTORY ENV
-    """
-
-    FEATURES: List[str] = ["x", "y", "u", "v", "yaw"]
-
-    def __init__(
-        self,
-        env: "AbstractEnv",
-        features: List[str] = None,
-        vehicles_count: int = 1,
-        features_range: Dict[str, List[float]] = None,
-        **kwargs: dict
-    ) -> None:
-
-        super().__init__(env)
-        self.features = features or self.FEATURES
-        self.vehicles_count = vehicles_count
-        self.features_range = features_range
-        if hasattr(env, "goal"):
-            self.goal = env.goal
-
-    def space(self) -> spaces.Space:
-        return spaces.Box(
-            shape=(self.vehicles_count, len(self.features)),
-            low=-np.inf,
-            high=np.inf,
-            dtype=np.float32,
-        )
-
-    def observe(self) -> np.ndarray:
-
-        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
-        df = df[self.features]
-        obs = df.values.copy()
-        obs[0, 0] = self.goal[0] - obs[0, 0]
-        obs[0, 1] = self.goal[1] - obs[0, 1]
-        return obs.astype(self.space().dtype)
-
-
-class ControlObservation(ObservationType):
-    """
-    Observe the aircaft without the position information
-    """
-
-    FEATURES: List[str] = ["roll", "pitch", "yaw", "u", "v", "w", "p", "q", "r"]
-
-    def __init__(
-        self,
-        env: "AbstractEnv",
-        features: List[str] = None,
-        vehicles_count: int = 1,
-        features_range: Dict[str, List[float]] = None,
-        **kwargs: dict
-    ) -> None:
-
-        super().__init__(env)
-        self.features = features or self.FEATURES
-        self.vehicles_count = vehicles_count
-        self.features_range = features_range
-
-    def space(self) -> spaces.Space:
-        return spaces.Box(
-            shape=(self.vehicles_count, len(self.features)),
-            low=-np.inf,
-            high=np.inf,
-            dtype=np.float32,
-        )
-
-    def observe(self) -> np.ndarray:
-
-        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
-        df = df[self.features]
-        obs = df.values.copy()
-        return obs.astype(self.space().dtype)
-
-
-class LongitudinalObservation(ObservationType):
-    """
-    Observe the aircraft only given longitudinal data
-    """
-
-    FEATURES: List[str] = ["pitch", "u", "w", "q"]
-
-    def __init__(
-        self,
-        env: "AbstractEnv",
-        features: List[str] = None,
-        vehicles_count: int = 1,
-        features_range: Dict[str, List[float]] = None,
-        **kwargs: dict
-    ) -> None:
-
-        super().__init__(env)
-        self.features = features or self.FEATURES
-        self.vehicles_count = vehicles_count
-        self.features_range = features_range
-
-    def space(self) -> spaces.Space:
-        return spaces.Box(
-            shape=(self.vehicles_count, len(self.features)),
-            low=-np.inf,
-            high=np.inf,
-            dtype=np.float32,
-        )
-
-    def observe(self) -> np.ndarray:
-
-        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
-        df = df[self.features]
-        obs = df.values.copy()
-        return obs.astype(self.space().dtype)
-
-
-class DynamicGoalObservation(DynamicObservation):
-
-    def __init__(self, env: "AbstractEnv", **kwargs: dict) -> None:
-        super().__init__(env, **kwargs)
-        if hasattr(env, "goal"):
-            self.goal = env.goal
-
-    def space(self) -> spaces.Space:
-        try:
-            obs = self.observe()
-            return spaces.Dict(
-                dict(
-                    desired_goal=spaces.Box(
-                        -np.inf,
-                        np.inf,
-                        shape=obs["desired_goal"].shape,
-                        dtype=np.float64,
-                    ),
-                    achieved_goal=spaces.Box(
-                        -np.inf,
-                        np.inf,
-                        shape=obs["achieved_goal"].shape,
-                        dtype=np.float64,
-                    ),
-                    observation=spaces.Box(
-                        -np.inf,
-                        np.inf,
-                        shape=obs["observation"].shape,
-                        dtype=np.float64,
-                    ),
-                )
-            )
-        except AttributeError:
-            return spaces.Space()
-
-    def observe(self) -> Dict[str, np.ndarray]:
-        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
-        df = df[self.features]
-        obs = df.values.copy()
-        # obs = obs.astype(self.space().dtype)
-        obs = OrderedDict(
-            [
-                ("observation", obs[0]),
-                ("achieved_goal", obs[0][0:3]),
-                ("desired_goal", self.goal),
-            ]
-        )
-        return obs
-
-
-class LateralGoalObservation(DynamicObservation):
-
-    FEATURES: List[str] = ["x", "y", "u", "v", "yaw"]
-
-    def __init__(
-        self, env: "AbstractEnv", features: List[str] = None, **kwargs: dict
-    ) -> None:
-        super().__init__(env, **kwargs)
-        self.features = features or self.FEATURES
-        if hasattr(env, "goal"):
-            self.goal = env.goal
-
-    def space(self) -> spaces.Space:
-        try:
-            obs = self.observe()
-            return spaces.Dict(
-                dict(
-                    desired_goal=spaces.Box(
-                        -np.inf,
-                        np.inf,
-                        shape=obs["desired_goal"].shape,
-                        dtype=np.float64,
-                    ),
-                    achieved_goal=spaces.Box(
-                        -np.inf,
-                        np.inf,
-                        shape=obs["achieved_goal"].shape,
-                        dtype=np.float64,
-                    ),
-                    observation=spaces.Box(
-                        -np.inf,
-                        np.inf,
-                        shape=obs["observation"].shape,
-                        dtype=np.float64,
-                    ),
-                )
-            )
-        except AttributeError:
-            return spaces.Space()
-
-    def observe(self) -> Dict[str, np.ndarray]:
-        df = pd.DataFrame.from_records([self.observer_vehicle.dict])[self.features]
-        df = df[self.features]
-        obs = df.values.copy()
-        obs = OrderedDict(
-            [
-                ("observation", obs[0]),
-                ("achieved_goal", obs[0][0:2]),
-                ("desired_goal", self.goal[0:2]),
-            ]
-        )
-        return obs
-
-
-def observation_factory(env: "AbstractEnv", config: dict) -> ObservationType:
-    if config["type"] == "Dynamics" or config["type"] == "dynamics":
-        return DynamicObservation(env, **config)
-    elif config["type"] == "Trajectory" or config["type"] == "trajectory":
-        return TrajectoryObservation(env, **config)
-    elif (
-        config["type"] == "LateralTrajectory" or config["type"] == "lateral_trajectory"
-    ):
-        return LateralTrajectoryObservation(env, **config)
-    elif config["type"] == "Control" or config["type"] == "control":
-        return ControlObservation(env, **config)
-    elif config["type"] == "Longitudinal" or config["type"] == "longitudinal":
-        return LongitudinalObservation(env, **config)
-    elif (
-        config["type"] == "Goal"
-        or config["type"] == "goal"
-        or config["type"] == "DynamicGoal"
-    ):
-        return DynamicGoalObservation(env, **config)
-    elif config["type"] == "LateralGoal" or config["type"] == "lateral_goal":
-        return LateralGoalObservation(env, **config)
     else:
-        raise ValueError("Unknown observation type")
+        raise ValueError(f"Invalid aircraft type: {aircraft_type}")
