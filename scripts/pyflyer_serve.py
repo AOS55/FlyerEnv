@@ -206,7 +206,10 @@ class FlyerServeEnv(gym.Env):
 def main():
     env = FlyerServeEnv()
     print(f"The created serve object: {env}")
-    env.step()
+    action = np.array([0.1, 0.2, 0.3]) 
+    for ida in range(100):
+        env.step(action)
+        print(f"Took Action {ida}")
 
 if __name__=="__main__":
     main()
