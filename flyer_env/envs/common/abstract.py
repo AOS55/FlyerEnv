@@ -61,7 +61,6 @@ class AbstractEnv(gym.Env):
 
         # Scene and vehicle management
         self.controlled_vehicles = []
-        # self._setup_spaces()  # Initialize action and observation spaces
 
         # State tracking
         self.time = 0.0
