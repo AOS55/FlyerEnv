@@ -145,8 +145,9 @@ def main():
         print(f"env: {env}")
         action = {}
         for _ in range(100):
+            print("about to step")
             env.step(action)
-            print(f"took a step")
+            print("stepped")
     except KeyboardInterrupt:
         print("\nShutdown requested...")
         os._exit(1)
