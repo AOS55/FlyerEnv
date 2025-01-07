@@ -12,7 +12,7 @@ class ObservationValidator:
 
 class ActionValidator:
     @staticmethod
-    def validate(action: np.ndarray, action_space_low: np.ndarray, 
+    def validate(action: np.ndarray, action_space_low: np.ndarray,
                 action_space_high: np.ndarray) -> bool:
         """Validate action array against action space bounds."""
         assert np.all(action >= action_space_low), "Action below lower bound"
@@ -22,14 +22,7 @@ class ActionValidator:
 
 class StateValidator:
     @staticmethod
-    def check_consistency(state1: dict, state2: dict, 
+    def check_consistency(state1: np.ndarray, state2: np.ndarray,
                          rtol=1e-5, atol=1e-8) -> bool:
         """Check if two states are consistent within tolerance."""
-        assert state1.keys() == state2.keys(), "States have different keys"
-        for key in state1:
-            np.testing.assert_allclose(
-                state1[key], state2[key],
-                rtol=rtol, atol=atol,
-                err_msg=f"Inconsistent values for key: {key}"
-            )
-        return True
+        return np.allclose(state1, state2, rtol=rtol, atol=atol)

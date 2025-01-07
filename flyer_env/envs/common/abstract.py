@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional, Text, Tuple, TypeVar
 import gymnasium as gym
+from gymnasium import spaces
 import numpy as np
 import json
 import socket
@@ -7,6 +8,7 @@ import sys
 import threading
 import time
 import subprocess
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from contextlib import contextmanager
 
@@ -14,6 +16,7 @@ from flyer_env.envs.common.observation import observation_factory, ObservationTy
 from flyer_env.envs.common.action import action_factory, ActionType
 
 Observation = TypeVar("Observation")
+Action = TypeVar("Action")
 
 @dataclass
 class Aircraft:
@@ -31,7 +34,7 @@ class ConnectionConfig:
     response_timeout: float = 5.0
     retry_interval: float = 0.1
 
-class AbstractEnv(gym.Env):
+class AbstractEnv(ABC):
     """
     A generic environment that serves as the basis for the FlyerEnv
     This environment creates a server to connect to the Bevy Running app.
@@ -54,20 +57,13 @@ class AbstractEnv(gym.Env):
         self._sock = None
         self._connected = False
 
-        # Configuration
+        # Initialize base attributes
+        self.controlled_vehicles: List[Aircraft] = []
         self.config = self.default_config()
         if config:
             self.configure(config)
 
-        # Scene and vehicle management
-        self.controlled_vehicles = []
-
-        # State tracking
-        self.time = 0.0
-        self.steps = 0
-        self.done = False
-
-        # Rendering
+        # Rendering setup
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
         if self.render_mode:
@@ -77,8 +73,67 @@ class AbstractEnv(gym.Env):
         try:
             self._start_game()
         except Exception as e:
+            print(f"Failed to start game: {e}")
             self.close()
             raise
+
+    @staticmethod
+    def stream_logs(process):
+        """Stream logs from process stderr to console"""
+        for line in iter(process.stderr.readline, ''):
+            print(f"[SERVER] {line.strip()}", file=sys.stderr, flush=True)
+
+    def _start_game(self) -> None:
+        """Initialize connection to Rust server"""
+        print("Starting Flyer initialization...")
+
+        # Start Bevy process
+        try:
+            self._process = subprocess.Popen(
+                ["pyflyer-rs/target/release/bevy_server"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+                universal_newlines=True
+            )
+
+            # Start log streaming in a separate thread
+            self._log_thread = threading.Thread(
+                target=self.stream_logs,
+                args=(self._process,),
+                daemon=True
+            )
+            self._log_thread.start()
+
+        except FileNotFoundError as e:
+            raise RuntimeError(f"Check 'pyflyer-rs/target/release/bevy_server' exists and is executable, {e} found.")
+
+        # Get port from process output with timeout
+        start_time = time.time()
+        self.port = None
+
+        while time.time() - start_time < self._connection_config.connection_timeout:
+            line = self._process.stdout.readline()
+            if line.startswith("PORT="):
+                self.port = int(line.strip().split("=")[1])
+                break
+
+        if not self.port:
+            self._cleanup_socket()
+            self._cleanup_process()
+            raise TimeoutError("Timeout waiting for server port")
+
+        # Connect socket
+        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self._sock.connect((self._connection_config.host, self.port))
+            self._connected = True
+            self._initialize_env()
+        except Exception as e:
+            self._cleanup_socket()
+            self._cleanup_process()
+            raise RuntimeError(f"Failed to connect to server: {e}")
 
     @contextmanager
     def _managed_connection(self, timeout: float) -> socket.socket:
@@ -133,181 +188,6 @@ class AbstractEnv(gym.Env):
 
         raise TimeoutError("Timeout waiting for response")
 
-    @staticmethod
-    def stream_logs(process):
-        """Stream logs from process stderr to console"""
-        for line in iter(process.stderr.readline, ''):
-            print(f"[SERVER] {line.strip()}", file=sys.stderr, flush=True)
-
-    def _start_game(self) -> None:
-        """Initialize connection to Rust server"""
-        print("Starting Flyer initialization...")
-
-        # Start Bevy process
-        try:
-            self._process = subprocess.Popen(
-                ["pyflyer-rs/target/release/bevy_server"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1,
-                universal_newlines=True
-            )
-
-            # Start log streaming in a separate thread
-            self._log_thread = threading.Thread(
-                target=self.stream_logs,
-                args=(self._process,),
-                daemon=True
-            )
-            self._log_thread.start()
-
-        except FileNotFoundError as e:
-            raise RuntimeError(f"Check 'pyflyer-rs/target/release/bevy_server' exists and is executable, {e} found.")
-
-        # Get port from process output with timeout
-        start_time = time.time()
-        self.port = None
-
-        while time.time() - start_time < self._connection_config.connection_timeout:
-            line = self._process.stdout.readline()
-            if line.startswith("PORT="):
-                self.port = int(line.strip().split("=")[1])
-                break
-
-        if not self.port:
-            self._cleanup_process()
-            raise TimeoutError("Timeout waiting for server port")
-
-        # Connect socket
-        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self._sock.connect((self._connection_config.host, self.port))
-            self._connected = True
-            self._initialize_env()
-        except Exception as e:
-            self._cleanup_socket()
-            self._cleanup_process()
-            raise RuntimeError(f"Failed to connect to server: {e}")
-
-    def _initialize_env(self) -> None:
-        """Send initial configuration to server"""
-        init_msg = {
-            "Initialize": {
-                "config": self.config
-            }
-        }
-
-        response = self._send_command(init_msg)
-        # print(f"response: {response}")
-        if response.get("status") != "ready":
-            raise RuntimeError(f"Failed to initialize: {response}")
-
-        # Setup controlled vehicles
-        for aircraft in response["aircraft"]:
-            aircraft_type = list(aircraft["config"].keys())[0]
-            observation = observation_factory(aircraft_type, list(aircraft["observation_space"].keys())[0])
-            action = action_factory(aircraft_type, list(aircraft["action_space"].keys())[0])
-            aircraft = Aircraft(id=aircraft["name"], type=aircraft_type, observation=observation, action=action)
-            self.controlled_vehicles.append(aircraft)
-
-    @classmethod
-    def default_config(cls) -> dict:
-        """
-        Default environment configuration
-
-        Can be overloaded within environment config or with configure()
-        :return: a configuration dict
-        """
-        return {
-            "max_episode_steps": 1000,
-            "steps_per_action": 4,
-            "time_step": 1.0/120.0,
-            "aircraft_config": [{
-                "type": "dubins",
-                "action_type": "Continuous",
-                "observation_type": "Continuous"
-            }],
-            "agent_config": {
-                "render_width": 800.0,
-                "render_height": 600.0,
-                "mode": "human"
-            }
-        }
-
-    def configure(self, config: dict) -> None:
-        if config:
-            self.config.update(config)
-
-    def step(self, action: Dict[str, np.ndarray]) -> Tuple[Observation, float, bool, bool, dict]:
-        """Execute action and get new state"""
-        if not self._connected:
-            raise RuntimeError("Not connected to server")
-
-        if len(self.controlled_vehicles) == 0:
-            raise RuntimeError("No controlled vehicles available")
-
-        # Create action dictionary with native Python types
-        action_dict = {}
-        for aircraft in self.controlled_vehicles:
-            # Pass action through action space
-            action_dict[aircraft.id] = aircraft.action.act(action[aircraft.id])
-
-        print(f"action_dict: {action_dict}")
-
-        command = {
-            "Step": {
-                "actions": action_dict
-            }
-        }
-
-        try:
-            response = self._send_command(command)
-
-            print(f"Step Response: {response}")
-
-            obs_dict = {}
-            for aircraft in self.controlled_vehicles:
-                obs_dict[aircraft.id] = aircraft.observation.observe(response["obs"][aircraft.id])
-
-            return (
-                obs_dict,
-                response["reward"],
-                response["terminated"],
-                response["truncated"],
-                response["info"]
-            )
-
-        except Exception as e:
-            self.close()
-            raise RuntimeError(f"Step failed: {e}")
-
-    def reset(
-        self,
-        *,
-        seed: Optional[int] = None,
-        options: Optional[dict] = None
-    ) -> Tuple[Observation, dict]:
-        """Reset environment state"""
-        # super().reset(seed=seed, options=options)
-
-        # if options and "config" in options:
-        #     self.configure(options["config"])
-
-        command = {
-            "Reset": {
-                "seed": seed
-            }
-        }
-
-        try:
-            response = self._send_command(command)
-            print(f"Response: {response}")
-            return np.array(response["obs"]), response["info"]
-        except Exception as e:
-            self.close()
-            raise RuntimeError(f"Reset failed: {e}")
-
     def _cleanup_socket(self) -> None:
         """Clean up socket connection"""
         if self._sock:
@@ -332,6 +212,72 @@ class AbstractEnv(gym.Env):
                     # Give the log thread time to finish
                     self._log_thread.join(timeout=1)
                 self._process = None
+
+    def _initialize_env(self) -> None:
+        """Initialize environment on server and create Aircraft instances"""
+        init_msg = {
+            "Initialize": {
+                "config": self.config
+            }
+        }
+
+        response = self._send_command(init_msg)
+        if response.get("status") != "ready":
+            raise RuntimeError(f"Failed to initialize: {response}")
+
+        # Setup controlled vehicles
+        for aircraft_info in response["aircraft"]:
+            aircraft_type = list(aircraft_info["config"].keys())[0]
+            observation = observation_factory(
+                aircraft_type,
+                list(aircraft_info["observation_space"].keys())[0]
+            )
+            action = action_factory(
+                aircraft_type,
+                list(aircraft_info["action_space"].keys())[0]
+            )
+
+            aircraft = Aircraft(
+                id=aircraft_info["name"],
+                type=aircraft_type,
+                observation=observation,
+                action=action
+            )
+            self.controlled_vehicles.append(aircraft)
+
+    @abstractmethod
+    def step(self, action: Action) -> Tuple[Observation, float, bool, bool, dict]:
+        """Must be implemented by child classes"""
+        pass
+
+    @abstractmethod
+    def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None) -> Tuple[Observation, dict]:
+        """Must be implemented by child classes"""
+        pass
+
+    @classmethod
+    def default_config(cls) -> dict:
+        """
+        Default environment configuration
+
+        Can be overloaded within environment config or with configure()
+        :return: a configuration dict
+        """
+        return {
+            "max_episode_steps": 1000,
+            "steps_per_action": 4,
+            "time_step": 1.0/120.0,
+            "agent_config": {
+                "render_width": 800.0,
+                "render_height": 600.0,
+                "mode": "human"
+            }
+        }
+
+    def configure(self, config: dict) -> None:
+        """Update configuration with new values"""
+        if config:
+            self.config.update(config)
 
     def close(self) -> None:
         """Clean up resources"""

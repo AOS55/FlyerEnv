@@ -1,128 +1,281 @@
-import functools
-from typing import TYPE_CHECKING, Callable, Dict, Optional, Tuple, Union, List
-
+from typing import Dict, Optional, Tuple, Union, List
 import numpy as np
 from gymnasium import spaces
+from turtle import RawPen
 
 Action = Union[int, np.ndarray]
 
 class ActionType:
+    """Base class for all action types"""
 
-    def __init__(self) -> None:
-        return
-
+    @property
     def space(self) -> spaces.Space:
-        """The action space"""
+        """The action space following gymnasium conventions"""
         raise NotImplementedError
 
     def act(self, action: Action) -> None:
-        "Format the action to be used in the enviornment and send it out to be processed"
+        """Process action and return formatted list for server"""
         raise NotImplementedError
 
 class DubinsContinuousAction(ActionType):
+    """Continuous action space for Dubins aircraft"""
 
-    FEATURES: List[str] = [
-        "acceleration",
-        "bank_angle",
-        "vertical_speed"
-    ]
+    def __init__(self,
+        normalize: bool = True,
+        action_bounds: Optional[Dict[str, Optional[Tuple[float, float]]]] = None
+    ) -> None:
+        """
+        Initialize Dubins aircraft continuous action space.
 
-    def __init__(self, features_range: Dict[str, List[float]] = None, normalize: bool = False) -> None:
-        """Initialize the Dubins aircraft action type"""
-        if (features_range and normalize):
-            self.normalize = True
-        else:
-            self.normalize = False
+        Args:
+            normalize: If true, normalize actions to [-1, +1]
+            action_bounds: Optional bounds for each action dimension.
+                If None for a dimension, the dimension is unbounded.
 
-        if features_range:
-            self.features = list(features_range.keys())
-            self.features_range = features_range
-        else:
-            self.features = self.FEATURES
+        """
 
+        self.normalize = normalize
+        self.features = ["acceleration", "bank_angle", "vertical_speed"]
+
+        self._default_bounds = {
+            "acceleration": None,
+            "bank_angle": (-np.pi, np.pi),
+            "vertical_speed": None,
+        }
+
+        self.action_bounds = self._default_bounds.copy()
+        if action_bounds:
+            self.action_bounds.update(action_bounds)
+
+    @property
     def space(self) -> spaces.Space:
         """Action space for the Dubins aircraft"""
         if self.normalize:
-            return spaces.Box(low=-1, high=1, shape=(len(self.features),))
+            return spaces.Box(
+                low=-1.0,
+                high=1.0,
+                shape=(len(self.features),),
+                dtype=np.float32
+            )
         else:
-            return spaces.Box(low=-np.inf, high=np.inf, shape=(len(self.features),))
+            lows = []
+            highs = []
+            for feature in self.features:
+                bounds = self.action_bounds[feature]
+                if bounds is None:
+                    lows.append(-np.inf)
+                    highs.append(np.inf)
+                else:
+                    lows.append(bounds[0])
+                    highs.append(bounds[1])
 
-    def act(self, action: Action) -> None:
+            return spaces.Box(
+                low=np.array(lows),
+                high=np.array(highs),
+                dtype=np.float32
+            )
 
-        if len(action) != len(self.features):
-            raise ValueError(f"Action vector has {len(action)} elements, expected {len(self.features)}")
+    def act(self, action: np.ndarray) -> None:
+        """
+        Process action array into a list of values.
 
-        # Format the action dictionary
-        action_values = [float(a) for a in action]  # TODO: This isn't ideal review why this is needed?
+        Args:
+            action: Array of action values, either normalized [-1, 1] or raw values.
 
-        # Normalize the action if needed
+        Returns:
+            List of processed action values
+        """
+
+        if not isinstance(action, np.ndarray):
+            action = np.array(action, dtype=np.float32)
+
         if self.normalize:
-            action_values = [(val + 1) / 2 * (max_val - min_val) + min_val
-            for val, (min_val, max_val) in zip(action_values, [self.features_range[f] for f in self.features])]
+            # Denormalize actions
+            processed_action = []
+            for i, feature in enumerate(self.features):
+                bounds = self.action_bounds[feature]
+                if bounds is None:
+                    # For unbounded actions, use the normalized value directly
+                    processed_action.append(action[i])
+                else:
+                    min_val, max_val = bounds
+                    processed_action.append(
+                        min_val + (action[i] + 1.0) * 0.5 * (max_val - min_val)
+                    )
+            return processed_action
 
-        # Send the action to the environment
-        return action_values
+        else:
+            # When not normalizing, use raw values but respect bounds
+            processed_action = []
+            for i, feature in enumerate(self.features):
+                bounds = self.action_bounds[feature]
+                if bounds is None:
+                    processed_action.append(action[i])
+                else:
+                    min_val, max_val = bounds
+                    processed_action.append(np.clip(action[i], min_val, max_val))
+            return processed_action
+
 
 class DubinsDiscreteAction(ActionType):
-    # TODO: Implement the DubinsDiscreteAction class
+    """Discrete action space for Dubins aircraft"""
 
-    FEATURES: List[str] = [
-        "acceleration",
-        "bank_angle",
-        "vertical_speed"
-    ]
+    def __init__(self, action_values: Optional[Dict[str, List[float]]] = None):
+        """
+        Initialize discrete action space for Dubins aircraft.
 
-    def __init__(self, features_range: Dict[str, List[float]] = None) -> None:
-        """Initialize the Dubins aircraft action type"""
-        if features_range:
-            self.features = list(features_range.keys())
-            self.features_range = features_range
-        else:
-            self.features = self.FEATURES
+        Args:
+            action_values: Optional discrete values for each action dimension.
+                Format: {"action_name": [value1, value2, ...]}
+        """
+        self.features = ["acceleration", "bank_angle", "vertical_speed"]
 
+        # Artficially constrain if no value provided
+        self._default_values = {
+            "acceleration": [-1.0, 0.0, 1.0],
+            "bank_angle": [-np.pi, 0.0, np.pi],
+            "vertical_speed": [-5.0, 0.0, 5.0]
+        }
+
+        self.action_values = self._default_values.copy()
+        if action_values:
+            self.action_values.update(action_values)
+
+    @property
     def space(self) -> spaces.Space:
-        """Action space for the Dubins aircraft"""
-        return spaces.MultiDiscrete([len(self.features_range[feature]) for feature in self.features])
+        """The discrete action space"""
+        return spaces.MultiDiscrete([
+            len(self.action_values[feature])
+            for feature in self.features
+        ])
 
-    def act(self, action: Action) -> Dict[str, float]:
-        raise NotImplementedError
+    def act(self, action: np.ndarray) -> List[float]:
+        """
+        Convert discrete actions to continuous values.
+
+        Args:
+            action: Array of discrete action indices
+
+        Returns:
+            List of continuous action values
+        """
+        if not isinstance(action, np.ndarray):
+            action = np.array(action, dtype=np.int64)
+
+        processed_action = []
+        for i, feature in enumerate(self.features):
+            values = self.action_values[feature]
+            idx = int(action[i])
+            if not 0 <= idx < len(values):
+                raise ValueError(
+                    f"Invalid action index {idx} for feature {feature}. "
+                    f"Must be between 0 and {len(values)-1}"
+                )
+            processed_action.append(values[idx])
+        return processed_action
 
 class FullContinuousAction(ActionType):
-    # TODO: Implement the FullContinuousAction class
+    """Continuous action space for full aircraft model"""
 
-    FEATURES: List[str] = [
-        "aileron",
-        "elevator",
-        "throttle",
-        "rudder"
-    ]
+    def __init__(
+        self,
+        normalize: bool = True,
+        action_bounds: Optional[Dict[str, Optional[Tuple[float, float]]]] = None
+    ):
+        self.normalize = normalize
+        self.features = ["elevator", "aileron", "throttle", "rudder"]
 
-    def __init__(self):
-        return
+        self._default_bounds = {
+            "elevator": (-0.5 * np.pi, 0.5 * np.pi),
+            "aileron": (-0.5 * np.pi, 0.5 * np.pi),
+            "throttle": (0.0, 1.0),
+            "rudder": (-0.5 * np.pi, 0.5 * np.pi)
+        }
 
+        self.action_bounds = self._default_bounds.copy()
+        if action_bounds:
+            self.action_bounds.update(action_bounds)
+
+    @property
     def space(self) -> spaces.Space:
-        return spaces.Box(low=-1, high=1, shape=len(self.FEATURES))
+        """The action space following Gymnasium conventions"""
+        if self.normalize:
+            return spaces.Box(
+                low=-1.0,
+                high=1.0,
+                shape=(len(self.features),),
+                dtype=np.float32
+            )
+        else:
+            lows = [b[0] for b in self.action_bounds.values()]
+            highs = [b[1] for b in self.action_bounds.values()]
+            return spaces.Box(
+                low=np.array(lows),
+                high=np.array(highs),
+                dtype=np.float32
+            )
 
-    def act(self, action: Action) -> Dict[str, float]:
-        raise NotImplementedError
+    def act(self, action: np.ndarray) -> List[float]:
+        """Process continuous actions for full aircraft model"""
+        if not isinstance(action, np.ndarray):
+            action = np.array(action, dtype=np.float32)
+
+        if self.normalize:
+            processed_action = []
+            for i, feature in enumerate(self.features):
+                bounds = self.action_bounds[feature]
+                low, high = bounds
+                processed_action.append(
+                    low + (action[i] + 1.0) * 0.5 * (high - low)
+                )
+            return processed_action
+        else:
+            return [
+                np.clip(a, self.action_bounds[f][0], self.action_bounds[f][1])
+                for a, f in zip(action, self.features)
+            ]
 
 class FullDiscreteAction(ActionType):
-    # TODO: Implement the FullDiscreteAction class
-    FEATURES: List[str] = [
-        "aileron",
-        "elevator",
-        "throttle",
-        "rudder"
-    ]
+    """Discrete action space for full aircraft model"""
 
-    def __init__(self):
-        return
+    def __init__(self, action_values: Optional[Dict[str, List[float]]] = None):
+        self.features = ["elevator", "aileron", "throttle", "rudder"]
 
+        self._default_values = {
+            "elevator": [-0.5 * np.pi, 0.0, 0.5 * np.pi],
+            "aileron": [-0.5 * np.pi, 0.0, 0.5 * np.pi],
+            "throttle": [0.0, 0.5, 1.0],
+            "rudder": [-0.5 * np.pi, 0.0, 0.5 * np.pi]
+        }
+
+        self.action_values = self._default_values.copy()
+        if action_values:
+            self.action_values.update(action_values)
+
+    @property
     def space(self) -> spaces.Space:
-        return spaces.MultiDiscrete([3, 3, 3, 3])
+        """The discrete action space"""
+        return spaces.MultiDiscrete([
+            len(self.action_values[feature])
+            for feature in self.features
+        ])
 
-    def acti(self, action: Action) -> Dict[str, float]:
-        raise NotImplementedError
+    def act(self, action: np.ndarray) -> List[float]:
+        """Convert discrete actions to continuous values"""
+        if not isinstance(action, np.ndarray):
+            action = np.array(action, dtype=np.int64)
+
+        processed_action = []
+        for i, feature in enumerate(self.features):
+            values = self.action_values[feature]
+            idx = int(action[i])
+            if not 0 <= idx < len(values):
+                raise ValueError(
+                    f"Invalid action index {idx} for feature {feature}. "
+                    f"Must be between 0 and {len(values)-1}"
+                )
+            processed_action.append(values[idx])
+        return processed_action
 
 
 def action_factory(aircraft_type: str, action_type: str, **kwargs) -> ActionType:

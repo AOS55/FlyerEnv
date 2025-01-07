@@ -26,7 +26,21 @@ class EnvironmentConfigs:
 
     @staticmethod
     def get_full_config():
-        # Similar to dubins but for full aircraft
+        return {
+            "max_episode_steps": 1000,
+            "steps_per_action": 4,
+            "time_step": 1.0/120.0,
+            "agent_config": {
+                "render_width": 800.0,
+                "render_height": 600.0,
+                "mode": "human"
+            },
+            "aircraft_config": [{
+                "type": "full",
+                "action_type": "Continuous",
+                "observation_type": "Continuous"
+            }]
+        }
         pass
 
     @staticmethod
@@ -43,7 +57,7 @@ class EnvironmentConfigs:
     def modify_config(base_config: dict, updates: dict) -> dict:
         """Deep update of configuration dictionary."""
         config = base_config.copy()
-        
+
         def update_dict(d, u):
             for k, v in u.items():
                 if isinstance(v, dict):
@@ -51,5 +65,5 @@ class EnvironmentConfigs:
                 else:
                     d[k] = v
             return d
-            
+
         return update_dict(config, updates)
