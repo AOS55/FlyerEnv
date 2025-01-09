@@ -2,12 +2,16 @@ import numpy as np
 
 class ObservationValidator:
     @staticmethod
-    def validate(obs: dict, expected_features: list) -> bool:
-        """Validate observation dictionary structure and values."""
-        for feature in expected_features:
-            assert feature in obs, f"Missing feature: {feature}"
-        for value in obs.values():
-            assert np.isfinite(value), f"Non-finite value in observation: {value}"
+    def validate(obs: np.ndarray, low: np.ndarray = None, high: np.ndarray = None) -> bool:
+        """Validate observation array structure, values, and optional bounds."""
+        assert isinstance(obs, np.ndarray), "Observation must be a NumPy array."
+        assert np.all(np.isfinite(obs)), "Observation contains non-finite values (e.g., inf or NaN)."
+
+        if low is not None and high is not None:
+            assert obs.shape == low.shape == high.shape, "Observation and bounds must have the same shape."
+            assert np.all(obs >= low), f"Observation values are below the lower bounds: {low}."
+            assert np.all(obs <= high), f"Observation values exceed the upper bounds: {high}."
+
         return True
 
 class ActionValidator:

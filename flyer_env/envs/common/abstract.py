@@ -152,8 +152,6 @@ class AbstractEnv(ABC):
     def _send_command(self, command: dict, timeout: float = None) -> dict:
         """Send command to Rust server and receive response"""
 
-        print(f"command: {command}")
-
         if not self._connected:
             raise RuntimeError("Not connected to server")
 
@@ -225,16 +223,26 @@ class AbstractEnv(ABC):
         if response.get("status") != "ready":
             raise RuntimeError(f"Failed to initialize: {response}")
 
+        normalize_observations = self.config.get("normalize_observations", False)
+        normalize_actions = self.config.get("normalize_actions", False)
+
         # Setup controlled vehicles
         for aircraft_info in response["aircraft"]:
+            print(f"aircraft_info: {aircraft_info}")
             aircraft_type = list(aircraft_info["config"].keys())[0]
+            aircraft_config = aircraft_info["config"][aircraft_type]  # limits from aircraft config
+
             observation = observation_factory(
                 aircraft_type,
-                list(aircraft_info["observation_space"].keys())[0]
+                list(aircraft_info["observation_space"].keys())[0],
+                config = aircraft_config,
+                normalize = normalize_observations
             )
             action = action_factory(
                 aircraft_type,
-                list(aircraft_info["action_space"].keys())[0]
+                list(aircraft_info["action_space"].keys())[0],
+                config = aircraft_config,
+                normalize = normalize_actions
             )
 
             aircraft = Aircraft(

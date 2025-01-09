@@ -1,9 +1,9 @@
 from typing import Dict, Optional, Tuple, Union, List
 import numpy as np
 from gymnasium import spaces
-from turtle import RawPen
 
 Action = Union[int, np.ndarray]
+
 
 class ActionType:
     """Base class for all action types"""
@@ -14,8 +14,9 @@ class ActionType:
         raise NotImplementedError
 
     def act(self, action: Action) -> None:
-        """Process action and return formatted list for server"""
+        """Process action and return formatted dictionary for server"""
         raise NotImplementedError
+
 
 class DubinsContinuousAction(ActionType):
     """Continuous action space for Dubins aircraft"""
@@ -75,46 +76,44 @@ class DubinsContinuousAction(ActionType):
                 dtype=np.float32
             )
 
-    def act(self, action: np.ndarray) -> None:
+    def act(self, action: np.ndarray) -> Dict[str, float]:
         """
-        Process action array into a list of values.
+        Process action array into a dictionary of values.
 
         Args:
             action: Array of action values, either normalized [-1, 1] or raw values.
 
         Returns:
-            List of processed action values
+            Dictionary mapping feature names to processed values
         """
-
         if not isinstance(action, np.ndarray):
             action = np.array(action, dtype=np.float32)
 
+        processed_dict = {}
+
         if self.normalize:
             # Denormalize actions
-            processed_action = []
-            for i, feature in enumerate(self.features):
+            for ida, feature in enumerate(self.features):
                 bounds = self.action_bounds[feature]
                 if bounds is None:
                     # For unbounded actions, use the normalized value directly
-                    processed_action.append(action[i])
+                    processed_dict[feature] = float(action[ida])
                 else:
                     min_val, max_val = bounds
-                    processed_action.append(
-                        min_val + (action[i] + 1.0) * 0.5 * (max_val - min_val)
+                    processed_dict[feature] = float(
+                        min_val + (action[ida] + 1.0) * 0.5 * (max_val - min_val)
                     )
-            return processed_action
-
         else:
             # When not normalizing, use raw values but respect bounds
-            processed_action = []
-            for i, feature in enumerate(self.features):
+            for ida, feature in enumerate(self.features):
                 bounds = self.action_bounds[feature]
                 if bounds is None:
-                    processed_action.append(action[i])
+                    processed_dict[feature] = float(action[ida])
                 else:
                     min_val, max_val = bounds
-                    processed_action.append(np.clip(action[i], min_val, max_val))
-            return processed_action
+                    processed_dict[feature] = float(np.clip(action[ida], min_val, max_val))
+
+        return processed_dict
 
 
 class DubinsDiscreteAction(ActionType):
@@ -149,7 +148,7 @@ class DubinsDiscreteAction(ActionType):
             for feature in self.features
         ])
 
-    def act(self, action: np.ndarray) -> List[float]:
+    def act(self, action: np.ndarray) -> Dict[str, float]:
         """
         Convert discrete actions to continuous values.
 
@@ -157,12 +156,12 @@ class DubinsDiscreteAction(ActionType):
             action: Array of discrete action indices
 
         Returns:
-            List of continuous action values
+            Dictionary mapping feature names to continuous values
         """
         if not isinstance(action, np.ndarray):
             action = np.array(action, dtype=np.int64)
 
-        processed_action = []
+        processed_dict = {}
         for i, feature in enumerate(self.features):
             values = self.action_values[feature]
             idx = int(action[i])
@@ -171,8 +170,9 @@ class DubinsDiscreteAction(ActionType):
                     f"Invalid action index {idx} for feature {feature}. "
                     f"Must be between 0 and {len(values)-1}"
                 )
-            processed_action.append(values[idx])
-        return processed_action
+            processed_dict[feature] = float(values[idx])
+        return processed_dict
+
 
 class FullContinuousAction(ActionType):
     """Continuous action space for full aircraft model"""
@@ -215,25 +215,27 @@ class FullContinuousAction(ActionType):
                 dtype=np.float32
             )
 
-    def act(self, action: np.ndarray) -> List[float]:
+    def act(self, action: np.ndarray) -> Dict[str, float]:
         """Process continuous actions for full aircraft model"""
         if not isinstance(action, np.ndarray):
             action = np.array(action, dtype=np.float32)
 
+        processed_dict = {}
         if self.normalize:
-            processed_action = []
-            for i, feature in enumerate(self.features):
+            for ida, feature in enumerate(self.features):
                 bounds = self.action_bounds[feature]
                 low, high = bounds
-                processed_action.append(
-                    low + (action[i] + 1.0) * 0.5 * (high - low)
+                processed_dict[feature] = float(
+                    low + (action[ida] + 1.0) * 0.5 * (high - low)
                 )
-            return processed_action
         else:
-            return [
-                np.clip(a, self.action_bounds[f][0], self.action_bounds[f][1])
-                for a, f in zip(action, self.features)
-            ]
+            for ida, feature in enumerate(self.features):
+                bounds = self.action_bounds[feature]
+                processed_dict[feature] = float(
+                    np.clip(action[ida], bounds[0], bounds[1])
+                )
+        return processed_dict
+
 
 class FullDiscreteAction(ActionType):
     """Discrete action space for full aircraft model"""
@@ -260,26 +262,37 @@ class FullDiscreteAction(ActionType):
             for feature in self.features
         ])
 
-    def act(self, action: np.ndarray) -> List[float]:
+    def act(self, action: np.ndarray) -> Dict[str, float]:
         """Convert discrete actions to continuous values"""
         if not isinstance(action, np.ndarray):
             action = np.array(action, dtype=np.int64)
 
-        processed_action = []
-        for i, feature in enumerate(self.features):
+        processed_dict = {}
+        for ida, feature in enumerate(self.features):
             values = self.action_values[feature]
-            idx = int(action[i])
+            idx = int(action[ida])
             if not 0 <= idx < len(values):
                 raise ValueError(
                     f"Invalid action index {idx} for feature {feature}. "
                     f"Must be between 0 and {len(values)-1}"
                 )
-            processed_action.append(values[idx])
-        return processed_action
+            processed_dict[feature] = float(values[idx])
+        return processed_dict
 
 
-def action_factory(aircraft_type: str, action_type: str, **kwargs) -> ActionType:
+def action_factory(aircraft_type: str, action_type: str, config: Optional[Dict] = None, **kwargs) -> ActionType:
+
     if aircraft_type == "Dubins":
+
+        if config:
+            # Extract bounds from Dubins config
+            action_bounds = {
+                "acceleration": (-config["acceleration"], config["acceleration"]),
+                "bank_angle": (-config["max_bank_angle"], config["max_bank_angle"]),
+                "vertical_speed": (-config["max_descent_rate"], config["max_climb_rate"])
+            }
+            kwargs["action_bounds"] = action_bounds
+
         if action_type == "Continuous":
             return DubinsContinuousAction(**kwargs)
         elif action_type == "Discrete":

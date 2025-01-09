@@ -23,6 +23,7 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
 
         # Setup standard Gym spaces from the Aircraft
         self.vehicle = self.controlled_vehicles[0]
+        print(f"self.vehicle: {self.vehicle}")
         self.action_space = self.vehicle.action.space
         self.observation_space = self.vehicle.observation.space
 
@@ -44,7 +45,8 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
         """
         # Process action through Aircraft action space
         processed_action = self.vehicle.action.act(action)
-        processed_action = [float(x) for x in processed_action]
+
+        print(f"single agent action: {processed_action}")
 
         # Send to server with aircraft ID
         response = self._send_command({

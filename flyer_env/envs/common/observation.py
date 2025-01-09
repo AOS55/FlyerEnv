@@ -34,6 +34,8 @@ class DubinsObservation(ObservationType):
         self.normalize = normalize
         self.features = ["x", "y", "heading", "altitude", "airspeed"]
 
+        print(f"self.normalize: {self.normalize}")
+
         self._default_bounds = {
             "x": None,  # Unbounded
             "y": None,  # Unbounded
@@ -88,19 +90,26 @@ class DubinsObservation(ObservationType):
         obs = []
         for feature in self.features:
             value = raw_obs.get(feature, 0.0)  # Default to 0.0 if missing
-            print(f"Feature {feature}: {value} (raw: {raw_obs.get(feature)})")
 
             if self.normalize:
                 bounds = self.obs_bounds[feature]
                 if bounds is None:
-                    # Keep unbounded values as is
-                    obs.append(value)
+                    # For unbounded values, normalize using a reference scale
+                    if feature in ["x", "y"]:
+                        # Normalize position relative to typical range (from variance)
+                        scale = 1000.0  # Assuming this matches the variance in config
+                        value = value / scale  # This will give roughly [-1, 1] for typical values
+                    elif feature == "altitude":
+                        # Normalize altitude relative to typical flight levels
+                        scale = 1000.0  # 1km reference scale
+                        value = value / scale
                 else:
                     # Normalize bounded values to [-1, 1]
                     low, high = bounds
                     if high > low:  # Avoid division by zero
                         value = 2.0 * (value - low) / (high - low) - 1.0
                     obs.append(value)
+                print(f"Obs is under normalize: {obs}")
             else:
                 obs.append(value)
 
@@ -111,7 +120,7 @@ class FullObservation(ObservationType):
 
     def __init__(
         self,
-        normalize: bool = True,
+        normalize: bool = False,
         obs_bounds: Optional[Dict[str, Optional[Tuple[float, float]]]] = None
     ):
         """
@@ -210,13 +219,14 @@ class FullObservation(ObservationType):
 
         return np.array(obs, dtype=np.float32)
 
-def observation_factory(aircraft_type: str, observation_type: str, **kwargs) -> ObservationType:
+def observation_factory(aircraft_type: str, observation_type: str, config: Optional[Dict] = None, **kwargs) -> ObservationType:
     """
     Create an observation space based on aircraft and observation type.
 
     Args:
         aircraft_type: Type of aircraft ("Dubins" or "Full")
         observation_type: Type of observation space ("Continuous" currently)
+        config: Optional aircraft configuration containing bounds info
         **kwargs: Additional arguments passed to observation space constructor
 
     Returns:
@@ -224,8 +234,21 @@ def observation_factory(aircraft_type: str, observation_type: str, **kwargs) -> 
 
     Raises:
         ValueError: If aircraft_type or observation_type is invalid
+
     """
+
     if aircraft_type == "Dubins":
+
+        if config:
+            obs_bounds = {
+                "x": None,
+                "y": None,
+                "heading": (-np.pi, np.pi),
+                "altitude": None,
+                "airspeed": (config["min_speed"], config["max_speed"])
+            }
+            kwargs["obs_bounds"] = obs_bounds
+
         if observation_type == "Continuous":
             return DubinsObservation(**kwargs)
         else:
