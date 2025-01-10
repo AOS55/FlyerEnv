@@ -155,3 +155,29 @@ class TestDubinsEnvironment(BaseSingleAgentTest):
     #         if terminated:
     #             break
     #     assert terminated, "No termination at maximum speed"
+
+
+if __name__=="__main__":
+
+    from flyer_env.envs.common.single_agent_env import SingleAgentEnv
+
+    config = {
+        "max_episode_steps": 1000,
+        "steps_per_action": 4,
+        "time_step": 1.0/120.0,
+        "aircraft_config": [{
+            "type": "dubins",
+            "action_type": "Continuous",
+            "observation_type": "Continuous"
+        }],
+        "agent_config": {
+            "render_width": 800.0,
+            "render_height": 600.0,
+            "mode": "human"
+        }
+    }
+    env = SingleAgentEnv(config=config)
+    action = np.array([0.0, 1.0, 0])
+    print(f"iaction: {action}")
+    obs, _, terminated, _, _ = env.step(action)
+    print(f"pos_step: {obs}")

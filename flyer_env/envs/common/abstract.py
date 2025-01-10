@@ -90,7 +90,7 @@ class AbstractEnv(ABC):
         # Start Bevy process
         try:
             self._process = subprocess.Popen(
-                ["pyflyer-rs/target/release/bevy_server"],
+                ["flyer-rs/target/release/serve"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
