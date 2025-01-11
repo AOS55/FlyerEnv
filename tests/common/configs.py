@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import Dict, Optional
 
 class EnvironmentConfigs:
     @staticmethod
@@ -30,16 +29,16 @@ class EnvironmentConfigs:
             "max_episode_steps": 1000,
             "steps_per_action": 4,
             "time_step": 1.0/120.0,
+            "aircraft_config": [{
+                "type": "full",
+                "action_type": "Continuous",
+                "observation_type": "Continuous"
+            }],
             "agent_config": {
                 "render_width": 800.0,
                 "render_height": 600.0,
                 "mode": "human"
             },
-            "aircraft_config": [{
-                "type": "full",
-                "action_type": "Continuous",
-                "observation_type": "Continuous"
-            }]
         }
         pass
 

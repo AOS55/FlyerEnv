@@ -91,6 +91,6 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
                 "seed": seed
             }
         })
-
+        print(f"Response: {response}")
         obs = self.vehicle.observation.observe(response["obs"][self.vehicle.id])
         return obs, response["info"]

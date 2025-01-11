@@ -178,6 +178,6 @@ if __name__=="__main__":
     }
     env = SingleAgentEnv(config=config)
     action = np.array([0.0, 1.0, 0])
-    print(f"iaction: {action}")
+    print(f"action: {action}")
     obs, _, terminated, _, _ = env.step(action)
     print(f"pos_step: {obs}")
