@@ -20,10 +20,15 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
 
         if len(self.controlled_vehicles) != 1:
             raise ValueError("SingleAgentEnv must have exactly one controlled vehicle")
+        if self.config.get('max_episode_steps', 0) <= 0:
+            raise ValueError("max_episode_steps must be positive")
+        if self.config.get('time_step', 0) <= 0:
+            raise ValueError("time_step must be positive")
+        print(f"self.config: {self.config}")
 
+        self.max_velocity = 900.0  # Add reasonable max velocity
         # Setup standard Gym spaces from the Aircraft
         self.vehicle = self.controlled_vehicles[0]
-        print(f"self.vehicle: {self.vehicle}")
         self.action_space = self.vehicle.action.space
         self.observation_space = self.vehicle.observation.space
 
@@ -59,11 +64,15 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
 
         # Get observation through Aircraft observation space
         obs = self.vehicle.observation.observe(response["obs"][self.vehicle.id])
+        reward = response["reward"][self.vehicle.id]
+        terminated = response["terminated"][self.vehicle.id]
+
+        print(f"response: {response}")
 
         return (
             obs,
-            response["reward"],
-            response["terminated"],
+            reward,
+            terminated,
             response["truncated"],
             response["info"]
         )

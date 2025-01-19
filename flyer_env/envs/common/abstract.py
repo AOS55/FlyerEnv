@@ -62,6 +62,7 @@ class AbstractEnv(ABC):
         self.config = self.default_config()
         if config:
             self.configure(config)
+        self.dt = self.config["time_step"]
 
         # Rendering setup
         assert render_mode is None or render_mode in self.metadata["render_modes"]

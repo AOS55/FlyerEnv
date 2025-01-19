@@ -29,7 +29,6 @@ logs
 old_logs
 models
 outputs
-
 # Docs
 docs/_build
 **jupyter_execute

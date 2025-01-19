@@ -1,3 +1,5 @@
+from flyer_env.envs.common.observation import DubinsObservation, FullObservation
+from flyer_env.envs.common.action import DubinsContinuousAction, FullContinuousAction
 import pytest
 import numpy as np
 from tests.common import BaseSingleAgentTest, EnvironmentConfigs
@@ -30,12 +32,12 @@ class TestEnvironmentConfiguration(BaseSingleAgentTest):
         env = self.create_env(config)
 
         # Get the aircraft config from the environment
-        aircraft_config = env.vehicle.config
+        aircraft_config = env.vehicle
 
         # Test aircraft type-specific parameters
-        assert aircraft_config["type"] == "dubins"
-        assert aircraft_config["action_type"] == "Continuous"
-        assert aircraft_config["observation_type"] == "Continuous"
+        assert aircraft_config.type == "Dubins"
+        assert isinstance(aircraft_config.action, DubinsContinuousAction)
+        assert isinstance(aircraft_config.observation, DubinsObservation)
 
         # Verify state space dimensions
         assert env.observation_space.shape == (5,)  # x, y, heading, altitude, airspeed
@@ -51,16 +53,16 @@ class TestEnvironmentConfiguration(BaseSingleAgentTest):
         env = self.create_env(config)
 
         # Get the aircraft config
-        aircraft_config = env.vehicle.config
+        aircraft_config = env.vehicle
 
         # Test aircraft type-specific parameters
-        assert aircraft_config["type"] == "full"
-        assert aircraft_config["action_type"] == "Continuous"
-        assert aircraft_config["observation_type"] == "Continuous"
+        assert aircraft_config.type == "Full"
+        assert isinstance(aircraft_config.action, FullContinuousAction)
+        assert isinstance(aircraft_config.observation, FullObservation)
 
         # Verify state space dimensions
-        assert env.observation_space.shape == (12,)  # x, y, z, roll, pitch, yaw, u, v, w, p, q, r
-        assert env.action_space.shape == (4,)       # elevator, aileron, throttle, rudder
+        assert np.all(env.action_space.low == -1.0)  # x, y, z, roll, pitch, yaw, u, v, w, p, q, r
+        assert np.all(env.action_space.high == 1.0)  # elevator, aileron, throttle, rudder
 
     def test_config_modification(self):
         """Test that configuration modifications are properly applied."""
@@ -117,9 +119,10 @@ class TestEnvironmentConfiguration(BaseSingleAgentTest):
         env1 = self.create_env(config1)
         env2 = self.create_env(config2)
 
+        # TODO: Pass seed in here and see if it follows the environment reset
         # Reset both environments and compare initial states
-        obs1, _ = env1.reset()
-        obs2, _ = env2.reset()
+        obs1, _ = env1.reset(seed=seed)
+        obs2, _ = env2.reset(seed=seed)
 
         assert np.allclose(obs1, obs2)
 

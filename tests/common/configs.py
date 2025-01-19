@@ -6,6 +6,7 @@ class EnvironmentConfigs:
     def get_dubins_config(seed=None):
         config = {
             "max_episode_steps": 1000,
+            "normalize_actions": True,
             "steps_per_action": 4,
             "time_step": 1.0/120.0,
             "aircraft_config": [{
@@ -27,6 +28,7 @@ class EnvironmentConfigs:
     def get_full_config():
         return {
             "max_episode_steps": 1000,
+            "normalize_actions": True,
             "steps_per_action": 4,
             "time_step": 1.0/120.0,
             "aircraft_config": [{
