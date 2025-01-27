@@ -158,11 +158,13 @@ class AbstractEnv(ABC):
 
         timeout = timeout or self._connection_config.response_timeout
         command_str = json.dumps(command) + "\n"
-
         with self._managed_connection(timeout) as sock:
             try:
                 sock.sendall(command_str.encode())
-                return self._read_response(timeout)
+                if list(command.keys())[0] == "Render":
+                    return self._read_render_response(timeout)
+                else:
+                    return self._read_response(timeout)
             except (socket.timeout, json.JSONDecodeError) as e:
                 raise RuntimeError(f"Command failed: {e}")
 
@@ -186,6 +188,31 @@ class AbstractEnv(ABC):
                 continue
 
         raise TimeoutError("Timeout waiting for response")
+
+    def _read_render_response(self, timeout: float) -> dict:
+        """Read length-prefixed response from socket"""
+        start_time = time.time()
+
+        # Read 4-byte length prefix
+        length_bytes = self._recv_exactly(4, start_time, timeout)
+        if not length_bytes:
+            raise TimeoutError("Connection closed")
+
+        message_length = int.from_bytes(length_bytes, 'big')
+        message = self._recv_exactly(message_length, start_time, timeout).decode()
+        return json.loads(message)
+
+    def _recv_exactly(self, n: int, start_time: float, timeout: float) -> bytes:
+        """Read exactly n bytes with timeout"""
+        buffer = bytearray()
+        while len(buffer) < n:
+            if time.time() - start_time > timeout:
+                raise TimeoutError("Timeout waiting for response")
+            chunk = self._sock.recv(min(4096, n - len(buffer)))
+            if not chunk:
+                return None
+            buffer.extend(chunk)
+        return bytes(buffer)
 
     def _cleanup_socket(self) -> None:
         """Clean up socket connection"""
@@ -256,12 +283,17 @@ class AbstractEnv(ABC):
 
     @abstractmethod
     def step(self, action: Action) -> Tuple[Observation, float, bool, bool, dict]:
-        """Must be implemented by child classes"""
+        """Step envrionment with action"""
         pass
 
     @abstractmethod
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None) -> Tuple[Observation, dict]:
-        """Must be implemented by child classes"""
+        """Reset Env with seed and options"""
+        pass
+
+    @abstractmethod
+    def render(self):
+        """Get RGB array render from the environment"""
         pass
 
     @classmethod

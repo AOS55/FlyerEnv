@@ -1,6 +1,7 @@
 from typing import Optional, Tuple
 import gymnasium as gym
 import numpy as np
+import base64
 
 from flyer_env.envs.common.abstract import AbstractEnv, ConnectionConfig
 
@@ -103,3 +104,22 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
         print(f"Response: {response}")
         obs = self.vehicle.observation.observe(response["obs"][self.vehicle.id])
         return obs, response["info"]
+
+    def render(self):
+        """Get RGB array render from the environment."""
+        response = self._send_command(command = {"Render": None}, timeout = 10.0)
+        print("Command Sent!")
+
+        if "frame" not in response:
+            raise RuntimeError("No frame data in render response")
+
+        frame_data = base64.b64decode(response["frame"])
+        width = response["width"]
+        height = response["height"]
+
+        frame = np.frombuffer(frame_data, dtype=np.uint8)
+        frame = frame.reshape((int(height), int(width), 4))
+        print(f"frame: {frame}")
+        rgb_frame = frame[:, :, :3]
+
+        return rgb_frame
