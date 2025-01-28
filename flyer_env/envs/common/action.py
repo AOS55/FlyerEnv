@@ -76,6 +76,79 @@ class DubinsContinuousAction(ActionType):
                 dtype=np.float32
             )
 
+    def from_dict(self, action_dict: Dict[str, float]) -> np.ndarray:
+        """
+        Convert dictionary of unnormalized actions to numpy array.
+
+        Args:
+            action_dict: Dictionary mapping feature names to their raw values
+
+        Returns:
+            Numpy array of actions (normalized if self.normalize is True)
+        """
+        action = np.zeros(len(self.features), dtype=np.float32)
+
+        for i, feature in enumerate(self.features):
+            if feature not in action_dict:
+                raise ValueError(f"Missing required feature: {feature}")
+
+            value = float(action_dict[feature])
+            bounds = self.action_bounds[feature]
+
+            if self.normalize:
+                if bounds is None:
+                    # For unbounded actions, use value directly
+                    action[i] = value
+                else:
+                    # Normalize to [-1, 1]
+                    min_val, max_val = bounds
+                    action[i] = 2.0 * (value - min_val) / (max_val - min_val) - 1.0
+            else:
+                if bounds is not None:
+                    # Clip to bounds if not normalizing
+                    min_val, max_val = bounds
+                    value = np.clip(value, min_val, max_val)
+                action[i] = value
+
+        return action
+
+    def to_dict(self, action: np.ndarray) -> Dict[str, float]:
+        """
+        Convert action array back to dictionary with original values.
+
+        Args:
+            action: Numpy array of actions (normalized or unnormalized)
+
+        Returns:
+            Dictionary mapping feature names to their original values
+        """
+        if not isinstance(action, np.ndarray):
+            action = np.array(action, dtype=np.float32)
+
+        result = {}
+        for i, feature in enumerate(self.features):
+            value = float(action[i])
+
+            if self.normalize:
+                bounds = self.action_bounds[feature]
+                if bounds is None:
+                    # For unbounded actions, use the normalized value directly
+                    result[feature] = value
+                else:
+                    # Denormalize bounded values from [-1, 1]
+                    min_val, max_val = bounds
+                    result[feature] = min_val + (value + 1.0) * 0.5 * (max_val - min_val)
+            else:
+                bounds = self.action_bounds[feature]
+                if bounds is None:
+                    result[feature] = value
+                else:
+                    # Clip to bounds if not normalized
+                    min_val, max_val = bounds
+                    result[feature] = float(np.clip(value, min_val, max_val))
+
+        return result
+
     def act(self, action: np.ndarray) -> Dict[str, float]:
         """
         Process action array into a dictionary of values.
@@ -148,6 +221,57 @@ class DubinsDiscreteAction(ActionType):
             for feature in self.features
         ])
 
+    def from_dict(self, action_dict: Dict[str, float]) -> np.ndarray:
+        """
+        Convert dictionary of continuous values to discrete action indices.
+
+        Args:
+            action_dict: Dictionary mapping feature names to their continuous values
+
+        Returns:
+            Numpy array of discrete action indices
+        """
+        action = np.zeros(len(self.features), dtype=np.int64)
+
+        for i, feature in enumerate(self.features):
+            if feature not in action_dict:
+                raise ValueError(f"Missing required feature: {feature}")
+
+            value = float(action_dict[feature])
+            values = np.array(self.action_values[feature])
+
+            # Find closest discrete value
+            idx = np.abs(values - value).argmin()
+            action[i] = idx
+
+        return action
+
+    def to_dict(self, action: np.ndarray) -> Dict[str, float]:
+        """
+        Convert discrete action indices to dictionary with actual values.
+
+        Args:
+            action: Array of discrete action indices
+
+        Returns:
+            Dictionary mapping feature names to their actual values
+        """
+        if not isinstance(action, np.ndarray):
+            action = np.array(action, dtype=np.int64)
+
+        result = {}
+        for i, feature in enumerate(self.features):
+            values = self.action_values[feature]
+            idx = int(action[i])
+            if not 0 <= idx < len(values):
+                raise ValueError(
+                    f"Invalid action index {idx} for feature {feature}. "
+                    f"Must be between 0 and {len(values)-1}"
+                )
+            result[feature] = float(values[idx])
+
+        return result
+
     def act(self, action: np.ndarray) -> Dict[str, float]:
         """
         Convert discrete actions to continuous values.
@@ -215,6 +339,65 @@ class FullContinuousAction(ActionType):
                 dtype=np.float32
             )
 
+    def from_dict(self, action_dict: Dict[str, float]) -> np.ndarray:
+        """
+        Convert dictionary of unnormalized actions to numpy array.
+
+        Args:
+            action_dict: Dictionary mapping feature names to their raw values
+
+        Returns:
+            Numpy array of actions (normalized if self.normalize is True)
+        """
+        action = np.zeros(len(self.features), dtype=np.float32)
+
+        for i, feature in enumerate(self.features):
+            if feature not in action_dict:
+                raise ValueError(f"Missing required feature: {feature}")
+
+            value = float(action_dict[feature])
+            bounds = self.action_bounds[feature]
+
+            if self.normalize:
+                # Normalize to [-1, 1]
+                min_val, max_val = bounds
+                action[i] = 2.0 * (value - min_val) / (max_val - min_val) - 1.0
+            else:
+                # Clip to bounds
+                min_val, max_val = bounds
+                action[i] = np.clip(value, min_val, max_val)
+
+        return action
+
+    def to_dict(self, action: np.ndarray) -> Dict[str, float]:
+        """
+        Convert action array back to dictionary with original values.
+
+        Args:
+            action: Numpy array of actions (normalized or unnormalized)
+
+        Returns:
+            Dictionary mapping feature names to their original values
+        """
+        if not isinstance(action, np.ndarray):
+            action = np.array(action, dtype=np.float32)
+
+        result = {}
+        for i, feature in enumerate(self.features):
+            value = float(action[i])
+            bounds = self.action_bounds[feature]
+
+            if self.normalize:
+                # Denormalize from [-1, 1] to actual range
+                low, high = bounds
+                result[feature] = low + (value + 1.0) * 0.5 * (high - low)
+            else:
+                # Clip to bounds if not normalized
+                low, high = bounds
+                result[feature] = float(np.clip(value, low, high))
+
+        return result
+
     def act(self, action: np.ndarray) -> Dict[str, float]:
         """Process continuous actions for full aircraft model"""
         if not isinstance(action, np.ndarray):
@@ -261,6 +444,57 @@ class FullDiscreteAction(ActionType):
             len(self.action_values[feature])
             for feature in self.features
         ])
+
+    def from_dict(self, action_dict: Dict[str, float]) -> np.ndarray:
+        """
+        Convert dictionary of continuous values to discrete action indices.
+
+        Args:
+            action_dict: Dictionary mapping feature names to their continuous values
+
+        Returns:
+            Numpy array of discrete action indices
+        """
+        action = np.zeros(len(self.features), dtype=np.int64)
+
+        for i, feature in enumerate(self.features):
+            if feature not in action_dict:
+                raise ValueError(f"Missing required feature: {feature}")
+
+            value = float(action_dict[feature])
+            values = np.array(self.action_values[feature])
+
+            # Find closest discrete value
+            idx = np.abs(values - value).argmin()
+            action[i] = idx
+
+        return action
+
+    def to_dict(self, action: np.ndarray) -> Dict[str, float]:
+        """
+        Convert discrete action indices to dictionary with actual values.
+
+        Args:
+            action: Array of discrete action indices
+
+        Returns:
+            Dictionary mapping feature names to their actual values
+        """
+        if not isinstance(action, np.ndarray):
+            action = np.array(action, dtype=np.int64)
+
+        result = {}
+        for i, feature in enumerate(self.features):
+            values = self.action_values[feature]
+            idx = int(action[i])
+            if not 0 <= idx < len(values):
+                raise ValueError(
+                    f"Invalid action index {idx} for feature {feature}. "
+                    f"Must be between 0 and {len(values)-1}"
+                )
+            result[feature] = float(values[idx])
+
+        return result
 
     def act(self, action: np.ndarray) -> Dict[str, float]:
         """Convert discrete actions to continuous values"""

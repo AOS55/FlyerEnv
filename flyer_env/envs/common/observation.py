@@ -76,6 +76,39 @@ class DubinsObservation(ObservationType):
                 dtype=np.float32
             )
 
+    def to_dict(self, obs: np.ndarray) -> Dict[str, float]:
+        """
+        Convert observation array back to dictionary with original values.
+
+        Args:
+            obs: Numpy array of observations (normalized or unnormalized)
+
+        Returns:
+            Dictionary mapping feature names to their original values
+        """
+        result = {}
+        for i, feature in enumerate(self.features):
+            value = float(obs[i])
+
+            if self.normalize:
+                bounds = self.obs_bounds[feature]
+                if bounds is None:
+                    # Denormalize unbounded values
+                    if feature in ["x", "y"]:
+                        scale = 1000.0  # Same scale used in normalize
+                        value = value * scale
+                    elif feature == "altitude":
+                        scale = 1000.0  # Same scale used in normalize
+                        value = value * scale
+                else:
+                    # Denormalize bounded values from [-1, 1]
+                    low, high = bounds
+                    if high > low:
+                        value = (value + 1.0) * (high - low) / 2.0 + low
+
+            result[feature] = value
+
+        return result
 
     def observe(self, raw_obs: Dict[str, float]) -> np.ndarray:
         """
@@ -188,6 +221,32 @@ class FullObservation(ObservationType):
                 high=np.array(highs),
                 dtype=np.float32
             )
+
+    def to_dict(self, obs: np.ndarray) -> Dict[str, float]:
+        """
+        Convert observation array back to dictionary with original values.
+
+        Args:
+            obs: Numpy array of observations (normalized or unnormalized)
+
+        Returns:
+            Dictionary mapping feature names to their original values
+        """
+        result = {}
+        for i, feature in enumerate(self.features):
+            value = float(obs[i])
+
+            if self.normalize:
+                bounds = self.obs_bounds[feature]
+                if bounds is not None:
+                    # Denormalize bounded values from [-1, 1]
+                    low, high = bounds
+                    if high > low:
+                        value = (value + 1.0) * (high - low) / 2.0 + low
+
+            result[feature] = value
+
+        return result
 
     def observe(self, raw_obs: Dict[str, float]) -> np.ndarray:
         """

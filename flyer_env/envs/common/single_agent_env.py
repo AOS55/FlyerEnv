@@ -17,6 +17,9 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
         render_mode: Optional[str] = None,
         connection_config: Optional[ConnectionConfig] = None
     ) -> None:
+
+        print(f"render_mode: {render_mode}")
+        print(f"config: {config}")
         super().__init__(config, render_mode, connection_config)
 
         if len(self.controlled_vehicles) != 1:
@@ -32,6 +35,10 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
         self.vehicle = self.controlled_vehicles[0]
         self.action_space = self.vehicle.action.space
         self.observation_space = self.vehicle.observation.space
+
+        # Private helper methods
+        self._observation = self.vehicle.observation
+        self._action = self.vehicle.action
 
     def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, dict]:
         """

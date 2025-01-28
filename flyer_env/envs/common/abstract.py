@@ -68,7 +68,10 @@ class AbstractEnv(ABC):
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
         if self.render_mode:
-            self.config.agent_config.mode = self.render_mode
+            if self.render_mode == "rgb_array":
+                self.config['agent_config']['mode'] = "RGBArray"
+            else:
+                self.config['agent_config']['mode'] = "human"
 
         # Initialize connection to Rust server
         try:
@@ -318,6 +321,8 @@ class AbstractEnv(ABC):
     def configure(self, config: dict) -> None:
         """Update configuration with new values"""
         if config:
+            if 'agent_config' not in config:
+                config['agent_config'] = self.default_config()['agent_config']
             self.config.update(config)
 
     def close(self) -> None:
