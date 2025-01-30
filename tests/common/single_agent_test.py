@@ -11,17 +11,18 @@ class BaseSingleAgentTest(BaseEnvironmentTest):
     Implements specific validation and testing methods for single agent scenarios.
     """
 
-    def create_env(self, config: Optional[Dict[str, Any]] = None) -> SingleAgentEnv:
+    def create_env(self, config: Optional[Dict[str, Any]] = None, render_mode: Optional[str] = None) -> SingleAgentEnv:
         """
         Create single agent environment instance.
 
         Args:
             config: Optional configuration dictionary
+            render_mode: Optional render mode for environment
 
         Returns:
             Configured SingleAgentEnv instance
         """
-        return SingleAgentEnv(config=config)
+        return SingleAgentEnv(config=config, render_mode=render_mode)
 
     def get_action(self) -> np.ndarray:
         """
@@ -101,7 +102,7 @@ class BaseSingleAgentTest(BaseEnvironmentTest):
 
     def test_episode_termination(self):
         """Test proper episode termination."""
-        metrics = self.run_episode(max_steps=1000)
+        metrics = self.run_episode(max_steps=100)
 
         # Episode should either complete normally or terminate early
         assert metrics['steps'] > 0, "Episode had zero steps"

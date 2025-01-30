@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Optional, Text, Tuple, TypeVar
 import gymnasium as gym
 from gymnasium import spaces
@@ -46,13 +47,15 @@ class AbstractEnv(ABC):
         self,
         config: dict = None,
         render_mode: Optional[str] = None,
-        connection_config: Optional[ConnectionConfig] = None
+        connection_config: Optional[ConnectionConfig] = None,
+        debug_level: str = "warn"
     ) -> None:
 
         super().__init__()
 
         # Connection management
         self._connection_config = connection_config or ConnectionConfig()
+        self._debug_level = debug_level
         self._process = None
         self._sock = None
         self._connected = False
@@ -91,15 +94,20 @@ class AbstractEnv(ABC):
         """Initialize connection to Rust server"""
         print("Starting Flyer initialization...")
 
+        server_command = "flyer_serve"  # Globally installed exexutable
+        env = os.environ.copy()
+        env["RUST_LOG"] = self._debug_level
+
         # Start Bevy process
         try:
             self._process = subprocess.Popen(
-                ["flyer-rs/target/release/serve"],
+                [server_command],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
                 bufsize=1,
-                universal_newlines=True
+                universal_newlines=True,
+                env=env
             )
 
             # Start log streaming in a separate thread
@@ -111,7 +119,9 @@ class AbstractEnv(ABC):
             self._log_thread.start()
 
         except FileNotFoundError as e:
-            raise RuntimeError(f"Check 'pyflyer-rs/target/release/bevy_server' exists and is executable, {e} found.")
+            raise RuntimeError(
+                f"Could not find 'flyer_serve' executable. Ensure it is installed and accessible in PATH. Original error: {e}"
+            )
 
         # Get port from process output with timeout
         start_time = time.time()
@@ -130,6 +140,7 @@ class AbstractEnv(ABC):
 
         # Connect socket
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         try:
             self._sock.connect((self._connection_config.host, self.port))
             self._connected = True
@@ -244,6 +255,7 @@ class AbstractEnv(ABC):
 
     def _initialize_env(self) -> None:
         """Initialize environment on server and create Aircraft instances"""
+        print(f"Sent: {self.config}")
         init_msg = {
             "Initialize": {
                 "config": self.config
@@ -259,7 +271,7 @@ class AbstractEnv(ABC):
 
         # Setup controlled vehicles
         for aircraft_info in response["aircraft"]:
-            print(f"aircraft_info: {aircraft_info}")
+            # print(f"aircraft_info: {aircraft_info}")
             aircraft_type = list(aircraft_info["config"].keys())[0]
             aircraft_config = aircraft_info["config"][aircraft_type]  # limits from aircraft config
 

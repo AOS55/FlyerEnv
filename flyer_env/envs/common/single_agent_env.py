@@ -15,12 +15,13 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
         self,
         config: dict = None,
         render_mode: Optional[str] = None,
-        connection_config: Optional[ConnectionConfig] = None
+        connection_config: Optional[ConnectionConfig] = None,
+        debug_level: str = "warn"
     ) -> None:
 
-        print(f"render_mode: {render_mode}")
+        # print(f"render_mode: {render_mode}")
         print(f"config: {config}")
-        super().__init__(config, render_mode, connection_config)
+        super().__init__(config, render_mode, connection_config, debug_level)
 
         if len(self.controlled_vehicles) != 1:
             raise ValueError("SingleAgentEnv must have exactly one controlled vehicle")
@@ -28,7 +29,7 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
             raise ValueError("max_episode_steps must be positive")
         if self.config.get('time_step', 0) <= 0:
             raise ValueError("time_step must be positive")
-        print(f"self.config: {self.config}")
+        # print(f"self.config: {self.config}")
 
         self.max_velocity = 900.0  # Add reasonable max velocity
         # Setup standard Gym spaces from the Aircraft
@@ -59,7 +60,7 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
         # Process action through Aircraft action space
         processed_action = self.vehicle.action.act(action)
 
-        print(f"single agent action: {processed_action}")
+        # print(f"single agent action: {processed_action}")
 
         # Send to server with aircraft ID
         response = self._send_command({
@@ -75,13 +76,13 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
         reward = response["reward"][self.vehicle.id]
         terminated = response["terminated"][self.vehicle.id]
 
-        print(f"response: {response}")
+        # print(f"response: {response}")
 
         return (
             obs,
             reward,
             terminated,
-            response["truncated"],
+            response["truncated"],  # Truncation is applied globally
             response["info"]
         )
 
@@ -108,7 +109,7 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
                 "seed": seed
             }
         })
-        print(f"Response: {response}")
+        # print(f"Response: {response}")
         obs = self.vehicle.observation.observe(response["obs"][self.vehicle.id])
         return obs, response["info"]
 

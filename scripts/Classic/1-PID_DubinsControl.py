@@ -215,7 +215,7 @@ def main():
             # Get control action
             act_dict = controller(obs_dict)
             act = env.unwrapped._action.from_dict(act_dict)
-            print(f"Raw action vector: {act}")
+            # print(f"Raw action vector: {act}")
 
             # Step environment
             obs, reward, truncated, terminated, info = env.step(act)

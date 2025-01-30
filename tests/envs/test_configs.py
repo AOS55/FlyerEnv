@@ -2,6 +2,7 @@ from flyer_env.envs.common.observation import DubinsObservation, FullObservation
 from flyer_env.envs.common.action import DubinsContinuousAction, FullContinuousAction
 import pytest
 import numpy as np
+import time
 from tests.common import BaseSingleAgentTest, EnvironmentConfigs
 
 class TestEnvironmentConfiguration(BaseSingleAgentTest):
@@ -173,3 +174,76 @@ class TestEnvironmentConfiguration(BaseSingleAgentTest):
         assert np.isclose(env.config["time_step"], 1.0/120.0)
         assert env.config["agent_config"]["render_width"] == 800.0
         assert env.config["agent_config"]["render_height"] == 600.0
+
+    def test_multiple_environments(self):
+        """Test that multiple environments can run simultaneously."""
+        # Create two environments with different seeds
+        config1 = EnvironmentConfigs.get_dubins_config(seed=42)
+        config2 = EnvironmentConfigs.get_dubins_config(seed=43)
+
+        env1 = self.create_env(config1)
+        env2 = self.create_env(config2)
+
+        try:
+            # Reset both environments
+            obs1, _ = env1.reset()
+            obs2, _ = env2.reset()
+
+            # Verify they have different initial states due to different seeds
+            assert not np.allclose(obs1, obs2), "Environments should have different initial states with different seeds"
+
+            # Run steps in both environments
+            for _ in range(100):
+                # Take actions in both environments
+                action = np.array([0.5, 0, 0])  # Simple test action
+
+                next_obs1, reward1, term1, trunc1, _ = env1.step(action)
+                next_obs2, reward2, term2, trunc2, _ = env2.step(action)
+
+                # Verify both environments are still running
+                assert not (term1 or trunc1), "Environment 1 terminated unexpectedly"
+                assert not (term2 or trunc2), "Environment 2 terminated unexpectedly"
+
+                # Verify observations are different between environments
+                assert not np.allclose(next_obs1, next_obs2), "Environments should maintain different states"
+
+        finally:
+            # Clean up
+            env1.close()
+            env2.close()
+
+    def test_long_evaluation_episode(self):
+        """Test environment can handle long evaluation episodes without timeout."""
+        # Create environments
+        config = EnvironmentConfigs.get_dubins_config(seed=42)
+        env = self.create_env(config)
+        eval_env = self.create_env(config)
+
+        try:
+            # Run full length episode in both envs
+            for env_name, test_env in [("train", env), ("eval", eval_env)]:
+                obs, _ = test_env.reset()
+
+                # Run for length of typical episode
+                steps = 0
+                max_steps = 3000
+
+                for _ in range(max_steps):
+                    action = np.array([0.5, 0, 0])  # Simple test action
+                    start_time = time.time()
+
+                    obs, reward, terminated, truncated, _ = test_env.step(action)
+                    step_time = time.time() - start_time
+
+                    print(f"{env_name} Step {steps}: {step_time:.3f}s")
+                    steps += 1
+
+                    if terminated or truncated:
+                        break
+
+                print(f"{env_name} completed {steps} steps")
+                assert steps > 0, f"{env_name} environment failed to complete any steps"
+
+        finally:
+            env.close()
+            eval_env.close()

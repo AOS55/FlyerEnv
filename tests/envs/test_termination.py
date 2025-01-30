@@ -80,7 +80,7 @@ class TestTaskTermination(BaseSingleAgentTest):
                 }
             }
 
-        self.env = self.create_env(config)
+        self.env = self.create_env(config=config, render_mode="rgb_array")
 
     def test_goal_termination(self):
         """Test goal reaching termination conditions."""

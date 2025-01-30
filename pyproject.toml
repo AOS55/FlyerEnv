@@ -1,19 +1,15 @@
 [build-system]
-requires = [
-    "setuptools>=75.3.0",
-    "setuptools-rust",
-    "wheel"
-]
+requires = ["setuptools>=75.3.0", "setuptools-rust", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "flyer-env"
 version = "0.2.0"
 description = "An environment for simulated fixed-wing aircraft guidance, navigation, and control tasks"
-readme = {file = "README.md", content-type = "text/markdown"}  # Combine both file and content type
-license = {text = "MIT"}
-authors = [{name = "Alexander Quessy", email = "aq15777@bristol.ac.uk"}]
-urls = {homepage = "https://github.com/aos55/FlyerEnv"}  # Use 'urls' for links
+readme = { file = "README.md", content-type = "text/markdown" }                                          # Combine both file and content type
+license = { text = "MIT" }
+authors = [{ name = "Alexander Quessy", email = "aq15777@bristol.ac.uk" }]
+urls = { homepage = "https://github.com/aos55/FlyerEnv" }                                                # Use 'urls' for links
 
 dependencies = [
     "gymnasium>=1.0.0",
@@ -26,13 +22,20 @@ dependencies = [
     "simple-pid",
     "pyYAML",
     "scikit-image",
-    "opensimplex"
+    "opensimplex",
+    "stable-baselines3",
+    "wandb",
+    "hydra-core",
 ]
 
-optional-dependencies = {deploy = ["pytest-runner", "sphinx<1.7.3", "sphinx_rtd_theme"]}
+optional-dependencies = { deploy = [
+    "pytest-runner",
+    "sphinx<1.7.3",
+    "sphinx_rtd_theme",
+] }
 
 [project.entry-points]
-"gymnasium.envs" = {"__root__" = "flyer_env.__init__:register_flyer_envs"}
+"gymnasium.envs" = { "__root__" = "flyer_env.__init__:register_flyer_envs" }
 
 [tool.setuptools.packages.find]
 include = ["flyer_env", "flyer_env.*"]

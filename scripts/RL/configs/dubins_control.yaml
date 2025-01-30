@@ -1,0 +1,20 @@
+project_name: Dubins-Control
+
+# Environment Properties
+seed: 42
+control_type: "altitude"
+target_value: 500.0
+tolerance: 10.0
+
+# SAC Properties
+learning_rate: 0.0003
+buffer_size: 1000000
+batch_size: 256
+tau: 0.005
+gamma: 0.99
+train_freq: 1
+gradient_steps: 1
+total_timesteps: 1000000
+
+# Misc
+use_wandb: False

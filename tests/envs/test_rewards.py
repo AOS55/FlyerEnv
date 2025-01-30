@@ -47,14 +47,14 @@ class TestTaskRewards(BaseSingleAgentTest):
         # Test rewards at different errors
         test_errors = [
             (0.0, 1.0, "perfect alignment"),
-            (0.05, 0.95, "small error"),
-            (0.2, 0.5, "medium error"),
-            (0.5, 0.1, "large error")
+            (0.05, 0.973, "small error"),
+            (0.2, 0.632, "medium error"),
+            (0.5, 0.062, "large error")
         ]
 
         for error, expected_reward, description in test_errors:
-            # Calculate reward directly
-            reward = np.exp(-5.0 * error / tolerance)
+            # Calculate reward to match Rust implementation
+            reward = np.exp(-(error / (3.0 * tolerance))**2)  # Square the normalized error
             assert abs(reward - expected_reward) < 0.1, \
                 f"For {description}, expected reward ~{expected_reward}, got {reward}"
 
@@ -62,19 +62,18 @@ class TestTaskRewards(BaseSingleAgentTest):
         """Test altitude control task rewards."""
         target_altitude = 1000.0
         tolerance = 20.0
-
         self.setup_task_config('Control', target_altitude, tolerance)
         obs, _ = self.env.reset()
 
         test_cases = [
             (0.0, 1.0, "at target"),
-            (10.0, 0.9, "small deviation"),
-            (40.0, 0.3, "medium deviation"),
-            (100.0, 0.05, "large deviation")
+            (10.0, 0.973, "small deviation"),  # Updated to match Rust
+            (40.0, 0.632, "medium deviation"),
+            (100.0, 0.062, "large deviation")
         ]
 
         for error, expected_reward, description in test_cases:
-            reward = np.exp(-5.0 * error / tolerance)
+            reward = np.exp(-(error / (3.0 * tolerance))**2)
             assert abs(reward - expected_reward) < 0.1, \
                 f"For {description}, expected reward ~{expected_reward}, got {reward}"
 
@@ -100,19 +99,22 @@ class TestTaskRewards(BaseSingleAgentTest):
     def test_goal_task_dense(self):
         """Test dense goal reaching task rewards."""
         tolerance = 10.0
-
         self.setup_task_config('Goal', 100.0, tolerance, reward_type='Dense')
         obs, _ = self.env.reset()
 
         test_distances = [
             (0.0, 1.0, "at goal"),
-            (5.0, 0.85, "close"),
-            (20.0, 0.37, "medium"),
-            (50.0, 0.08, "far")
+            (5.0, 1.0, "close"),
+            (20.0, 0.641, "medium"),
+            (50.0, 0.062, "far")
         ]
 
         for distance, expected_reward, description in test_distances:
-            reward = np.exp(-5.0 * distance / tolerance)
+            # Match Rust logic with tolerance check
+            if distance <= tolerance:
+                reward = 1.0
+            else:
+                reward = np.exp(-(distance / (3.0 * tolerance))**2)
             assert abs(reward - expected_reward) < 0.1, \
                 f"For {description} (distance={distance}m), expected ~{expected_reward}, got {reward}"
 
@@ -126,15 +128,21 @@ class TestTaskRewards(BaseSingleAgentTest):
 
         test_cases = [
             ((0.0, 0.0), 1.0, "perfect alignment"),
-            ((runway_width/4, heading_tolerance/4), 0.8, "small deviation"),
-            ((runway_width/2, heading_tolerance/2), 0.6, "medium deviation"),
-            ((runway_width*2, heading_tolerance*2), 0.2, "large deviation")
+            ((runway_width/4, heading_tolerance/4), 0.74, "small deviation"),  # Updated to match 0.3*lat + 0.3*glide + 0.2*head + 0.2*speed
+            ((runway_width/2, heading_tolerance/2), 0.61, "medium deviation"),
+            ((runway_width*2, heading_tolerance*2), 0.50, "large deviation")
         ]
 
         for (lateral_error, heading_error), expected_reward, description in test_cases:
+            # Match Rust implementation weights and components
             lateral_reward = np.exp(-3.0 * lateral_error / runway_width)
             heading_reward = np.exp(-3.0 * heading_error / heading_tolerance)
-            reward = 0.5 * lateral_reward + 0.5 * heading_reward
+            # Assuming default values for glideslope and speed rewards when perfectly maintained
+            glideslope_reward = 1.0  # Perfect glideslope
+            speed_reward = 1.0       # Perfect speed
+
+            reward = (0.3 * lateral_reward + 0.3 * glideslope_reward +
+                    0.2 * heading_reward + 0.2 * speed_reward)
 
             assert abs(reward - expected_reward) < 0.15, \
                 f"For {description}, expected reward ~{expected_reward}, got {reward}"
