@@ -5,6 +5,7 @@ seed: 42
 control_type: "altitude"
 target_value: 500.0
 tolerance: 10.0
+eval_episode_length: 100
 
 # SAC Properties
 learning_rate: 0.0003

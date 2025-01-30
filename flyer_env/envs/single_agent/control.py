@@ -106,6 +106,7 @@ class ControlFlyerEnv(SingleAgentEnv):
         tolerance: float = 10.0,
         start_deviation: Union[float, Tuple[float, float]] = 100.0,
         use_full_aircraft: bool = False,
+        episode_length: Optional[int] = 1000,
         env_config: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
@@ -121,6 +122,7 @@ class ControlFlyerEnv(SingleAgentEnv):
                            - float: symmetric deviation [-value, value]
                            - tuple: (min_deviation, max_deviation)
             use_full_aircraft: Whether to use full aircraft model instead of Dubins
+            episode_length: Maximum number of steps per episode (to truncation)
             env_config: Optional additional environment configuration
         """
         assert render_mode is None or render_mode in self.metadata["render_modes"]
@@ -129,7 +131,7 @@ class ControlFlyerEnv(SingleAgentEnv):
             env_config = {}
 
         env_config.setdefault("max_episode_steps", 1000)
-        env_config.setdefault("time_step", 1/60)
+        env_config.setdefault("time_step", 1/60)  # 60 Hz
 
         if seed is not None:
             env_config["seed"] = seed
