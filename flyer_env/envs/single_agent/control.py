@@ -1,6 +1,10 @@
 from typing import Dict, Any, Optional, Union, Tuple, List
 import numpy as np
+from gymnasium import spaces
+
 from flyer_env.envs.common.single_agent_env import SingleAgentEnv
+from flyer_env.envs.common.action import ActionType
+from flyer_env.envs.common.observation import ObservationType
 
 class DubinsAircraftPreset:
     @staticmethod
@@ -106,6 +110,7 @@ class ControlFlyerEnv(SingleAgentEnv):
         tolerance: float = 10.0,
         start_deviation: Union[float, Tuple[float, float]] = 100.0,
         use_full_aircraft: bool = False,
+        simplified_spaces: bool = False,
         episode_length: Optional[int] = 1000,
         env_config: Optional[Dict[str, Any]] = None,
     ) -> None:
@@ -128,10 +133,10 @@ class ControlFlyerEnv(SingleAgentEnv):
         assert render_mode is None or render_mode in self.metadata["render_modes"]
 
         if env_config is None:
-            env_config = {}
+                env_config = {}
 
         env_config.setdefault("max_episode_steps", 1000)
-        env_config.setdefault("time_step", 1/60)  # 60 Hz
+        env_config.setdefault("time_step", 1/60)
 
         if seed is not None:
             env_config["seed"] = seed
@@ -145,10 +150,11 @@ class ControlFlyerEnv(SingleAgentEnv):
         # Prepare aircraft configuration
         if use_full_aircraft:
             aircraft_preset = FullAircraftPreset()
+            simplified_spaces = False
         else:
             aircraft_preset = DubinsAircraftPreset()
 
-        # Configure starting conditions based on control type
+        # Configure starting conditions
         initial_altitude = target_value + min_dev if control_type == "altitude" else 500.0
         initial_heading = (target_value + min_dev) if control_type == "heading" else None
         initial_speed = (target_value + min_dev) if control_type == "speed" else None
@@ -159,6 +165,10 @@ class ControlFlyerEnv(SingleAgentEnv):
             initial_heading=initial_heading,
             initial_speed=initial_speed
         )
+
+        # Store control type and simplified spaces flag for post-init setup
+        env_config["control_type"] = control_type
+        env_config["simplified_spaces"] = simplified_spaces
 
         # Create task configuration
         task_config = {
@@ -180,7 +190,27 @@ class ControlFlyerEnv(SingleAgentEnv):
 
         env_config["aircraft_config"] = full_aircraft_config
 
+        # Initialize base environment
         super().__init__(config=env_config, render_mode=render_mode)
+
+        # After initialization, set up simplified spaces if requested
+        if simplified_spaces and not use_full_aircraft:
+            action_config = aircraft_preset.default()["config"]
+
+            # Create simplified spaces
+            action_handler = TaskSpecificDubinsAction(control_type, action_config)
+            observation_handler = TaskSpecificDubinsObservation(control_type, action_config)
+
+            # Update the vehicle's handlers
+            self.vehicle.action = action_handler
+            self.vehicle.observation = observation_handler
+
+            # Update environment's spaces
+            self._action = action_handler
+            self._observation = observation_handler
+            self.action_space = action_handler.space
+            self.observation_space = observation_handler.space
+
 
     @classmethod
     def build_altitude_control(
@@ -189,6 +219,7 @@ class ControlFlyerEnv(SingleAgentEnv):
         tolerance: float = 10.0,
         start_deviation: Union[float, Tuple[float, float]] = 100.0,
         use_full_aircraft: bool = False,
+        simplified_spaces: bool = False,
         **kwargs
     ) -> "ControlFlyerEnv":
         """Create environment for altitude control task."""
@@ -198,6 +229,7 @@ class ControlFlyerEnv(SingleAgentEnv):
             tolerance=tolerance,
             start_deviation=start_deviation,
             use_full_aircraft=use_full_aircraft,
+            simplified_spaces=simplified_spaces,
             **kwargs
         )
 
@@ -208,6 +240,7 @@ class ControlFlyerEnv(SingleAgentEnv):
         tolerance: float = 0.1,
         start_deviation: Union[float, Tuple[float, float]] = 0.5,
         use_full_aircraft: bool = False,
+        simplified_spaces: bool = False,
         **kwargs
     ) -> "ControlFlyerEnv":
         """Create environment for heading control task."""
@@ -217,6 +250,7 @@ class ControlFlyerEnv(SingleAgentEnv):
             tolerance=tolerance,
             start_deviation=start_deviation,
             use_full_aircraft=use_full_aircraft,
+            simplified_spaces=simplified_spaces,
             **kwargs
         )
 
@@ -227,6 +261,7 @@ class ControlFlyerEnv(SingleAgentEnv):
         tolerance: float = 2.0,
         start_deviation: Union[float, Tuple[float, float]] = 5.0,
         use_full_aircraft: bool = False,
+        simplified_spaces: bool = False,
         **kwargs
     ) -> "ControlFlyerEnv":
         """Create environment for speed control task."""
@@ -236,6 +271,7 @@ class ControlFlyerEnv(SingleAgentEnv):
             tolerance=tolerance,
             start_deviation=start_deviation,
             use_full_aircraft=use_full_aircraft,
+            simplified_spaces=simplified_spaces,
             **kwargs
         )
 
@@ -260,3 +296,111 @@ class ControlFlyerEnv(SingleAgentEnv):
             use_full_aircraft=True,  # Attitude control always requires full aircraft
             **kwargs
         )
+
+class TaskSpecificDubinsAction(ActionType):
+    """Simplified action space for specific control tasks"""
+
+    def __init__(self, control_type: str, config: Dict[str, Any]):
+        self.control_type = control_type
+        self.config = config
+
+        # Define action spaces based on control type
+        if control_type == "altitude":
+            self.features = ["vertical_speed"]
+            self.bounds = {
+                "vertical_speed": (-config["max_descent_rate"], config["max_climb_rate"])
+            }
+        elif control_type == "heading":
+            self.features = ["bank_angle"]
+            self.bounds = {
+                "bank_angle": (-np.radians(config["max_bank_angle"]),
+                             np.radians(config["max_bank_angle"]))
+            }
+        elif control_type == "speed":
+            self.features = ["acceleration"]
+            self.bounds = {
+                "acceleration": (-config["acceleration"], config["acceleration"])
+            }
+        else:
+            raise ValueError(f"Unsupported control type: {control_type}")
+
+    @property
+    def space(self) -> spaces.Space:
+        """Return simplified action space for specific task"""
+        return spaces.Box(
+            low=np.array([b[0] for b in self.bounds.values()]),
+            high=np.array([b[1] for b in self.bounds.values()]),
+            dtype=np.float32
+        )
+
+    def act(self, action: np.ndarray) -> Dict[str, float]:
+        """Convert simplified action to full action dict"""
+        if not isinstance(action, np.ndarray):
+            action = np.array(action, dtype=np.float32)
+
+        # Create full action dict with defaults
+        full_action = {
+            "acceleration": 0.0,
+            "bank_angle": 0.0,
+            "vertical_speed": 0.0
+        }
+
+        # Update only the relevant action component
+        for i, feature in enumerate(self.features):
+            full_action[feature] = float(np.clip(
+                action[i],
+                self.bounds[feature][0],
+                self.bounds[feature][1]
+            ))
+
+        return full_action
+
+class TaskSpecificDubinsObservation(ObservationType):
+    """Simplified observation space for specific control tasks"""
+
+    def __init__(self, control_type: str, config: Dict[str, Any]):
+        self.control_type = control_type
+        self.config = config
+
+        # Define relevant features and bounds based on task
+        if control_type == "altitude":
+            self.features = ["altitude", "vertical_speed"]
+            self.bounds = {
+                "altitude": (0, 20000),  # 0 to 20 km
+                "vertical_speed": (-config["max_descent_rate"], config["max_climb_rate"])
+            }
+        elif control_type == "heading":
+            self.features = ["heading", "bank_angle"]
+            self.bounds = {
+                "heading": (-np.pi, np.pi),
+                "bank_angle": (-np.radians(config["max_bank_angle"]),
+                             np.radians(config["max_bank_angle"]))
+            }
+        elif control_type == "speed":
+            self.features = ["airspeed", "acceleration"]
+            self.bounds = {
+                "airspeed": (config["min_speed"], config["max_speed"]),
+                "acceleration": (-config["acceleration"], config["acceleration"])
+            }
+        else:
+            raise ValueError(f"Unsupported control type: {control_type}")
+
+    @property
+    def space(self) -> spaces.Space:
+        """Return simplified observation space for specific task"""
+        return spaces.Box(
+            low=np.array([b[0] for b in self.bounds.values()]),
+            high=np.array([b[1] for b in self.bounds.values()]),
+            dtype=np.float32
+        )
+
+    def observe(self, raw_obs: Dict[str, float]) -> np.ndarray:
+        """Extract relevant observations for the specific task"""
+        obs = []
+        for feature in self.features:
+            value = raw_obs.get(feature, 0.0)
+            bounds = self.bounds[feature]
+            value = np.clip(value, bounds[0], bounds[1])
+            obs.append(value)
+
+        return np.array(obs, dtype=np.float32)
