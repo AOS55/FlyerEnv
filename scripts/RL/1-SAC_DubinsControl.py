@@ -37,12 +37,27 @@ class DebugCallback(BaseCallback):
 
         # Accumulate episode reward
         self.current_episode_reward += self.locals['rewards'][0]
+        if hasattr(self, '_episode_step_counter'):
+            self._episode_step_counter += 1
 
-        # Check if episode ended
-        if self.locals['dones'][0]:
+        # Check if episode ended (either terminated or truncated)
+        print(f"self.locals: {self.locals}")
+        episode_done = self.locals['dones'][0]
+        if episode_done:
             self.episode_rewards.append(self.current_episode_reward)
-            self.episode_lengths.append(self.locals['episode_lengths'][0])
+
+            # Get episode length from info if available
+            if 'episode' in self.locals['infos'][0]:
+                episode_length = self.locals['infos'][0]['episode']['l']
+            else:
+                # If we can't get the episode length, use our step counter
+                if not hasattr(self, '_episode_step_counter'):
+                    self._episode_step_counter = 0
+                episode_length = self._episode_step_counter
+
+            self.episode_lengths.append(episode_length)
             self.current_episode_reward = 0
+            self._episode_step_counter = 0
 
             # Log episode statistics
             if len(self.episode_rewards) % self.log_freq == 0:
@@ -114,13 +129,14 @@ def train(cfg: DictConfig):
     )
     env = Monitor(env, log_dir)
 
-    # Create evaluation environment
+    # Create evaluation environment without rendering
     eval_env = gym.make("flyer_control-v1",
-        render_mode=None,
+        render_mode=None,  # Explicitly disable rendering
         seed=cfg.seed + 100,
         control_type=cfg.control_type,
         target_value=cfg.target_value,
-        tolerance=cfg.tolerance
+        tolerance=cfg.tolerance,
+        episode_length=cfg.eval_episode_length
     )
     eval_env = Monitor(eval_env, os.path.join(log_dir, 'eval'))
 
@@ -152,7 +168,7 @@ def train(cfg: DictConfig):
         log_path=os.path.join(log_dir, 'eval_logs'),
         eval_freq=100,
         deterministic=True,
-        render=False
+        render=False  # Ensure rendering is disabled during evaluation
     )
 
     callbacks = [debug_callback, checkpoint_callback, eval_callback]
