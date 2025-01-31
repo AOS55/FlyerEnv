@@ -299,7 +299,7 @@ def train(cfg: DictConfig):
     # Create environment
     env = gym.make("flyer_control-v1",
         render_mode="rgb_array",
-        seed=cfg.environment.seed,
+        seed=cfg.seed,
         start_deviation=cfg.environment.start_deviation,
         control_type=cfg.environment.control_type,
         target_value=cfg.environment.target_value,

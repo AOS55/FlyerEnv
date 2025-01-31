@@ -2,6 +2,7 @@ defaults:
   - environment: altitude
 
 project_name: Dubins-Control
+seed: 42
 
 # SAC Properties
 learning_rate: 0.0003
