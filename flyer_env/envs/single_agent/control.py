@@ -24,28 +24,47 @@ class DubinsAircraftPreset:
 
     @staticmethod
     def get_start_config(
-        initial_altitude: float = 500.0,
-        initial_heading: Optional[float] = None,
-        initial_speed: Optional[float] = None,
+        min_altitude: float = 400.0,
+        max_altitude: float = 600.0,
+        min_speed: Optional[float] = None,
+        max_speed: Optional[float] = None,
+        min_heading: Optional[float] = None,
+        max_heading: Optional[float] = None,
         position_variance: float = 50.0,
     ) -> Dict[str, Any]:
+        # Default speed range if none specified
+        if min_speed is None or max_speed is None:
+            default_min_speed = 75.0
+            default_max_speed = 100.0
+        else:
+            default_min_speed = min_speed
+            default_max_speed = max_speed
+
+        # Default heading range if none specified
+        if min_heading is None or max_heading is None:
+            default_min_heading = 0.0
+            default_max_heading = 2 * np.pi
+        else:
+            default_min_heading = min_heading
+            default_max_heading = max_heading
+
         config = {
             "type": "random",
             "config": {
                 "position": {
                     "origin_x": 0.0,
                     "origin_y": 0.0,
-                    "min_altitude": initial_altitude,
-                    "max_altitude": initial_altitude,
+                    "min_altitude": -min_altitude,
+                    "max_altitude": -max_altitude,
                     "variance": position_variance
                 },
                 "speed": {
-                    "min_speed": 75.0 if initial_speed is None else initial_speed,
-                    "max_speed": 100.0 if initial_speed is None else initial_speed
+                    "min_speed": default_min_speed,
+                    "max_speed": default_max_speed
                 },
                 "heading": {
-                    "min_heading": 0.0 if initial_heading is None else initial_heading,
-                    "max_heading": 2 * np.pi if initial_heading is None else initial_heading
+                    "min_heading": default_min_heading,
+                    "max_heading": default_max_heading
                 }
             }
         }
@@ -57,34 +76,53 @@ class FullAircraftPreset:
         return {
             "type": "full",
             "config": {
-                "ac_type": "generic_transport"
+                "ac_type": "twin_otter"
             }
         }
 
     @staticmethod
     def get_start_config(
-        initial_altitude: float = 1000.0,
-        initial_heading: Optional[float] = None,
-        initial_speed: float = 50.0,
+        min_altitude: float = 400.0,
+        max_altitude: float = 600.0,
+        min_speed: Optional[float] = None,
+        max_speed: Optional[float] = None,
+        min_heading: Optional[float] = None,
+        max_heading: Optional[float] = None,
         position_variance: float = 50.0,
     ) -> Dict[str, Any]:
+        # Default speed range if none specified
+        if min_speed is None or max_speed is None:
+            default_min_speed = 75.0
+            default_max_speed = 100.0
+        else:
+            default_min_speed = min_speed
+            default_max_speed = max_speed
+
+        # Default heading range if none specified
+        if min_heading is None or max_heading is None:
+            default_min_heading = 0.0
+            default_max_heading = 2 * np.pi
+        else:
+            default_min_heading = min_heading
+            default_max_heading = max_heading
+
         config = {
             "type": "random",
             "config": {
                 "position": {
                     "origin_x": 0.0,
                     "origin_y": 0.0,
-                    "min_altitude": initial_altitude,
-                    "max_altitude": initial_altitude,
+                    "min_altitude": -min_altitude,
+                    "max_altitude": -max_altitude,
                     "variance": position_variance
                 },
                 "speed": {
-                    "min_speed": initial_speed,
-                    "max_speed": initial_speed
+                    "min_speed": default_min_speed,
+                    "max_speed": default_max_speed
                 },
                 "heading": {
-                    "min_heading": 0.0 if initial_heading is None else initial_heading,
-                    "max_heading": 2 * np.pi if initial_heading is None else initial_heading
+                    "min_heading": default_min_heading,
+                    "max_heading": default_max_heading
                 }
             }
         }
@@ -133,7 +171,7 @@ class ControlFlyerEnv(SingleAgentEnv):
         assert render_mode is None or render_mode in self.metadata["render_modes"]
 
         if env_config is None:
-                env_config = {}
+            env_config = {}
 
         env_config.setdefault("max_episode_steps", 1000)
         env_config.setdefault("time_step", 1/60)
@@ -154,20 +192,25 @@ class ControlFlyerEnv(SingleAgentEnv):
         else:
             aircraft_preset = DubinsAircraftPreset()
 
-        # Configure starting conditions
-        initial_altitude = target_value + min_dev if control_type == "altitude" else 500.0
-        initial_heading = (target_value + min_dev) if control_type == "heading" else None
-        initial_speed = (target_value + min_dev) if control_type == "speed" else None
-
         aircraft_config = aircraft_preset.default()
-        aircraft_config["start_config"] = aircraft_preset.get_start_config(
-            initial_altitude=initial_altitude,
-            initial_heading=initial_heading,
-            initial_speed=initial_speed
-        )
+
+        # Configure starting conditions
+        if control_type == "altitude":
+            min_altitude = target_value + min_dev
+            max_altitude = target_value + max_dev
+            aircraft_config["start_config"] = aircraft_preset.get_start_config(min_altitude=min_altitude, max_altitude=max_altitude)
+        elif control_type == "speed":
+            min_speed = target_value + min_dev
+            max_speed = target_value + max_dev
+            aircraft_config["start_config"] = aircraft_preset.get_start_config(min_speed=min_speed, max_speed=max_speed)
+        elif control_type == "heading":
+            min_heading = target_value + min_dev
+            max_heading = target_value + max_dev
+            aircraft_config["start_config"] = aircraft_preset.get_start_config(min_heading=min_heading, max_heading=max_heading)
 
         # Store control type and simplified spaces flag for post-init setup
         env_config["control_type"] = control_type
+        print(f"simplified_spaces: {simplified_spaces}")
         env_config["simplified_spaces"] = simplified_spaces
 
         # Create task configuration
@@ -195,6 +238,7 @@ class ControlFlyerEnv(SingleAgentEnv):
 
         # After initialization, set up simplified spaces if requested
         if simplified_spaces and not use_full_aircraft:
+            print("running simplified_spaces")
             action_config = aircraft_preset.default()["config"]
 
             # Create simplified spaces
@@ -300,9 +344,10 @@ class ControlFlyerEnv(SingleAgentEnv):
 class TaskSpecificDubinsAction(ActionType):
     """Simplified action space for specific control tasks"""
 
-    def __init__(self, control_type: str, config: Dict[str, Any]):
+    def __init__(self, control_type: str, config: Dict[str, Any], normalize: bool = True):
         self.control_type = control_type
         self.config = config
+        self.normalize = normalize
 
         # Define action spaces based on control type
         if control_type == "altitude":
@@ -327,6 +372,13 @@ class TaskSpecificDubinsAction(ActionType):
     @property
     def space(self) -> spaces.Space:
         """Return simplified action space for specific task"""
+        if self.normalize:
+            return spaces.Box(
+                low=-1.0,
+                high=1.0,
+                shape=(len(self.features),),
+                dtype=np.float32
+            )
         return spaces.Box(
             low=np.array([b[0] for b in self.bounds.values()]),
             high=np.array([b[1] for b in self.bounds.values()]),
@@ -337,6 +389,12 @@ class TaskSpecificDubinsAction(ActionType):
         """Convert simplified action to full action dict"""
         if not isinstance(action, np.ndarray):
             action = np.array(action, dtype=np.float32)
+
+        # Denormalize if necessary
+        if self.normalize:
+            for i, feature in enumerate(self.features):
+                bounds = self.bounds[feature]
+                action[i] = (action[i] + 1.0) * (bounds[1] - bounds[0]) / 2.0 + bounds[0]
 
         # Create full action dict with defaults
         full_action = {
@@ -358,29 +416,26 @@ class TaskSpecificDubinsAction(ActionType):
 class TaskSpecificDubinsObservation(ObservationType):
     """Simplified observation space for specific control tasks"""
 
-    def __init__(self, control_type: str, config: Dict[str, Any]):
+    def __init__(self, control_type: str, config: Dict[str, Any], normalize: bool = True):
         self.control_type = control_type
         self.config = config
+        self.normalize = normalize
 
         # Define relevant features and bounds based on task
         if control_type == "altitude":
-            self.features = ["altitude", "vertical_speed"]
+            self.features = ["altitude"]
             self.bounds = {
-                "altitude": (0, 20000),  # 0 to 20 km
-                "vertical_speed": (-config["max_descent_rate"], config["max_climb_rate"])
+                "altitude": (0, 2000),  # 0 to 2 km
             }
         elif control_type == "heading":
-            self.features = ["heading", "bank_angle"]
+            self.features = ["heading"]
             self.bounds = {
                 "heading": (-np.pi, np.pi),
-                "bank_angle": (-np.radians(config["max_bank_angle"]),
-                             np.radians(config["max_bank_angle"]))
             }
         elif control_type == "speed":
-            self.features = ["airspeed", "acceleration"]
+            self.features = ["airspeed"]
             self.bounds = {
                 "airspeed": (config["min_speed"], config["max_speed"]),
-                "acceleration": (-config["acceleration"], config["acceleration"])
             }
         else:
             raise ValueError(f"Unsupported control type: {control_type}")
@@ -388,6 +443,13 @@ class TaskSpecificDubinsObservation(ObservationType):
     @property
     def space(self) -> spaces.Space:
         """Return simplified observation space for specific task"""
+        if self.normalize:
+            return spaces.Box(
+                low=-1.0,
+                high=1.0,
+                shape=(len(self.features),),
+                dtype=np.float32
+            )
         return spaces.Box(
             low=np.array([b[0] for b in self.bounds.values()]),
             high=np.array([b[1] for b in self.bounds.values()]),
@@ -401,6 +463,10 @@ class TaskSpecificDubinsObservation(ObservationType):
             value = raw_obs.get(feature, 0.0)
             bounds = self.bounds[feature]
             value = np.clip(value, bounds[0], bounds[1])
+
+            if self.normalize:
+                # Normalize to [-1, 1]
+                value = 2.0 * (value - bounds[0]) / (bounds[1] - bounds[0]) - 1.0
             obs.append(value)
 
         return np.array(obs, dtype=np.float32)

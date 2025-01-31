@@ -34,8 +34,6 @@ class DubinsObservation(ObservationType):
         self.normalize = normalize
         self.features = ["x", "y", "heading", "altitude", "airspeed"]
 
-        print(f"self.normalize: {self.normalize}")
-
         self._default_bounds = {
             "x": None,  # Unbounded
             "y": None,  # Unbounded
@@ -136,13 +134,13 @@ class DubinsObservation(ObservationType):
                         # Normalize altitude relative to typical flight levels
                         scale = 1000.0  # 1km reference scale
                         value = value / scale
+                    obs.append(value)
                 else:
                     # Normalize bounded values to [-1, 1]
                     low, high = bounds
                     if high > low:  # Avoid division by zero
                         value = 2.0 * (value - low) / (high - low) - 1.0
                     obs.append(value)
-                print(f"Obs is under normalize: {obs}")
             else:
                 obs.append(value)
 

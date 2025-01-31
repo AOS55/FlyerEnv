@@ -31,9 +31,11 @@ class Aircraft:
 class ConnectionConfig:
     """Configuration for TCP connection to Rust server"""
     host: str = "127.0.0.1"
-    connection_timeout: float = 30.0
-    response_timeout: float = 5.0
+    connection_timeout: float = 120.0
+    response_timeout: float = 120.0
     retry_interval: float = 0.1
+    max_retries: int = 3
+    backoff_factor: float = 2.0
 
 class AbstractEnv(ABC):
     """
@@ -165,43 +167,88 @@ class AbstractEnv(ABC):
                 self._sock.settimeout(original_timeout)
 
     def _send_command(self, command: dict, timeout: float = None) -> dict:
-        """Send command to Rust server and receive response"""
-
+        """Send command to Rust server with retry mechanism"""
         if not self._connected:
             raise RuntimeError("Not connected to server")
 
         timeout = timeout or self._connection_config.response_timeout
         command_str = json.dumps(command) + "\n"
-        with self._managed_connection(timeout) as sock:
+
+        retries = 0
+        last_exception = None
+
+        while retries < self._connection_config.max_retries:
             try:
-                sock.sendall(command_str.encode())
-                if list(command.keys())[0] == "Render":
-                    return self._read_render_response(timeout)
-                else:
-                    return self._read_response(timeout)
+                with self._managed_connection(timeout) as sock:
+                    sock.sendall(command_str.encode())
+                    if list(command.keys())[0] == "Render":
+                        return self._read_render_response(timeout)
+                    else:
+                        return self._read_response(timeout)
+
             except (socket.timeout, json.JSONDecodeError) as e:
-                raise RuntimeError(f"Command failed: {e}")
+                last_exception = e
+                retries += 1
+
+                if retries < self._connection_config.max_retries:
+                    # Calculate backoff time
+                    backoff_time = self._connection_config.retry_interval * \
+                                 (self._connection_config.backoff_factor ** retries)
+                    print(f"Command failed, retrying in {backoff_time:.2f}s (attempt {retries + 1}/{self._connection_config.max_retries})")
+                    time.sleep(backoff_time)
+
+                    # Try to reconnect if needed
+                    if not self._connected:
+                        try:
+                            self._reconnect()
+                        except Exception as conn_err:
+                            print(f"Reconnection failed: {conn_err}")
+                            continue
+
+        # If we get here, all retries failed
+        raise RuntimeError(f"Command failed after {retries} retries. Last error: {last_exception}")
 
     def _read_response(self, timeout: float) -> dict:
-        """Read and parse response from socket with timeout"""
+        """Read and parse response from socket with improved timeout handling"""
         buffer = ""
         start_time = time.time()
 
-        while time.time() - start_time < timeout:
+        while True:
+            if time.time() - start_time > timeout:
+                raise socket.timeout("Timeout waiting for complete response")
+
             try:
                 chunk = self._sock.recv(4096).decode()
                 if not chunk:
-                    time.sleep(self._connection_config.retry_interval)
-                    continue
+                    # Connection closed by server
+                    raise RuntimeError("Server closed connection")
 
                 buffer += chunk
                 if '\n' in buffer:
                     message, buffer = buffer.split('\n', 1)
-                    return json.loads(message)
+                    try:
+                        return json.loads(message)
+                    except json.JSONDecodeError as e:
+                        raise RuntimeError(f"Invalid JSON response: {e}")
+
             except socket.timeout:
+                # Short timeout, continue reading
                 continue
 
-        raise TimeoutError("Timeout waiting for response")
+    def _reconnect(self):
+        """Attempt to reconnect to the server"""
+        self._cleanup_socket()
+
+        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
+        try:
+            self._sock.connect((self._connection_config.host, self.port))
+            self._connected = True
+            print("Successfully reconnected to server")
+        except Exception as e:
+            self._connected = False
+            raise RuntimeError(f"Reconnection failed: {e}")
 
     def _read_render_response(self, timeout: float) -> dict:
         """Read length-prefixed response from socket"""
@@ -266,8 +313,8 @@ class AbstractEnv(ABC):
         if response.get("status") != "ready":
             raise RuntimeError(f"Failed to initialize: {response}")
 
-        normalize_observations = self.config.get("normalize_observations", False)
-        normalize_actions = self.config.get("normalize_actions", False)
+        normalize_observations = self.config.get("normalize_observations", True)
+        normalize_actions = self.config.get("normalize_actions", True)
 
         # Setup controlled vehicles
         for aircraft_info in response["aircraft"]:

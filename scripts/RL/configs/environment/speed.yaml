@@ -1,0 +1,7 @@
+# Environment Properties
+seed: 42
+control_type: "speed"
+target_value: 100.0
+tolerance: 5.0
+eval_episode_length: 100
+start_deviation: 20.0

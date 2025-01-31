@@ -19,8 +19,9 @@ class GoalFlyerEnv(SingleAgentEnv):
         heading_range: Tuple[float, float] = (0.0, 2 * np.pi),
         origin: Tuple[float, float, float] = (0.0, 0.0, -500.0),
         tolerance: float = 50.0,
-        reward_type: str = "dense",
+        reward_type: str = "Dense",
         use_full_aircraft: bool = False,
+        episode_length: Optional[int] = 1000,
         env_config: Optional[Dict[str, Any]] = None
     ) -> None:
         """
@@ -67,11 +68,17 @@ class GoalFlyerEnv(SingleAgentEnv):
             "type": aircraft_type,
             "action_type": "Continuous",
             "observation_type": "Continuous",
+            "start_config": {
+                "type": "fixed",
+                "config": {
+                    "position": {"x": origin[0], "y": origin[1], "z": origin[2]},  # Start at origin
+                }
+            },
             "task_config": {
                 "type": "Goal",
                 "config": {
-                    "position": goal_position.tolist(),
-                    "reward_type": reward_type.capitalize(),
+                    "position": {"x": goal_position[0], "y": goal_position[1], "z": goal_position[2]},
+                    "reward_type": reward_type,
                     "tolerance": float(tolerance)
                 }
             }

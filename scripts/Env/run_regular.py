@@ -7,6 +7,7 @@ flyer_env.register_flyer_envs()
 
 def main():
     env = gym.make("flyer_control-v1",
+        seed=5,
         control_type="altitude",
         target_value=500.0,
         tolerance=10.0,

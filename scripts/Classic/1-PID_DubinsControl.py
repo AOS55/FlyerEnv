@@ -196,8 +196,9 @@ def main():
         print(f"Target: {scenario['target_value']}, Tolerance: {scenario['tolerance']}")
 
         env = gym.make("flyer_control-v1",
-            render_mode="rgb_array",
             seed=42,
+            render_mode="rgb_array",
+            start_deviation=100.0,
             control_type=scenario['control_type'],
             target_value=scenario['target_value'],
             tolerance=scenario['tolerance']

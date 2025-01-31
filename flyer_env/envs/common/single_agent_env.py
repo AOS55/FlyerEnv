@@ -20,7 +20,7 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
     ) -> None:
 
         # print(f"render_mode: {render_mode}")
-        print(f"config: {config}")
+        # print(f"config: {config}")
         super().__init__(config, render_mode, connection_config, debug_level)
 
         if len(self.controlled_vehicles) != 1:
