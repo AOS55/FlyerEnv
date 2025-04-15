@@ -50,7 +50,7 @@ class AbstractEnv(ABC):
         config: dict = None,
         render_mode: Optional[str] = None,
         connection_config: Optional[ConnectionConfig] = None,
-        debug_level: str = "warn"
+        debug_level: str = "info"
     ) -> None:
 
         super().__init__()
@@ -86,11 +86,23 @@ class AbstractEnv(ABC):
             self.close()
             raise
 
+    # @staticmethod
+    # def stream_logs(process):
+    #     """Stream logs from process stderr to console"""
+    #     for line in iter(process.stderr.readline, ''):
+    #         print(f"[SERVER] {line.strip()}", file=sys.stderr, flush=True)
+
     @staticmethod
     def stream_logs(process):
         """Stream logs from process stderr to console"""
-        for line in iter(process.stderr.readline, ''):
-            print(f"[SERVER] {line.strip()}", file=sys.stderr, flush=True)
+        print("Log thread started - waiting for server logs...")
+        try:
+            for line in process.stderr:
+                line = line.strip()
+                if line:
+                    print(f"[SERVER] {line}", file=sys.stderr, flush=True)
+        except Exception as e:
+            print(f"Error in log streaming: {e}", file=sys.stderr)
 
     def _start_game(self) -> None:
         """Initialize connection to Rust server"""
@@ -119,6 +131,8 @@ class AbstractEnv(ABC):
                 daemon=True
             )
             self._log_thread.start()
+
+            print(f"self._log_thread: {self._log_thread}")
 
         except FileNotFoundError as e:
             raise RuntimeError(
@@ -318,7 +332,7 @@ class AbstractEnv(ABC):
 
         # Setup controlled vehicles
         for aircraft_info in response["aircraft"]:
-            # print(f"aircraft_info: {aircraft_info}")
+            print(f"aircraft_info: {aircraft_info}")
             aircraft_type = list(aircraft_info["config"].keys())[0]
             aircraft_config = aircraft_info["config"][aircraft_type]  # limits from aircraft config
 
