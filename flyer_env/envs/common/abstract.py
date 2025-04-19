@@ -86,12 +86,6 @@ class AbstractEnv(ABC):
             self.close()
             raise
 
-    # @staticmethod
-    # def stream_logs(process):
-    #     """Stream logs from process stderr to console"""
-    #     for line in iter(process.stderr.readline, ''):
-    #         print(f"[SERVER] {line.strip()}", file=sys.stderr, flush=True)
-
     @staticmethod
     def stream_logs(process):
         """Stream logs from process stderr to console"""
@@ -131,8 +125,6 @@ class AbstractEnv(ABC):
                 daemon=True
             )
             self._log_thread.start()
-
-            print(f"self._log_thread: {self._log_thread}")
 
         except FileNotFoundError as e:
             raise RuntimeError(
@@ -327,8 +319,8 @@ class AbstractEnv(ABC):
         if response.get("status") != "ready":
             raise RuntimeError(f"Failed to initialize: {response}")
 
-        normalize_observations = self.config.get("normalize_observations", True)
-        normalize_actions = self.config.get("normalize_actions", True)
+        normalize_observations = self.config.get("normalize_observations", False)
+        normalize_actions = self.config.get("normalize_actions", False)
 
         # Setup controlled vehicles
         for aircraft_info in response["aircraft"]:
