@@ -162,6 +162,7 @@ class FullObservation(ObservationType):
             obs_bounds: Optional bounds for each observation dimension
         """
         self.normalize = normalize
+        self.normalize = False
         self.features = [
             "x", "y", "z",           # Position
             "roll", "pitch", "yaw",  # Orientation
@@ -273,7 +274,7 @@ class FullObservation(ObservationType):
                     obs.append(value)
             else:
                 obs.append(value)
-
+        # print(f"obs: {obs}")
         return np.array(obs, dtype=np.float32)
 
 def observation_factory(aircraft_type: str, observation_type: str, config: Optional[Dict] = None, **kwargs) -> ObservationType:
