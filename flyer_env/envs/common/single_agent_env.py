@@ -61,7 +61,6 @@ class SingleAgentEnv(AbstractEnv, gym.Env):
         processed_action = self.vehicle.action.act(action)
 
         # print(f"single agent action: {processed_action}")
-
         # Send to server with aircraft ID
         response = self._send_command({
             "Step": {
