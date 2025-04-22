@@ -562,7 +562,7 @@ class TrajectoryFollowingController:
     """Controller for following pre-computed trajectories."""
     def __init__(self,
         altitude_gains=(1.5, 0.05, 0.4),
-        heading_gains=(1.0, 0.0, 0.4),
+        heading_gains=(0.8, 0.1, 0.3),
         speed_gains=(2.0, 0.1, 0.4),
         cross_track_gains=(0.6, 0.0, 0.2)
     ):
@@ -575,7 +575,9 @@ class TrajectoryFollowingController:
         self.heading_pid = PIDController(
             kp=heading_gains[0],
             ki=heading_gains[1],
-            kd=heading_gains[2])
+            kd=heading_gains[2],
+            rate_limit=0.05
+        )
         self.speed_pid = PIDController(
             kp=speed_gains[0],
             ki=speed_gains[1],
@@ -671,7 +673,7 @@ class TrajectoryFollowingController:
         speed_error = target_speed - obs['airspeed']
         altitude_error = target_pos[2] - current_pos[2]
 
-        print(f'target_pos: {target_pos}, current_pos: {current_pos}, altitude_error: {altitude_error}')
+        # print(f'target_pos: {target_pos}, current_pos: {current_pos}, altitude_error: {altitude_error}')
         # print(f"target_speed: {target_speed}, current_speed: {obs['airspeed']}, speed_error: {speed_error}")
 
         # Generate control inputs
@@ -698,14 +700,14 @@ class TrajectoryFollowingController:
         return ((angle + np.pi) % (2 * np.pi)) - np.pi
 
 class PIDController:
-    def __init__(self, kp: float, ki: float, kd: float, dt: float = 1/60):
+    def __init__(self, kp: float, ki: float, kd: float, dt: float = 1/60, rate_limit: float = 1.0):
         self.kp = kp
         self.ki = ki
         self.kd = kd
         self.dt = dt
         self.windup_limit = 20.0
         self.prev_output = 0.0
-        self.max_rate = 1.0
+        self.max_rate = rate_limit
         self.reset()
 
     def reset(self):
@@ -757,14 +759,26 @@ def plot_results(obs_history: Dict[str, list], goal_position: np.ndarray,
     """Plot the results including planned path and actual trajectory."""
     fig = plt.figure(figsize=(15, 10))
 
+    plot_colours = {
+            'track': '#1E88E5',  # Blue
+            'plan': '#43A047',  # Green
+            'goal': '#F4511E',  # Orange
+        }
+
     # 3D trajectory plot
     ax1 = fig.add_subplot(221, projection='3d')
-    ax1.plot(obs_history['x'], obs_history['y'], obs_history['altitude'],
-             'b-', label='Actual Path')
-    ax1.plot(waypoints[:, 0], waypoints[:, 1],
-             [-goal_position[2]]*len(waypoints), 'g--', label='Planned Path')
-    ax1.scatter(goal_position[0], goal_position[1], -goal_position[2],
-                color='r', marker='*', s=100, label='Goal')
+    ax1.plot(
+        obs_history['x'], obs_history['y'], obs_history['altitude'],
+        color=plot_colours['track'], label='Actual Path'
+    )
+    ax1.plot(
+        waypoints[:, 0], waypoints[:, 1],
+        [-goal_position[2]]*len(waypoints), color=plot_colours['plan'], linestyle='--', label='Planned Path'
+    )
+    ax1.scatter(
+        goal_position[0], goal_position[1], -goal_position[2],
+        color=plot_colours['goal'], marker='*', s=100, label='Goal'
+    )
     ax1.set_xlabel('X (m)')
     ax1.set_ylabel('Y (m)')
     ax1.set_zlabel('Altitude (m)')
@@ -773,10 +787,10 @@ def plot_results(obs_history: Dict[str, list], goal_position: np.ndarray,
 
     # Top-down view
     ax2 = fig.add_subplot(222)
-    ax2.plot(obs_history['x'], obs_history['y'], 'b-', label='Actual Path')
-    ax2.plot(waypoints[:, 0], waypoints[:, 1], 'g--', label='Planned Path')
+    ax2.plot(obs_history['x'], obs_history['y'], color=plot_colours['track'], linestyle='-', label='Actual Path')
+    ax2.plot(waypoints[:, 0], waypoints[:, 1], color=plot_colours['plan'], linestyle='--', label='Planned Path')
     ax2.scatter(goal_position[0], goal_position[1],
-                color='r', marker='*', s=100, label='Goal')
+                color=plot_colours['goal'], marker='*', s=100, label='Goal')
     ax2.set_xlabel('X (m)')
     ax2.set_ylabel('Y (m)')
     ax2.grid(True)
@@ -786,9 +800,9 @@ def plot_results(obs_history: Dict[str, list], goal_position: np.ndarray,
 
     # Control inputs
     ax3 = fig.add_subplot(223)
-    ax3.plot(obs_history['vertical_speed'], 'b-', label='Vertical Speed')
-    ax3.plot(obs_history['bank_angle'], 'g-', label='Bank Angle')
-    ax3.plot(obs_history['acceleration'], 'r-', label='Acceleration')
+    ax3.plot(obs_history['vertical_speed'], color=plot_colours['track'], linestyle='-', label='Vertical Speed')
+    ax3.plot(obs_history['bank_angle'], color=plot_colours['plan'], linestyle='--', label='Bank Angle')
+    ax3.plot(obs_history['acceleration'], color=plot_colours['goal'], linestyle='-.', label='Acceleration')
     ax3.set_xlabel('Time Step')
     ax3.set_ylabel('Control Values')
     ax3.grid(True)
@@ -817,25 +831,15 @@ def plot_results(obs_history: Dict[str, list], goal_position: np.ndarray,
         print("Warning: Empty trajectory")
         tracking_error = np.zeros(actual_len)
 
-    ax4.plot(tracking_error, 'purple', label='Tracking Error')
+    rewards = obs_history['reward']
+    ax4.plot(rewards, color='black', label='Reward')
     ax4.set_xlabel('Time Step')
-    ax4.set_ylabel('Error (m)')
+    ax4.set_ylabel('Reward')
     ax4.grid(True)
-    ax4.legend()
-    ax4.set_title('Path Tracking Error')
+    # ax4.legend()
+    ax4.set_title('Reward over Time')
 
-    plt.tight_layout()
-    plt.show()
-
-    plt.figure(figsize=(8, 6))
-    plt.plot(waypoints[:, 0], waypoints[:, 1], 'go-', label="Waypoints")
-    plt.plot(trajectory[:, 0], trajectory[:, 1], 'b-', label="Trajectory")
-    plt.scatter(goal_position[0], goal_position[1], color='r', marker='*', s=100, label='Goal')
-    plt.xlabel("X (m)")
-    plt.ylabel("Y (m)")
-    plt.title("Planned Path vs. Waypoints")
-    plt.legend()
-    plt.grid(True)
+    plt.savefig('results.pdf')
     plt.show()
 
 def main():
@@ -843,10 +847,10 @@ def main():
     env = gym.make('flyer_goal-v1',
         seed=41,
         render_mode="rgb_array",
-        distance_range=(2000.0, 5000.0),  # Fixed distance for demo
-        altitude_range=(-500.0, -500.0),   # Fixed altitude for demo
-        heading_range=(np.pi/4, np.pi/4),  # Fixed heading for demo
-        tolerance=100.0,
+        goal_distance_range=(2000.0, 5000.0),  # Changed from distance_range
+        goal_altitude_range_agl=(500.0, 500.0),  # Changed from altitude_range
+        goal_heading_range_rad=(np.pi/4, np.pi/4),  # Changed from heading_range
+        goal_tolerance=100.0,  # Changed from tolerance
         reward_type="Dense"
     )
 
@@ -864,9 +868,32 @@ def main():
     obs_history = {}
 
     # Get goal position from environment
-    goal_dict = env.unwrapped.config["aircraft_config"][0]["task_config"]["config"]["position"]
-    goal_position = np.array([goal_dict['x'], goal_dict['y'], goal_dict['z']])
-    print(f"Goal position: {goal_position}")
+    # Get goal position from environment info after reset
+    try:
+        # First try to get it from info
+        goal_position_dict = info.get("goal_position")
+        if goal_position_dict and isinstance(goal_position_dict, dict):
+            goal_position = np.array([goal_position_dict['x'], goal_position_dict['y'], goal_position_dict['z']])
+            print(f"Goal position from info: {goal_position}")
+        else:
+            # If that didn't work, try to extract from the task config in the unwrapped env
+            unwrapped_env = env.unwrapped
+            goal_pos_data = unwrapped_env.controlled_vehicles[0].config
+            # Might need to adjust the exact way to access this based on internal structure
+            goal_position = np.array([
+                goal_pos_data["task_config"]["config"]["position"]["x"],
+                goal_pos_data["task_config"]["config"]["position"]["y"],
+                goal_pos_data["task_config"]["config"]["position"]["z"]
+            ])
+            print(f"Goal position from unwrapped env: {goal_position}")
+    except (KeyError, AttributeError) as e:
+        # If all else fails, hardcode the position or generate it
+        print(f"Could not access goal position: {e}")
+        # This assumes the goal is at a 45-degree angle from start at distance of 2750m
+        # and an altitude of 500m - modify as needed based on your environment setup
+        goal_position = np.array([1946.5, 1946.5, 500.0])
+        print(f"Using fallback goal position: {goal_position}")
+
 
     # Get initial state
     obs_dict = env.unwrapped._observation.to_dict(obs)

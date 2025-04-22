@@ -1,7 +1,5 @@
 import gymnasium as gym
 import flyer_env
-import time
-import numpy as np
 
 flyer_env.register_flyer_envs()
 
@@ -11,7 +9,8 @@ def main():
         control_type="altitude",
         target_value=500.0,
         tolerance=10.0,
-        env_config={"max_episode_steps": 10, "steps_per_action": 5}
+        use_full_aircraft=True,
+        max_episode_steps=True
     )
 
 

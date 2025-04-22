@@ -303,7 +303,6 @@ def train(cfg: DictConfig):
         start_deviation=cfg.environment.start_deviation,
         control_type=cfg.environment.control_type,
         target_value=cfg.environment.target_value,
-        simplified_spaces=True,
         tolerance=cfg.environment.tolerance
     )
 

@@ -1,3 +1,5 @@
+import os
+import csv
 import matplotlib.pyplot as plt
 import flyer_env
 import gymnasium as gym
@@ -54,7 +56,7 @@ class DubinsController:
         if control_type == "altitude":
             self.pid = PIDController(kp=2.0, ki=0.1, kd=0.3)
         elif control_type == "heading":
-            self.pid = PIDController(kp=1.0, ki=0.1, kd=0.5)
+            self.pid = PIDController(kp=0.8, ki=0.1, kd=0.3)
         elif control_type == "speed":
             self.pid = PIDController(kp=3.0, ki=0.1, kd=0.3)
 
@@ -86,7 +88,7 @@ class DubinsController:
             current_heading = obs['heading']
             error = self.normalize_angle(self.target - current_heading)
             bank_angle = self.pid.update(error)
-
+            print(f"bank_angle: {bank_angle}")
             # Clamp bank angle to reasonable values
             bank_angle = np.clip(bank_angle, -np.pi/4, np.pi/4)
 
@@ -164,7 +166,7 @@ def plot_tracking(data, control_type: str, target_value=500.0, tolerance=10.0):
     plt.show()
 
 def update_history(obs_history: Dict[str, list], obs: Dict[str, float], act: Dict[str, float], reward: float) -> Dict[str, list]:
-    # Update all state variables
+    # Update all state variablese
     for key in obs:
         if key not in obs_history:
             obs_history[key] = []
@@ -182,7 +184,22 @@ def update_history(obs_history: Dict[str, list], obs: Dict[str, float], act: Dic
 
     return obs_history
 
-def main():
+def save_to_csv(obs_history: Dict[str, list], control_type: str, output_dir: str):
+    os.makedirs(output_dir, exist_ok=True)
+    file_path = os.path.join(output_dir, f"{control_type}_data.csv")
+
+    with open(file_path, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        headers = list(obs_history.keys())
+        writer.writerow(headers)
+
+        for i in range(len(next(iter(obs_history.values())))):
+            row = [obs_history[key][i] for key in headers]
+            writer.writerow(row)
+
+    print(f"Data saved to {file_path}")
+
+def main(output_dir: str = None):
 
     # Control task parameters
     scenarios = [
@@ -234,6 +251,10 @@ def main():
 
         plot_tracking(obs_history, scenario['control_type'], scenario['target_value'], scenario['tolerance'])
 
+        if output_dir:
+            save_to_csv(obs_history, scenario['control_type'], output_dir)
+
+
 if __name__ == "__main__":
     flyer_env.register_flyer_envs()
-    main()
+    main(output_dir="run_output")

@@ -53,7 +53,6 @@ def run_and_plot(
             target_value=1000.0,
             tolerance=500.0, # Wider tolerance as we're not controlling to target here
             # Make episode long enough to see effects
-            env_config={"max_episode_steps": 300, "steps_per_action": 5}
         )
         print(f"[SUCCESS] Raw environment created. Type: {type(wrapped_env)}")
 
