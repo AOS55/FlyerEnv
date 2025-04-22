@@ -1,8 +1,6 @@
 import os
-from typing import Dict, List, Optional, Text, Tuple, TypeVar
-import gymnasium as gym
-from gymnasium import spaces
-import numpy as np
+from typing import List, Optional, Tuple, TypeVar
+
 import json
 import socket
 import sys

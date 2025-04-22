@@ -22,3 +22,8 @@ def register_flyer_envs():
         id="flyer_goal-v1",
         entry_point="flyer_env.envs.single_agent.goal:GoalFlyerEnv"
     )
+
+    register(
+        id="flyer_trajectory-v1",
+        entry_point="flyer_env.envs.single_agent.trajectory:TrajectoryFlyerEnv"
+    )
