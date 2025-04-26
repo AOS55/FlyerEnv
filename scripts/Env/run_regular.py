@@ -5,11 +5,12 @@ flyer_env.register_flyer_envs()
 
 def main():
     env = gym.make("flyer_control-v1",
+        render_mode="rgb_array",
         seed=5,
         control_type="altitude",
         target_value=500.0,
         tolerance=10.0,
-        use_full_aircraft=True,
+        use_full_aircraft=False,
         max_episode_steps=True
     )
 
@@ -19,7 +20,7 @@ def main():
     while not done:
         action = env.action_space.sample()
         obs, reward, terminated, truncated, info = env.step(action)
-        done = terminated or truncated
+        done = truncated
 
 
 if __name__ == "__main__":
