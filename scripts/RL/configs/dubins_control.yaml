@@ -17,4 +17,4 @@ total_timesteps: 1000000
 # Misc
 use_wandb: False
 checkpoint_freq: 10000
-resume_training: false
+resume_training: False

@@ -1,0 +1,24 @@
+# --- Select the default environment ---
+defaults:
+  - environment: full_altitude # Default to full altitude control
+
+# --- Project Settings ---
+project_name: FullControl-TwinOtter # Give it a distinct project name
+seed: 42
+
+# --- SAC Properties ---
+learning_rate: 0.0003
+buffer_size: 1000000
+batch_size: 256
+tau: 0.005
+gamma: 0.99
+train_freq: 10
+gradient_steps: 10
+total_timesteps: 2000000
+
+# --- Callbacks & Misc ---
+use_wandb: False
+checkpoint_freq: 25000
+eval_freq: 25000
+n_eval_episodes: 5
+resume_training: False

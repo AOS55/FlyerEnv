@@ -1,0 +1,14 @@
+# Environment Properties for Full Aircraft (Twin Otter) - Heading Control
+use_full_aircraft: True
+control_type: "heading"
+target_value: 0.0 # Target heading in radians (e.g., North)
+tolerance: 0.15 # Radians tolerance (adjust as needed)
+start_deviation: 0.3 # Radians deviation (adjust as needed)
+
+# Optional Trim
+# trim_condition_params:
+#   type: "StraightAndLevel"
+#   airspeed: 80.0
+
+# seed: 42 # Can inherit seed from main config or set here
+# eval_episode_length: 100
