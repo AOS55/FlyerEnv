@@ -1,0 +1,16 @@
+project_name: FlyerRL_GoalDubinsDense
+total_timesteps: 1000000
+
+env:
+  name: flyer_goal-v1
+  # Override physics via defaults list (or directly if preferred)
+  defaults:
+    - /common/physics: dubins_physics # Explicitly choose Dubins
+  params:
+    reward_type: "Dense" # Keep it dense for faster learning initially
+    use_full_aircraft: false # Ensure consistency
+    # Other goal params can be adjusted as needed
+
+# Choose an agent suitable for Dubins, maybe adjust params
+agent: # Defaults to SAC from train.yaml, might need tuning
+  learning_rate: 0.0003 # Example adjustment
