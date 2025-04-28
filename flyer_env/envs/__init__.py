@@ -5,3 +5,5 @@
 from flyer_env.envs.single_agent.trajectory import TrajectoryFlyerEnv
 from flyer_env.envs.single_agent.control import ControlFlyerEnv
 from flyer_env.envs.single_agent.goal import GoalFlyerEnv
+# from flyer_env.envs.single_agent.runway import RunwayFlyerEnv
+# from flyer_env.envs.single_agent.landing import LandingFlyerEnv

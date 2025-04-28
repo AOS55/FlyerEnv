@@ -1,13 +1,8 @@
-# import os
 from importlib.metadata import version
 
 __version__ = version("flyer-env")
 
-# os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-
 from gymnasium.envs.registration import register
-
-# # from flyer_env.wrappers import RecordVideo
 
 def register_flyer_envs():
     """Import the envs module so that the environs register themselves."""
@@ -27,3 +22,13 @@ def register_flyer_envs():
         id="flyer_trajectory-v1",
         entry_point="flyer_env.envs.single_agent.trajectory:TrajectoryFlyerEnv"
     )
+
+    # register(
+    #     id="flyer_runway-v1",
+    #     entry_point="flyer_env.envs.single_agent.runway:RunwayFlyerEnv"
+    # )
+
+    # register(
+    #     id="flyer_landing-v1",
+    #     entry_point="flyer_env.envs.single_agent.landing:LandingFlyerEnv"
+    # )
