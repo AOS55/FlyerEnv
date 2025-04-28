@@ -302,8 +302,6 @@ def train(cfg: DictConfig):
 
     print(f"cfg: {cfg}")
 
-    print(f"cfg: {cfg}")
-
     if cfg.get("seed") is not None:
         seed_everything(cfg.seed)
 
