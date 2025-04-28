@@ -1,0 +1,42 @@
+# configs/experiment/control_dubins_heading.yaml
+# Heading control experiment with Dubins aircraft model
+# This version redefines the entire 'env' group for the experiment.
+
+# --- Global overrides ---
+project_name: FlyerRL_ControlDubinsHeading
+total_timesteps: 1000000
+
+# --- Redefine the 'env' group entirely for this experiment ---
+env:
+  # Specify the environment name directly
+  name: flyer_control-v1
+
+  # Specify the physics model default for *this* env configuration
+  defaults:
+    - /common/physics: dubins_physics
+
+  # Define all necessary parameters for this specific env instance
+  params:
+    # Reference global params (defined in train.yaml or overridden here)
+    max_episode_steps: ${max_episode_steps}
+    time_step: ${time_step}
+    normalize_observations: ${normalize_observations}
+    normalize_actions: ${normalize_actions}
+    render_mode: ${render_mode}
+    seed: ${seed}
+
+    # Experiment-specific parameters for ControlFlyerEnv
+    control_type: "heading"
+    target_value: 0.0
+    tolerance: 0.1
+    start_deviation: 0.5
+    use_full_aircraft: false # CRITICAL: Use Dubins model
+    trim_condition_params: null # Explicitly null for Dubins
+
+# --- Override the 'agent' group if needed ---
+# This overrides the agent loaded by `agent: sac` in train.yaml's defaults
+agent:
+  learning_rate: 0.0003 # Example override for SAC
+  # Add other agent params here to override sac defaults if necessary
+# --- Callbacks are likely inherited correctly from train.yaml defaults ---
+# callbacks: ... (only if overrides needed)

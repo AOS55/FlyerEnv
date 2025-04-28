@@ -194,7 +194,7 @@ class MetricsCallback(BaseCallback):
     def _on_step(self) -> bool:
         """Update metrics on each step"""
         # Get info from the last transition
-        info = self.locals['infos'][0]
+        # info = self.locals['infos'][0]
         reward = self.locals['rewards'][0]
         done = self.locals['dones'][0]
 
@@ -260,14 +260,14 @@ def create_callbacks(log_dir: str, cfg: Dict) -> CallbackList:
     """Create all callbacks for training"""
     metrics_callback = MetricsCallback(log_dir, use_wandb=cfg.use_wandb)
     checkpoint_callback = CheckpointCallback(
-        save_freq=cfg.checkpoint_freq,
+        save_freq=cfg.callbacks.checkpoint_freq,  # Changed from cfg.checkpoint_freq
         save_path=os.path.join(log_dir, 'checkpoints'),
         name_prefix="sac_model"
     )
     eval_callback = EvalPlottingCallback(
-        eval_freq=cfg.get('eval_freq', 10000),  # Evaluate every 10k steps by default
+        eval_freq=cfg.callbacks.eval_freq,  # Changed from cfg.get('eval_freq', 10000)
         log_dir=log_dir,
-        n_eval_episodes=cfg.get('n_eval_episodes', 3)  # Run 3 evaluation episodes by default
+        n_eval_episodes=cfg.callbacks.n_eval_episodes  # Changed from cfg.get('n_eval_episodes', 3)
     )
 
     return CallbackList([metrics_callback, checkpoint_callback, eval_callback])
@@ -279,10 +279,12 @@ def setup_logging() -> str:
     os.makedirs(log_dir, exist_ok=True)
     return log_dir
 
-@hydra.main(version_base="1.1", config_path="configs", config_name="dubins_control")
+@hydra.main(version_base="1.1", config_path="configs", config_name="1-control_dubins_heading")
 def train(cfg: DictConfig):
     # Setup logging directory
     log_dir = setup_logging()
+
+    print(f"cfg: {cfg}")
 
     # Save full config
     OmegaConf.save(cfg, os.path.join(log_dir, 'config.yaml'))
@@ -297,28 +299,29 @@ def train(cfg: DictConfig):
         )
 
     # Create environment
-    env = gym.make("flyer_control-v1",
-        render_mode="rgb_array",
-        seed=cfg.seed,
-        start_deviation=cfg.environment.start_deviation,
-        control_type=cfg.environment.control_type,
-        target_value=cfg.environment.target_value,
-        tolerance=cfg.environment.tolerance
-    )
+    logging.info("Creating environment...")
+    env = None
+    try:
+        env_cfg = cfg.env
+        env_id = env_cfg.name
+        env_params_dict = OmegaConf.to_container(env_cfg.params, resolve=True)
+        env = gym.make(env_id, **env_params_dict)
+        logging.info(f"Instantiated environment: ID='{env_id}', Class='{type(env)}'")
+    except Exception as e:
+        logging.error(f"Failed environment creation: gym.make(ID='{env_cfg.get('name', 'N/A')}'): {e}")
+        import traceback
+        traceback.print_exc()
+        # Clean up WandB if needed
+        if cfg.get('use_wandb', False) and wandb is not None and wandb.run:
+            wandb.finish(exit_code=1)
+        return # Exit training
 
     # Initialize SAC agent
+    agent_params = OmegaConf.to_container(cfg.agent, resolve=True)
     model = SAC(
         "MlpPolicy",
         env,
-        learning_rate=cfg.learning_rate,
-        buffer_size=cfg.buffer_size,
-        batch_size=cfg.batch_size,
-        tau=cfg.tau,
-        gamma=cfg.gamma,
-        train_freq=cfg.train_freq,
-        gradient_steps=cfg.gradient_steps,
-        verbose=1,
-        tensorboard_log=log_dir
+        **agent_params
     )
 
     # Setup callbacks

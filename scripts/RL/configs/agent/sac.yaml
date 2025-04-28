@@ -1,0 +1,10 @@
+# SAC (Soft Actor-Critic) agent parameters
+learning_rate: 0.0001 # Learning rate
+buffer_size: 1000000 # Replay buffer size
+batch_size: 512 # Batch size for training
+tau: 0.01 # Target network update rate
+gamma: 0.99 # Discount factor
+train_freq: 16 # Update model every x steps
+gradient_steps: 16 # Number of gradient steps per update
+learning_starts: 10000 # Collect transitions before training
+use_sde: false # Use State Dependent Exploration

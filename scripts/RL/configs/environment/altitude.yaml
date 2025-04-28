@@ -1,6 +1,0 @@
-# Environment Properties
-control_type: "altitude"
-target_value: 500.0
-tolerance: 10.0
-eval_episode_length: 100
-start_deviation: 100.0

@@ -1,0 +1,13 @@
+# PPO (Proximal Policy Optimization) agent parameters
+learning_rate: 0.0003 # Learning rate
+n_steps: 2048 # Number of steps to collect before updating
+batch_size: 64 # Batch size for training
+n_epochs: 10 # Number of training epochs per update
+gamma: 0.99 # Discount factor
+gae_lambda: 0.95 # GAE lambda parameter
+clip_range: 0.2 # Clipping parameter for PPO
+clip_range_vf: null # Clipping parameter for value function
+normalize_advantage: true # Normalize advantage
+ent_coef: 0.0 # Entropy coefficient
+vf_coef: 0.5 # Value function coefficient
+max_grad_norm: 0.5 # Maximum gradient norm

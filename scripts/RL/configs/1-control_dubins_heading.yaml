@@ -1,0 +1,37 @@
+# configs/control_dubins_heading.yaml
+defaults:
+  - _self_
+  - env: control
+  - agent: sac
+  - callbacks: default
+  - hydra: default
+
+# Experiment-specific settings
+project_name: FlyerRL_ControlDubinsHeading
+total_timesteps: 1000000
+
+# Environment overrides
+env:
+  defaults:
+    - /common/physics: dubins_physics
+  params:
+    control_type: heading
+    target_value: 0.0
+    tolerance: 0.1
+    start_deviation: 0.5
+    use_full_aircraft: false
+    trim_condition_params: null
+
+# Agent overrides
+agent:
+  learning_rate: 0.0003
+
+# Global settings
+seed: 42
+max_episode_steps: 1000
+time_step: 0.0166667
+normalize_observations: false
+normalize_actions: false
+render_mode: rgb_array
+use_wandb: false
+resume_training: false

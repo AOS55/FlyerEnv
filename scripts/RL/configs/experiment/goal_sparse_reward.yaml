@@ -1,0 +1,22 @@
+# Goal-seeking experiment with sparse rewards
+project_name: FlyerRL_GoalSparseReward
+total_timesteps: 1500000 # More timesteps for sparse reward learning
+
+# --- Environment config overrides ---
+env:
+  name: flyer_goal-v1 # Use goal environment
+
+  params:
+    goal_distance_range: [1000.0, 3000.0] # Longer distances to goal
+    goal_altitude_range_agl: [300.0, 800.0] # Goal altitude range
+    goal_tolerance: 75.0 # Larger tolerance for reaching goal
+    reward_type: "Sparse" # Use sparse rewards (harder to learn)
+    use_full_aircraft: true # Use full aircraft model
+    max_episode_steps: 2000 # Longer episodes for exploration
+
+# --- Agent config overrides ---
+agent:
+  gamma: 0.995 # Higher discount factor for long-term rewards
+  learning_rate: 0.0001 # Lower learning rate
+  batch_size: 1024 # Larger batch size
+  learning_starts: 20000 # More exploration before learning

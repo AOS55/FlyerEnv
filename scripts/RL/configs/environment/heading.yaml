@@ -1,7 +1,0 @@
-# Environment Properties
-seed: 42
-control_type: "heading"
-target_value: 1.5
-tolerance: 0.1
-eval_episode_length: 100
-start_deviation: 0.1

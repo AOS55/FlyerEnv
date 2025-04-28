@@ -1,0 +1,40 @@
+# Runway environment configuration
+defaults:
+  - /common/physics: full_physics # Default to full physics model (more realistic for landing)
+
+# Environment identifier
+name: flyer_runway-v1
+
+# Parameters directly matching RunwayFlyerEnv.__init__ parameters
+params:
+  # Common parameters from global config
+  max_episode_steps: ${max_episode_steps}
+  time_step: ${time_step}
+  normalize_observations: ${normalize_observations}
+  normalize_actions: ${normalize_actions}
+  render_mode: ${render_mode}
+  seed: ${seed}
+
+  # Aircraft start parameters
+  start_altitude_range_m_agl: [400.0, 600.0] # Min/max start altitude AGL
+  start_airspeed_range_mps: [70.0, 90.0] # Min/max airspeed (m/s)
+  start_heading_range_deg: [0.0, 360.0] # Min/max heading (degrees)
+  start_position_variance: 1.0 # Position variance (m)
+
+  # Runway randomization parameters
+  runway_distance_range_m: [4000.0, 8000.0] # Min/max runway distance
+  runway_bearing_range_deg: [0.0, 360.0] # Min/max runway bearing (degrees)
+  runway_heading_range_deg: [0.0, 360.0] # Min/max runway heading (degrees)
+
+  # Fixed runway geometry
+  runway_width: 45.0 # Runway width (m)
+  runway_length: 1800.0 # Runway length (m)
+  glideslope_deg: 3.0 # Glide slope angle (degrees)
+
+  # Aircraft parameters
+  use_full_aircraft: true # Use full aircraft model
+
+  # Optional trim condition
+  trim_condition_params:
+    type: "StraightAndLevel"
+    airspeed: 80.0

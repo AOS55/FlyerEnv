@@ -1,0 +1,30 @@
+# Control environment configuration
+defaults:
+  - /common/physics: full_twin_otter # Default to full physics model
+
+# Environment identifier
+name: flyer_control-v1
+
+# Parameters directly matching ControlFlyerEnv.__init__ parameters
+params:
+  # Common parameters from global config
+  max_episode_steps: ${max_episode_steps}
+  time_step: ${time_step}
+  normalize_observations: ${normalize_observations}
+  normalize_actions: ${normalize_actions}
+  render_mode: ${render_mode}
+  seed: ${seed}
+
+  # Control-specific parameters
+  control_type: "altitude" # Control task type (altitude, heading, speed, etc.)
+  target_value: 3000.0 # Target value to maintain
+  tolerance: 50.0 # Tolerance around target
+  start_deviation: 200.0 # Initial deviation from target
+  use_full_aircraft: true # Use full aircraft model instead of Dubins
+
+  # Trim condition parameters (passed as trim_condition_params to __init__)
+  trim_condition_params:
+    type: "StraightAndLevel"
+    airspeed: 90.0
+    # gamma_deg: 0.0                   # Optional for SteadyClimb
+    # bank_angle_deg: 0.0              # Optional for CoordinatedTurn

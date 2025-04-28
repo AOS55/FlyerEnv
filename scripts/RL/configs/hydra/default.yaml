@@ -1,0 +1,27 @@
+# Default Hydra configuration
+run:
+  # Directory where outputs (configs, logs) are stored
+  dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+sweep:
+  # Directory for multi-run outputs
+  dir: multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  subdir: ${hydra.job.num}
+
+job_logging:
+  # Default logging configuration
+  version: 1
+  formatters:
+    simple:
+      format: "[%(asctime)s][HYDRA] %(message)s"
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: simple
+      level: INFO
+  root:
+    level: INFO
+    handlers: [console]
+  loggers:
+    hydra:
+      level: INFO

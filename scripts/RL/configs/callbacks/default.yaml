@@ -1,0 +1,4 @@
+# Default callback configuration
+checkpoint_freq: 50000 # Save a checkpoint every 50k steps
+eval_freq: 25000 # Run evaluation every 25k steps
+n_eval_episodes: 3 # Number of episodes for evaluation

@@ -1,0 +1,22 @@
+# Altitude control experiment with full aircraft model
+project_name: FlyerRL_ControlFullAltitude_Refactored
+total_timesteps: 2000000 # Longer training time for this experiment
+
+# --- Overrides for environment config ---
+env:
+  params:
+    max_episode_steps: 1500 # Longer episodes
+    control_type: "altitude" # Control altitude
+    target_value: 4000.0 # Higher target altitude (m)
+    tolerance: 40.0 # Tighter tolerance
+    start_deviation: 200.0 # Initial deviation from target
+    use_full_aircraft: true # Use full aircraft physics
+
+    # Trim condition for stable flight
+    trim_condition_params:
+      type: "StraightAndLevel"
+      airspeed: 90.0 # Cruising airspeed (m/s)
+
+# --- Overrides for agent config ---
+agent:
+  learning_rate: 0.0002 # Higher learning rate

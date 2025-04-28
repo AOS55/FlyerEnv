@@ -1,0 +1,24 @@
+# configs/train.yaml - Main configuration file
+defaults:
+  - experiment: null # Default experiment
+  - env: control # Default environment type
+  - agent: sac # Default agent type
+  - callbacks: default # Default callbacks
+  - hydra: default # Hydra settings
+  - _self_ # Include this config last
+
+# --- Global Settings (can be overridden by experiments) ---
+project_name: FlyerRL_Experiments
+seed: 42
+total_timesteps: 1000000
+
+# --- Global Env Param Defaults (can be referenced by env configs) ---
+max_episode_steps: 1000
+time_step: 0.0166667 # Default simulation time step (1/60s)
+normalize_observations: false
+normalize_actions: false
+render_mode: rgb_array # Default to no rendering
+
+# --- Global Flags ---
+use_wandb: false
+resume_training: false

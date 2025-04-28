@@ -1,0 +1,21 @@
+# Hydra configuration for evaluation script (eval.py)
+
+hydra:
+  run:
+    # Use the job name from the original training run if possible, or set a default
+    dir: ${run_dir}/${output_subdir}
+  job:
+    # Allow Hydra to load the *original* training config from the run_dir
+    config:
+      override_dirname:
+        kv_sep: '=' # Standard Hydra separator
+        item_sep: ','
+        exclude_keys: ['run_dir', 'model_filename', 'num_episodes', 'deterministic', 'output_subdir', 'render_mode'] # Prevent these eval params from naming the dir
+
+# --- Evaluation Parameters ---
+run_dir: ??? # REQUIRED: Path to the specific training output directory (e.g., outputs/YYYY-MM-DD/HH-MM-SS)
+model_filename: "best_model.zip" # Model file to load (e.g., best_model.zip, final_model.zip)
+num_episodes: 5 # Number of evaluation episodes
+deterministic: True # Use deterministic actions for evaluation
+output_subdir: "evaluation" # Subdirectory within run_dir to save evaluation results (CSV, plots, etc.)
+render_mode: "rgb_array" # Environment render mode ('human', 'rgb_array', 'none')
