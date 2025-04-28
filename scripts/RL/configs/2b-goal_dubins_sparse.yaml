@@ -1,0 +1,35 @@
+# Goal reaching task with Dubins model and sparse rewards
+
+defaults:
+  - env: goal_sparse # Start with sparse reward base (defaults to Full physics)
+  - agent: sac
+  - callbacks: default
+  - hydra: default
+  - _self_
+
+# Experiment-specific settings
+project_name: FlyerRL
+run_name: GoalDubinsSparse
+total_timesteps: 1500000 # Sparse rewards often need more steps
+seed: 42
+
+# Environment overrides (Modify goal_sparse defaults)
+env:
+  params:
+    use_full_aircraft: false # CRITICAL: Switch to Dubins model
+    render_mode: rgb_array
+    # Optionally adjust goal parameters for Dubins sparse task
+    # goal_distance_range: [1500.0, 4000.0]
+    # goal_tolerance: 60.0
+    # max_episode_steps: 2000
+
+# Agent overrides (Optional: Tune for sparse reward task)
+agent:
+  use_her: true
+  # learning_rate: 0.0001
+  # learning_starts: 20000
+  # gamma: 0.995
+
+# Global settings
+use_wandb: True
+resume_training: False

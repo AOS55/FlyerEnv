@@ -1,0 +1,37 @@
+# Control altitude task using the full aircraft model
+
+defaults:
+  - env: control_altitude # Start with altitude control base
+  - agent: sac
+  - callbacks: default
+  - hydra: default
+  - _self_
+
+# Experiment-specific settings
+project_name: FlyerRL
+run_name: ControlFullAltitude
+total_timesteps: 2000000 # May need more steps for full physics
+seed: 42
+
+# Environment overrides (Modify control_altitude defaults)
+env:
+  params:
+    use_full_aircraft: true # CRITICAL: Switch to full physics
+    # Add appropriate trim conditions for full physics altitude control
+    trim_condition_params:
+      type: "StraightAndLevel" # Start in stable flight
+      airspeed: 85.0 # Example cruising airspeed
+    # Optionally adjust target/tolerance/deviation for full physics if needed
+    target_value: 3000.0 # Example higher target altitude
+    tolerance: 40.0
+    start_deviation: 200.0
+    max_episode_steps: 1500 # Optionally increase episode length
+
+# Agent overrides (Optional: Tune for full physics if necessary)
+# agent:
+#   learning_rate: 0.0001
+#   gamma: 0.995
+
+# Global settings
+use_wandb: True
+resume_training: False

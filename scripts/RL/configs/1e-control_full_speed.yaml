@@ -1,0 +1,38 @@
+# Control speed task using the full aircraft model
+
+defaults:
+  - env: control_speed # Start with speed control base
+  - agent: sac
+  - callbacks: default
+  - hydra: default
+  - _self_
+
+# Experiment-specific settings
+project_name: FlyerRL
+run_name: ControlFullSpeed
+total_timesteps: 1500000 # May need more steps for full physics
+seed: 42
+
+# Environment overrides (Modify control_speed defaults)
+env:
+  params:
+    render_mode: rgb_array
+    use_full_aircraft: true # CRITICAL: Switch to full physics
+    # Add appropriate trim conditions for full physics speed control
+    trim_condition_params:
+      type: "StraightAndLevel" # Start in stable flight
+      airspeed: ${env.params.target_value} # Match trim airspeed to target speed
+    # Optionally adjust target/tolerance/deviation for full physics if needed
+    # target_value: 90.0
+    # tolerance: 4.0
+    # start_deviation: 10.0
+    # max_episode_steps: 1500 # Optionally increase episode length
+
+# Agent overrides (Optional: Tune for full physics if necessary)
+# agent:
+#   learning_rate: 0.0002
+#   batch_size: 512
+
+# Global settings
+use_wandb: True
+resume_training: False

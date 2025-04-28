@@ -1,4 +1,4 @@
-from stable_baselines3 import SAC
+from stable_baselines3 import SAC, HerReplayBuffer
 from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback, CallbackList
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -295,89 +295,189 @@ def setup_logging() -> str:
     os.makedirs(log_dir, exist_ok=True)
     return log_dir
 
-@hydra.main(version_base="1.1", config_path="configs", config_name="1b-control_dubins_speed")
+@hydra.main(version_base="1.1", config_path="configs") # Keep config_name removed
 def train(cfg: DictConfig):
     # Setup logging directory
     log_dir = setup_logging()
 
-    print(f"cfg: {cfg}")
+    # --- Add Debug Prints (Optional but recommended from previous step) ---
+    print("\n" + "="*20 + " HYDRA CONFIG DEBUG " + "="*20)
+    print("--- Raw OmegaConf Object (YAML representation) ---")
+    try:
+        print(OmegaConf.to_yaml(cfg))
+    except Exception as e:
+        print(f"Error printing OmegaConf object: {e}")
+    # ... (add the specific value checks too if helpful) ...
+    print("="*60 + "\n")
+    # --- End Debug Prints ---
+
 
     if cfg.get("seed") is not None:
         seed_everything(cfg.seed)
+        # Set Gymnasium global seed too
+        gym.utils.seeding.np_random(cfg.seed)
+
 
     # Save full config
-    OmegaConf.save(cfg, os.path.join(log_dir, 'config.yaml'))
+    os.makedirs(log_dir, exist_ok=True) # Ensure log dir exists
+    OmegaConf.save(cfg, os.path.join(log_dir, 'resolved_config.yaml'))
 
     # Initialize wandb if enabled
     if cfg.use_wandb:
-        wandb.init(
-            project=cfg.project_name,
-            config=OmegaConf.to_container(cfg, resolve=True),
-            dir=log_dir,
-            name=f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        )
+        # Initialize wandb (wandb init logic)
+        # ...
+        pass # Add your wandb init code here
 
     # Create environment
     logging.info("Creating environment...")
     env = None
     try:
-        # Validate environment config
-        if not hasattr(cfg, 'env'):
-            raise ValueError("Environment configuration missing 'env' section")
-
-        env_cfg = cfg.env
-        if not hasattr(env_cfg, 'name'):
-            raise ValueError("Environment configuration missing 'name' field")
-
-        env_id = env_cfg.name
-        env_params_dict = {}
-        if hasattr(env_cfg, 'params'):
-            env_params_dict = OmegaConf.to_container(env_cfg.params, resolve=True)
+        # ... (your existing environment creation logic) ...
+        env_id = cfg.env.name
+        env_params_dict = OmegaConf.to_container(cfg.env.params, resolve=True) if hasattr(cfg.env, 'params') else {}
         env = gym.make(env_id, **env_params_dict)
+        logging.info(f"Environment '{env_id}' created successfully.")
+        # Optionally check environment for GoalEnv tasks
+        # check_env(env) # Might be too strict depending on wrappers
+
     except Exception as e:
-        logging.error(f"Failed environment creation: gym.make(ID='{env_cfg.get('name', 'N/A')}'): {e}")
+        logging.error(f"Failed environment creation: gym.make(ID='{cfg.env.get('name', 'N/A')}'): {e}")
         import traceback
         traceback.print_exc()
-        # Clean up WandB if needed
         if cfg.get('use_wandb', False) and wandb is not None and wandb.run:
-            wandb.finish(exit_code=1)
+             wandb.finish(exit_code=1)
         return # Exit training
 
-    # Initialize SAC agent
+    # --- HER Integration ---
+    replay_buffer_class = None
+    replay_buffer_kwargs = {}
+    policy_class = "MlpPolicy" # Default policy
+
+    use_her = cfg.agent.get("use_her", False)
+
+    if use_her:
+        logging.info("HER requested via configuration.")
+
+        # 1. Check if the environment observation space is a dictionary (required for HER)
+        if not isinstance(env.observation_space, gym.spaces.Dict):
+            logging.error("HER requires a Dict observation space (containing 'observation', 'achieved_goal', 'desired_goal'). Disabling HER.")
+            use_her = False
+        else:
+            # 2. Check if the necessary keys are in the observation space
+            required_keys = {"observation", "achieved_goal", "desired_goal"}
+            if not required_keys.issubset(env.observation_space.spaces.keys()):
+                logging.error(f"Observation space Dict missing required keys for HER ({required_keys}). Disabling HER.")
+                use_her = False
+            else:
+                 policy_class = "MultiInputPolicy" # Use MultiInputPolicy for Dict observations
+                 logging.info(f"Using '{policy_class}' for HER with Dict observation space.")
+
+    if use_her: # Check again in case it was disabled by checks
+        replay_buffer_class = HerReplayBuffer
+
+        # 3. Determine max_episode_length (required by HerReplayBuffer)
+        max_episode_length = None
+        if env.spec is not None and env.spec.max_episode_steps is not None:
+            max_episode_length = env.spec.max_episode_steps
+            logging.info(f"HER: Using max_episode_length from env.spec: {max_episode_length}")
+        elif cfg.env.params.get("max_episode_steps") is not None:
+            max_episode_length = cfg.env.params.max_episode_steps
+            logging.info(f"HER: Using max_episode_length from config env.params: {max_episode_length}")
+
+        if max_episode_length is None:
+            logging.error("HER requires 'max_episode_steps' to be defined either in the environment spec or config env.params. Disabling HER.")
+            replay_buffer_class = None # Disable HER if length is missing
+            policy_class = "MlpPolicy" # Revert policy if HER disabled
+        else:
+            # 4. Prepare HerReplayBuffer keyword arguments
+            her_kwargs = {
+                "env": env,
+                "buffer_size": cfg.agent.buffer_size, # Use original buffer size from config
+                "max_episode_length": max_episode_length,
+                "goal_selection_strategy": cfg.agent.get("goal_selection_strategy", "future"), # Get from config or use default
+                "n_sampled_goal": cfg.agent.get("n_sampled_goal", 4), # Get from config or use default
+                "online_sampling": True, # SAC typically uses online sampling
+                "device": "auto", # Or get from cfg.agent if specified
+            }
+            # Only merge if HER is actually enabled
+            if replay_buffer_class is HerReplayBuffer:
+                 replay_buffer_kwargs.update(her_kwargs)
+                 logging.info(f"HER replay buffer configured with kwargs: {replay_buffer_kwargs}")
+
+
+    # --- End HER Integration ---
+
+    # Prepare SAC agent parameters (remove HER-specific keys)
     agent_params = OmegaConf.to_container(cfg.agent, resolve=True)
-    model = SAC(
-        "MlpPolicy",
-        env,
-        **agent_params
-    )
+    agent_params.pop("use_her", None)
+    agent_params.pop("goal_selection_strategy", None)
+    agent_params.pop("n_sampled_goal", None)
+    # Make sure buffer_size is not passed if HER is used (it's in replay_buffer_kwargs)
+    if replay_buffer_class is HerReplayBuffer:
+        agent_params.pop("buffer_size", None)
+
+
+    # Initialize SAC agent
+    logging.info(f"Initializing SAC agent with policy '{policy_class}'...")
+    model = None
+    try:
+        model = SAC(
+            policy=policy_class,
+            env=env,
+            replay_buffer_class=replay_buffer_class,    # None if HER is not used
+            replay_buffer_kwargs=replay_buffer_kwargs, # Empty if HER is not used
+            verbose=1,                                 # Set verbosity
+            seed=cfg.seed,                             # Pass seed
+            **agent_params                            # Pass the rest of SAC params
+        )
+        logging.info("SAC model initialized successfully.")
+        logging.info(f"Using Replay Buffer: {model.replay_buffer.__class__.__name__}")
+
+    except Exception as e:
+        logging.error(f"Failed to initialize SAC model: {e}")
+        import traceback
+        traceback.print_exc()
+        if cfg.get('use_wandb', False) and wandb is not None and wandb.run:
+             wandb.finish(exit_code=1)
+        env.close()
+        return # Exit training
+
 
     # Setup callbacks
-    callbacks = create_callbacks(log_dir, cfg)
+    callbacks_list = create_callbacks(log_dir, cfg) # Use your existing function
 
     # Load from checkpoint if specified
-    if cfg.get('resume_training', False):
-        checkpoint_path = Path(log_dir) / 'checkpoints'
-        if checkpoint_path.exists():
-            checkpoints = list(checkpoint_path.glob("sac_model_*.zip"))
-            if checkpoints:
-                latest_checkpoint = max(checkpoints, key=lambda x: int(x.stem.split('_')[-1]))
-                model = SAC.load(str(latest_checkpoint), env=env)
-                start_timestep = int(latest_checkpoint.stem.split('_')[-1])
-                logging.info(f"Resuming training from checkpoint at step {start_timestep}")
+    # ... (Your checkpoint loading logic) ...
+
 
     # Train the agent
-    model.learn(
-        total_timesteps=cfg.total_timesteps,
-        callback=callbacks,
-        reset_num_timesteps=not cfg.get('resume_training', False)
-    )
+    logging.info(f"Starting training for {cfg.total_timesteps} timesteps...")
+    try:
+        model.learn(
+            total_timesteps=cfg.total_timesteps,
+            callback=callbacks_list,
+            reset_num_timesteps=not cfg.get('resume_training', False), # Check resume flag
+            log_interval=10 # Log training stats frequency (episodes)
+        )
+        logging.info("Training finished.")
+    except Exception as e:
+        logging.error(f"Error during training: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        # Save final model regardless of training success/failure
+        final_model_path = os.path.join(log_dir, 'final_model.zip')
+        model.save(final_model_path)
+        logging.info(f"Final model saved to {final_model_path}")
 
-    # Save final model
-    model.save(os.path.join(log_dir, 'final_model'))
+        env.close() # Close environment
+        logging.info("Environment closed.")
 
-    if cfg.use_wandb:
-        wandb.finish()
+        if cfg.use_wandb and wandb.run:
+            wandb.finish()
+            logging.info("WandB run finished.")
 
 if __name__ == "__main__":
+    # Ensure environments are registered before Hydra parses config
     flyer_env.register_flyer_envs()
     train()

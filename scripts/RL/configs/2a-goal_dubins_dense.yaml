@@ -1,0 +1,30 @@
+# Goal reaching task with Dubins model and dense rewards
+
+defaults:
+  - env: goal_dense # Base config already uses Dubins and Dense reward
+  - agent: sac
+  - callbacks: default
+  - hydra: default
+  - _self_
+
+# Experiment-specific settings
+project_name: FlyerRL
+run_name: GoalDubinsDense
+total_timesteps: 1000000
+
+seed: 42
+
+# Environment overrides (Optional: Fine-tune goal_dense parameters if needed)
+env:
+  params:
+    render_mode: rgb_array
+    goal_distance_range: [800.0, 2500.0]
+    max_episode_steps: 1200
+
+# Agent overrides (Optional: Tune if needed)
+agent:
+  use_her: true
+
+# Global settings
+use_wandb: True
+resume_training: False

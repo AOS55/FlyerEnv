@@ -1,9 +1,9 @@
 defaults:
-  - _self_
   - env: control_heading
   - agent: sac
   - callbacks: default
   - hydra: default
+  - _self_
 
 # Experiment-specific settings
 project_name: FlyerRL
@@ -16,7 +16,7 @@ env:
     max_episode_steps: 1000
     normalize_observations: false
     normalize_actions: false
-    seed: 42
+    seed: ${seed}
     time_step: 0.0166667
 
 # Global settings

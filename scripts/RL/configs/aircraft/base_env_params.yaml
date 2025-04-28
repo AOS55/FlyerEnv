@@ -1,7 +1,0 @@
-# Common base environment parameters shared across all environments
-max_episode_steps: 1000 # Maximum steps per episode
-time_step: 0.0166667 # Simulation time step (1/60s)
-normalize_observations: false # Whether to normalize observations
-normalize_actions: false # Whether to normalize actions
-render_mode: null # Default render mode (null=no rendering)
-seed: null # Seed for environment randomness

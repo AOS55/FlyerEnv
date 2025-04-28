@@ -1,0 +1,32 @@
+# Trajectory following task: Coordinated turn with Dubins model
+
+defaults:
+  - env: trajectory_turn # Base config is already Dubins turn
+  - agent: sac
+  - callbacks: default
+  - hydra: default
+  - _self_
+
+# Experiment-specific settings
+project_name: FlyerRL
+run_name: TrajectoryTurnDubins
+total_timesteps: 1200000 # Turns might be slightly harder
+seed: 42
+
+# Environment overrides (Optional: Fine-tune trajectory_turn params)
+# env:
+#   params:
+#     target_velocity: 45.0
+#     motion_params:
+#       turn_radius: 350.0
+#       turn_angle: 180.0
+#       direction: "Left"
+#     max_episode_steps: 1000
+
+# Agent overrides (Optional: Tune if needed)
+# agent:
+#   learning_rate: 0.00025
+
+# Global settings
+use_wandb: True
+resume_training: False

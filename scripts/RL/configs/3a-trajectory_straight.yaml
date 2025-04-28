@@ -1,0 +1,30 @@
+# Trajectory following task: Straight line with Dubins model
+
+defaults:
+  - env: trajectory_straight # Base config is already Dubins straight
+  - agent: sac
+  - callbacks: default
+  - hydra: default
+  - _self_
+
+# Experiment-specific settings
+project_name: FlyerRL
+run_name: TrajectoryStraightDubins
+total_timesteps: 1000000
+seed: 42
+
+# Environment overrides (Optional: Fine-tune trajectory_straight params)
+# env:
+#   params:
+#     target_velocity: 60.0
+#     motion_params:
+#       target_distance: 2500.0
+#     max_episode_steps: 800
+
+# Agent overrides (Optional: Tune if needed)
+# agent:
+#   learning_rate: 0.0003
+
+# Global settings
+use_wandb: True
+resume_training: False

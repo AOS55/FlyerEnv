@@ -1,0 +1,37 @@
+# Goal reaching task with Full aircraft model and dense rewards
+
+defaults:
+  - env: goal_dense # Start with dense reward base (defaults to Dubins)
+  - agent: sac
+  - callbacks: default
+  - hydra: default
+  - _self_
+
+# Experiment-specific settings
+project_name: FlyerRL
+run_name: GoalFullDense
+total_timesteps: 2000000 # Full physics likely needs more steps
+seed: 42
+
+# Environment overrides (Modify goal_dense defaults)
+env:
+  params:
+    use_full_aircraft: true # CRITICAL: Switch to Full model
+    # Optionally adjust goal parameters for Full physics dense task
+    # goal_distance_range: [1500.0, 4000.0]
+    # goal_tolerance: 75.0
+    # max_episode_steps: 2000
+    # Add trim condition if needed for starting state
+    # trim_condition_params:
+    #   type: "StraightAndLevel"
+    #   airspeed: 80.0
+
+# Agent overrides (Optional: Tune for Full physics)
+agent:
+  use_her: true
+#   learning_rate: 0.0002
+#   batch_size: 512
+
+# Global settings
+use_wandb: True
+resume_training: False
