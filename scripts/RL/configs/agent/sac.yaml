@@ -1,0 +1,11 @@
+learning_rate: 0.0003 # Learning rate
+buffer_size: 1000000 # Replay buffer size
+batch_size: 256 # Batch size for training
+tau: 0.005 # Target network update rate
+gamma: 0.99 # Discount factor
+train_freq: 10 # Update model every x steps
+gradient_steps: 10 # Number of gradient steps per update
+learning_starts: 50000
+# learning_starts: 10000 # Collect transitions before training
+# use_sde: false # Use State Dependent Exploration
+# verbose: 1 # Added verbosity

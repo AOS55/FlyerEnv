@@ -1,0 +1,14 @@
+name: "flyer_control-v1" # Registered Gym ID
+
+params:
+  seed: 42
+  control_type: "heading"
+  target_value: 1.5 # Target heading (radians, e.g., ~90 degrees East)
+  tolerance: 0.1 # Radians (~5.7 degrees)
+  start_deviation: 0.1 # Radians (~28 degrees)
+  use_full_aircraft: false # Use Dubins model
+  trim_condition_params: null
+  max_episode_steps: 1000
+  time_step: 0.01666666666
+  normalize_observations: false
+  normalize_actions: false

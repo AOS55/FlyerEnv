@@ -1,0 +1,15 @@
+name: "flyer_trajectory-v1" # Registered Gym ID
+
+params:
+  # TrajectoryFlyerEnv.__init__ parameters
+  motion_type: "straight_and_level"
+  target_velocity: 50.0 # m/s
+  motion_params:
+    target_distance: 2000.0 # Meters
+  start_position: [0.0, 0.0, -500.0] # [x, y, z] NED
+  start_heading_deg: 0.0 # Degrees North
+  use_full_aircraft: false # Use Dubins model
+  max_episode_steps: 1000
+  time_step: 0.01666666666
+  normalize_observations: false
+  normalize_actions: false

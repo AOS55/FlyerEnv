@@ -1,0 +1,14 @@
+name: "flyer_control-v1" # Registered Gym ID
+
+params:
+  # ControlFlyerEnv.__init__ parameters
+  control_type: "altitude"
+  target_value: 1000.0 # Target altitude (meters AGL)
+  tolerance: 25.0 # Meters
+  start_deviation: 150.0 # Start +/- this amount from target (meters)
+  use_full_aircraft: false # Use Dubins model
+  trim_condition_params: null # Not applicable to Dubins
+  max_episode_steps: 500 # Max steps for this specific task variant
+  time_step: 0.01666666666 # ~1/60s
+  normalize_observations: false
+  normalize_actions: false

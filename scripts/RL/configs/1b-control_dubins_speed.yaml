@@ -1,0 +1,29 @@
+defaults:
+  - _self_
+  - env: control_speed
+  - agent: sac
+  - callbacks: default
+  - hydra: default
+
+# Experiment-specific settings
+project_name: FlyerRL
+run_name: ControlDubinsSpeed
+total_timesteps: 1000000
+seed: 42
+
+env:
+  params:
+    render_mode: rgb_array
+    max_episode_steps: 1000
+    normalize_observations: false
+    normalize_actions: false
+    seed: 42
+    time_step: 0.0166667
+
+# Agent overrides
+agent:
+  learning_rate: 0.0003
+
+# Global settings
+use_wandb: True
+resume_training: False

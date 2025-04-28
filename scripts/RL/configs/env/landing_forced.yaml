@@ -1,0 +1,21 @@
+name: "flyer_landing-v1" # Registered Gym ID
+
+params:
+  # LandingFlyerEnv.__init__ parameters
+  target_position_coords: null # No specific target, just land safely
+  max_landing_speed: 25.0 # m/s at touchdown
+  max_descent_rate: 3.0 # m/s at touchdown
+  max_bank_angle_deg: 20.0 # Degrees near ground
+  max_landing_distance: 200.0 # Not relevant without target? Check env logic. Default.
+  landing_complete_height_agl: 0.5 # Meters AGL threshold
+  # Start Randomization
+  start_altitude_range_m_agl: [500.0, 800.0]
+  start_airspeed_range_mps: [70.0, 90.0]
+  start_heading_range_deg: [0.0, 360.0]
+  start_position_variance: 100.0
+  use_full_aircraft: true # Use Full aircraft model
+  trim_condition_params: null
+  max_episode_steps: 3000
+  time_step: 0.01666666666
+  normalize_observations: false
+  normalize_actions: false

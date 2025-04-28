@@ -1,0 +1,23 @@
+name: "flyer_runway-v1" # Registered Gym ID
+
+params:
+  # RunwayFlyerEnv.__init__ parameters
+  # Start Randomization (usually near origin for runway tasks)
+  start_altitude_range_m_agl: [500.0, 700.0]
+  start_airspeed_range_mps: [70.0, 90.0]
+  start_heading_range_deg: [0.0, 360.0]
+  start_position_variance: 10.0 # Start close to origin
+  # Runway Randomization
+  runway_distance_range_m: [4000.0, 8000.0] # Distance from origin
+  runway_bearing_range_deg: [0.0, 360.0] # Bearing from origin
+  runway_heading_range_deg: [0.0, 360.0] # Runway orientation
+  # Fixed Geometry
+  runway_width: 45.0
+  runway_length: 1800.0
+  glideslope_deg: 3.0
+  use_full_aircraft: true # Use Full aircraft model
+  trim_condition_params: null
+  max_episode_steps: 3000
+  time_step: 0.01666666666
+  normalize_observations: false
+  normalize_actions: false

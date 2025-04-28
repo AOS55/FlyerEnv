@@ -1,0 +1,14 @@
+name: "flyer_control-v1" # Registered Gym ID
+
+params:
+  # ControlFlyerEnv.__init__ parameters
+  control_type: "speed"
+  target_value: 80.0 # Target airspeed (m/s)
+  tolerance: 5.0 # m/s
+  start_deviation: 15.0 # Start +/- this amount from target (m/s)
+  use_full_aircraft: false # Use Dubins model
+  trim_condition_params: null
+  max_episode_steps: 500
+  time_step: 0.01666666666
+  normalize_observations: false
+  normalize_actions: false

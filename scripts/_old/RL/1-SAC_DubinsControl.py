@@ -13,8 +13,6 @@ import numpy as np
 from typing import List, Dict
 from pathlib import Path
 import matplotlib.pyplot as plt
-import random
-import torch
 
 
 class EvalPlottingCallback(BaseCallback):
@@ -195,6 +193,8 @@ class MetricsCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         """Update metrics on each step"""
+        # Get info from the last transition
+        info = self.locals['infos'][0]
         reward = self.locals['rewards'][0]
         done = self.locals['dones'][0]
 
@@ -256,34 +256,18 @@ class MetricsCallback(BaseCallback):
         with open(os.path.join(self.log_dir, 'metrics_summary.json'), 'w') as f:
             json.dump(summary, f, indent=4)
 
-def seed_everything(seed_value):
-    """Seeds libraries for reproducibility."""
-    random.seed(seed_value)
-    np.random.seed(seed_value)
-    torch.manual_seed(seed_value)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed_value)
-        torch.cuda.manual_seed_all(seed_value) # for multi-GPU.
-        # Force deterministic algorithms
-        os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8" # Or ":16:8"
-        torch.use_deterministic_algorithms(True)
-        # Might be needed for older PyTorch versions
-        # torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-    print(f"Seeded everything with: {seed_value}")
-
 def create_callbacks(log_dir: str, cfg: Dict) -> CallbackList:
     """Create all callbacks for training"""
     metrics_callback = MetricsCallback(log_dir, use_wandb=cfg.use_wandb)
     checkpoint_callback = CheckpointCallback(
-        save_freq=cfg.callbacks.checkpoint_freq,  # Changed from cfg.checkpoint_freq
+        save_freq=cfg.checkpoint_freq,
         save_path=os.path.join(log_dir, 'checkpoints'),
         name_prefix="sac_model"
     )
     eval_callback = EvalPlottingCallback(
-        eval_freq=cfg.callbacks.eval_freq,  # Changed from cfg.get('eval_freq', 10000)
+        eval_freq=cfg.get('eval_freq', 10000),  # Evaluate every 10k steps by default
         log_dir=log_dir,
-        n_eval_episodes=cfg.callbacks.n_eval_episodes  # Changed from cfg.get('n_eval_episodes', 3)
+        n_eval_episodes=cfg.get('n_eval_episodes', 3)  # Run 3 evaluation episodes by default
     )
 
     return CallbackList([metrics_callback, checkpoint_callback, eval_callback])
@@ -295,15 +279,10 @@ def setup_logging() -> str:
     os.makedirs(log_dir, exist_ok=True)
     return log_dir
 
-@hydra.main(version_base="1.1", config_path="configs", config_name="1b-control_dubins_speed")
+@hydra.main(version_base="1.1", config_path="configs", config_name="dubins_control")
 def train(cfg: DictConfig):
     # Setup logging directory
     log_dir = setup_logging()
-
-    print(f"cfg: {cfg}")
-
-    if cfg.get("seed") is not None:
-        seed_everything(cfg.seed)
 
     # Save full config
     OmegaConf.save(cfg, os.path.join(log_dir, 'config.yaml'))
@@ -318,37 +297,28 @@ def train(cfg: DictConfig):
         )
 
     # Create environment
-    logging.info("Creating environment...")
-    env = None
-    try:
-        # Validate environment config
-        if not hasattr(cfg, 'env'):
-            raise ValueError("Environment configuration missing 'env' section")
-
-        env_cfg = cfg.env
-        if not hasattr(env_cfg, 'name'):
-            raise ValueError("Environment configuration missing 'name' field")
-
-        env_id = env_cfg.name
-        env_params_dict = {}
-        if hasattr(env_cfg, 'params'):
-            env_params_dict = OmegaConf.to_container(env_cfg.params, resolve=True)
-        env = gym.make(env_id, **env_params_dict)
-    except Exception as e:
-        logging.error(f"Failed environment creation: gym.make(ID='{env_cfg.get('name', 'N/A')}'): {e}")
-        import traceback
-        traceback.print_exc()
-        # Clean up WandB if needed
-        if cfg.get('use_wandb', False) and wandb is not None and wandb.run:
-            wandb.finish(exit_code=1)
-        return # Exit training
+    env = gym.make("flyer_control-v1",
+        render_mode="rgb_array",
+        seed=cfg.seed,
+        start_deviation=cfg.environment.start_deviation,
+        control_type=cfg.environment.control_type,
+        target_value=cfg.environment.target_value,
+        tolerance=cfg.environment.tolerance
+    )
 
     # Initialize SAC agent
-    agent_params = OmegaConf.to_container(cfg.agent, resolve=True)
     model = SAC(
         "MlpPolicy",
         env,
-        **agent_params
+        learning_rate=cfg.learning_rate,
+        buffer_size=cfg.buffer_size,
+        batch_size=cfg.batch_size,
+        tau=cfg.tau,
+        gamma=cfg.gamma,
+        train_freq=cfg.train_freq,
+        gradient_steps=cfg.gradient_steps,
+        verbose=1,
+        tensorboard_log=log_dir
     )
 
     # Setup callbacks

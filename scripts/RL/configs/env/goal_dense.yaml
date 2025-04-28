@@ -1,0 +1,15 @@
+name: "flyer_goal-v1" # Registered Gym ID
+
+params:
+  # GoalFlyerEnv.__init__ parameters
+  goal_distance_range: [1000.0, 3000.0] # Meters from start
+  goal_altitude_range_agl: [400.0, 800.0] # Meters AGL
+  goal_heading_range_rad: [0.0, 6.2831853] # Radians (0 to 2*pi)
+  goal_tolerance: 50.0 # Meters
+  reward_type: "Dense" # Use distance-based dense reward
+  start_position: [0.0, 0.0, -600.0] # Start position [x, y, z] NED
+  use_full_aircraft: false # Use Dubins model
+  max_episode_steps: 1500
+  time_step: 0.01666666666
+  normalize_observations: false
+  normalize_actions: false

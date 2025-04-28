@@ -1,0 +1,17 @@
+name: "flyer_trajectory_v1" # Registered Gym ID
+
+params:
+  # TrajectoryFlyerEnv.__init__ parameters
+  motion_type: "coordinated_turn"
+  target_velocity: 40.0 # m/s
+  motion_params:
+    turn_radius: 300.0 # Meters
+    turn_angle: 180.0 # Degrees (will be converted to radians)
+    direction: "Right" # "Right" or "Left"
+  start_position: [0.0, 0.0, -400.0] # [x, y, z] NED
+  start_heading_deg: 90.0 # Degrees East (to start turn nicely)
+  use_full_aircraft: false # Use Dubins model
+  max_episode_steps: 1200
+  time_step: 0.01666666666k
+  normalize_observations: false
+  normalize_actions: false
