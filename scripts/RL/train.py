@@ -1,17 +1,15 @@
 from stable_baselines3 import SAC, HerReplayBuffer
-from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback, CallbackList
+from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback, CallbackList, EvalCallback
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import gymnasium as gym
 import flyer_env
 import os
-from datetime import datetime
 import logging
 import wandb
 import json
 import numpy as np
 from typing import List, Dict
-from pathlib import Path
 import matplotlib.pyplot as plt
 import random
 import torch
@@ -176,7 +174,7 @@ class MetricsCallback(BaseCallback):
 
     def __init__(self, log_dir: str, use_wandb: bool = False, verbose: int = 0):
         super().__init__(verbose)
-        self.log_dir = log_dir
+        # self.log_dir = log_dir
         self.use_wandb = use_wandb
         self.episode_rewards = []
         self.episode_lengths = []
@@ -184,11 +182,13 @@ class MetricsCallback(BaseCallback):
         self.current_episode_length = 0
 
         # Setup logging
+        log_file_path = os.path.join(log_dir, 'training.log')
+        os.makedirs(log_dir, exist_ok=True)
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s [%(levelname)s] %(message)s',
             handlers=[
-                logging.FileHandler(os.path.join(log_dir, 'training.log')),
+                logging.FileHandler(log_file_path),
                 logging.StreamHandler()
             ]
         )
@@ -253,7 +253,8 @@ class MetricsCallback(BaseCallback):
         }
 
         # Save summary to file
-        with open(os.path.join(self.log_dir, 'metrics_summary.json'), 'w') as f:
+        summary_file_path = os.path.join(self.log_dir, 'metrics_summary.json')
+        with open(summary_file_path, 'w') as f:
             json.dump(summary, f, indent=4)
 
 def seed_everything(seed_value):
@@ -272,7 +273,7 @@ def seed_everything(seed_value):
         torch.backends.cudnn.benchmark = False
     print(f"Seeded everything with: {seed_value}")
 
-def create_callbacks(log_dir: str, cfg: Dict) -> CallbackList:
+def create_callbacks(log_dir: str, cfg: Dict, eval_env: gym.Env) -> CallbackList:
     """Create all callbacks for training"""
     metrics_callback = MetricsCallback(log_dir, use_wandb=cfg.use_wandb)
     checkpoint_callback = CheckpointCallback(
@@ -280,25 +281,35 @@ def create_callbacks(log_dir: str, cfg: Dict) -> CallbackList:
         save_path=os.path.join(log_dir, 'checkpoints'),
         name_prefix="sac_model"
     )
-    eval_callback = EvalPlottingCallback(
+    eval_plotting_callback = EvalPlottingCallback(
         eval_freq=cfg.callbacks.eval_freq,  # Changed from cfg.get('eval_freq', 10000)
         log_dir=log_dir,
         n_eval_episodes=cfg.callbacks.n_eval_episodes  # Changed from cfg.get('n_eval_episodes', 3)
     )
+    eval_callback_sb3 = EvalCallback(
+        eval_env=eval_env,                  # The separate environment for evaluation
+        best_model_save_path=log_dir,       # Save 'best_model.zip' here
+        log_path=log_dir,                   # Save evaluation logs (evaluations.npz) here
+        eval_freq=cfg.callbacks.eval_freq,  # How often to run evaluation (in steps)
+                                            # Ensure this frequency makes sense for eval cost
+        n_eval_episodes=cfg.callbacks.n_eval_episodes, # Number of episodes per evaluation
+        deterministic=True,                 # Use deterministic actions for evaluation
+        render=False                        # Don't render evaluation visually
+    )
 
-    return CallbackList([metrics_callback, checkpoint_callback, eval_callback])
 
-def setup_logging() -> str:
-    """Create logging directory with timestamp"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_dir = os.path.join("logs", f"run_{timestamp}")
-    os.makedirs(log_dir, exist_ok=True)
-    return log_dir
+    return CallbackList([metrics_callback, checkpoint_callback, eval_plotting_callback, eval_callback_sb3])
+
+# def setup_logging() -> str:
+#     """Create logging directory with timestamp"""
+#     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#     log_dir = os.path.join("logs", f"run_{timestamp}")
+#     os.makedirs(log_dir, exist_ok=True)
+#     return log_dir
 
 @hydra.main(version_base="1.1", config_path="configs") # Keep config_name removed
 def train(cfg: DictConfig):
     # Setup logging directory
-    log_dir = setup_logging()
 
     # --- Add Debug Prints (Optional but recommended from previous step) ---
     print("\n" + "="*20 + " HYDRA CONFIG DEBUG " + "="*20)
@@ -319,8 +330,7 @@ def train(cfg: DictConfig):
 
 
     # Save full config
-    os.makedirs(log_dir, exist_ok=True) # Ensure log dir exists
-    OmegaConf.save(cfg, os.path.join(log_dir, 'resolved_config.yaml'))
+    OmegaConf.save(cfg, 'resolved_config.yaml')
 
     # Initialize wandb if enabled
     if cfg.use_wandb:
@@ -329,7 +339,6 @@ def train(cfg: DictConfig):
                 project=cfg.project_name,
                 config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
                 name=cfg.get('run_name', None), # Use run_name if provided
-                dir=log_dir,
                 sync_tensorboard=True,
                 monitor_gym=True,
                 save_code=True,
@@ -343,8 +352,9 @@ def train(cfg: DictConfig):
             cfg.use_wandb = False # Disable wandb if init fails
 
     # --- Environment Creation ---
-    logging.info("Creating environment...")
+    logging.info("Creating training environment...")
     env = None
+    eval_env = None
     try:
         env_id = cfg.env.name
         # Resolve env params before passing to gym.make
@@ -353,11 +363,15 @@ def train(cfg: DictConfig):
         logging.info(f"Environment '{env_id}' created successfully.")
         logging.info(f"Observation Space: {env.observation_space}")
         logging.info(f"Action Space: {env.action_space}")
+        logging.info("Creating evaluation environment...")
+        eval_env = gym.make(env_id, **env_params_dict)
+        logging.info(f"Evaluation environment '{env_id}' created successfully.")
 
     except Exception as e:
         logging.error(f"Failed environment creation: gym.make(ID='{cfg.env.get('name', 'N/A')}'): {e}")
         import traceback
         traceback.print_exc()
+        if env: env.close()
         if cfg.get('use_wandb', False) and wandb is not None and wandb.run:
              wandb.finish(exit_code=1)
         return # Exit training
@@ -458,7 +472,8 @@ def train(cfg: DictConfig):
 
 
     # Setup callbacks
-    callbacks_list = create_callbacks(log_dir, cfg) # Use your existing function
+    log_dir_path = os.getcwd()
+    callbacks_list = create_callbacks(log_dir_path, cfg, eval_env) # Use your existing function
 
     # Load from checkpoint if specified
     # ... (Your checkpoint loading logic) ...
@@ -480,12 +495,17 @@ def train(cfg: DictConfig):
         traceback.print_exc()
     finally:
         # Save final model regardless of training success/failure
-        final_model_path = os.path.join(log_dir, 'final_model.zip')
+        final_model_path = 'final_model.zip'
         model.save(final_model_path)
         logging.info(f"Final model saved to {final_model_path}")
 
-        env.close() # Close environment
-        logging.info("Environment closed.")
+        # Close environment
+        if env:
+            env.close()
+            logging.info("Training environment closed.")
+        if eval_env:
+            eval_env.close()
+            logging.info("Evaluation environment closed.")
 
         if cfg.use_wandb and wandb.run:
             wandb.finish()
