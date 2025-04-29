@@ -324,21 +324,35 @@ def train(cfg: DictConfig):
 
     # Initialize wandb if enabled
     if cfg.use_wandb:
-        # Initialize wandb (wandb init logic)
-        # ...
-        pass # Add your wandb init code here
+        try:
+            wandb.init(
+                project=cfg.project_name,
+                config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
+                name=cfg.get('run_name', None), # Use run_name if provided
+                dir=log_dir,
+                sync_tensorboard=True,
+                monitor_gym=True,
+                save_code=True,
+            )
+            logging.info(f"WandB initialized for project '{cfg.project_name}', run '{wandb.run.name}'")
+        except ImportError:
+            logging.error("wandb package not found, but use_wandb=True. Please install wandb.")
+            cfg.use_wandb = False # Disable wandb if import fails
+        except Exception as e:
+            logging.error(f"Failed to initialize WandB: {e}")
+            cfg.use_wandb = False # Disable wandb if init fails
 
-    # Create environment
+    # --- Environment Creation ---
     logging.info("Creating environment...")
     env = None
     try:
-        # ... (your existing environment creation logic) ...
         env_id = cfg.env.name
+        # Resolve env params before passing to gym.make
         env_params_dict = OmegaConf.to_container(cfg.env.params, resolve=True) if hasattr(cfg.env, 'params') else {}
         env = gym.make(env_id, **env_params_dict)
         logging.info(f"Environment '{env_id}' created successfully.")
-        # Optionally check environment for GoalEnv tasks
-        # check_env(env) # Might be too strict depending on wrappers
+        logging.info(f"Observation Space: {env.observation_space}")
+        logging.info(f"Action Space: {env.action_space}")
 
     except Exception as e:
         logging.error(f"Failed environment creation: gym.make(ID='{cfg.env.get('name', 'N/A')}'): {e}")
