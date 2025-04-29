@@ -9,6 +9,7 @@ defaults:
 project_name: FlyerRL
 run_name: ControlDubinsHeading
 total_timesteps: 1000000
+seed: 42
 
 env:
   params:
